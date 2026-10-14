@@ -105,7 +105,7 @@
     document.querySelector("#app").innerHTML = `
       <aside class="sidebar"><div class="brand"><div class="brand-mark">m<sup>+</sup></div><div><strong>DSE 數學</strong><small>研習室 · ${esc(data.title)}</small></div></div>
         <p class="nav-label">你的溫習空間</p><nav aria-label="主要導覽">${nav.map(([id,symbol,label]) => `<a href="#${id}" class="${route===id?"current":""}"><span aria-hidden="true">${symbol}</span>${label}${id==="saved"?` <small>${state.saved.length}</small>`:""}</a>`).join("")}</nav>
-        <div class="sidebar-bottom"><span class="status-dot"></span> 原創模擬題 · 非官方試卷<br><small>${esc(data.subtitle)} · 本機預覽</small></div>
+        <div class="sidebar-bottom"><span class="status-dot"></span> 原創模擬題 · 非官方試卷<br><small>${esc(data.subtitle)}</small></div>
       </aside>
       <div class="workspace"><header class="topbar"><span>一步一步，找出自己的解題方法。</span><div><a href="../paper${data.paper===1?2:1}/" class="other-paper">前往原創卷${data.paper===1?"二":"一"} →</a><span id="save-state">本機進度</span></div></header>
       <main>${content}</main><footer>原創試版 · 非香港考評局試卷 · 不含原卷圖片</footer></div>`;
