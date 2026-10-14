@@ -1,6 +1,6 @@
 # 2026 對應原創模擬卷
 
-網站：[卷一](https://ctyingfun-dev.github.io/dse-maths-original-pilots/paper1/) · [卷二](https://ctyingfun-dev.github.io/dse-maths-original-pilots/paper2/)
+網站：[卷一](https://dse-maths-original-pilots.pages.dev/paper1/) · [卷二](https://dse-maths-original-pilots.pages.dev/paper2/)
 
 兩份獨立試版：`paper1/` 對應 2026 卷一第 1 至 19 道大題，`paper2/` 對應 2026 卷二第 1 至 45 題。題號、課題和主要解題方法逐題對照；題幹、數值、選項和 SVG 示意圖重新編寫，並非考評局試卷或官方答案。
 
@@ -12,11 +12,13 @@
 - 卷二按甲部、乙部連續排版，A–D 選項直排；可逐題或整卷批改，並重做錯題。
 - 數學變數使用斜體，分數上下排列。只在 2026 原卷本身有圖的對應題使用重新繪製的圖：卷一第 8、17 題；卷二第 14、18、20、22、25、38、39、40 題。卷一第 9、10 題另以頻數表、幹葉圖呈現數據。
 - 兩卷的進度、計時、錯題和 JSON 備份互相隔離；新版使用 `2026-v2` 儲存格式，不會讀取先前簡易試版的答案。
-- 此儲存庫及 GitHub Pages 為獨立的原創模擬卷網站，不會修改原有卷一、卷二正式網站。沒有上傳原卷掃描、測試截圖、暫存檔或學生作答。
+- 此儲存庫、Cloudflare Pages 及 GitHub Pages 為獨立的原創模擬卷網站，不會修改原有卷一、卷二正式網站。沒有上傳原卷掃描、測試截圖、暫存檔或學生作答。
 
 本機預覽：安裝 Node.js 後執行 `node server.cjs`，開啟 `http://127.0.0.1:4284/`。網站不需要建置或後端服務。
 
-GitHub Pages：發佈來源為 `main` 分支的根目錄，更新並推送後會重新發佈。根目錄的 `.nojekyll` 保留純靜態檔案；所有站內連結使用相對路徑，以支援專案網址。
+Cloudflare Pages：主要網站為 `https://dse-maths-original-pilots.pages.dev/`，採直接上傳。發佈包只包含根目錄的 `index.html`、兩份試卷各自的 HTML／CSS／JavaScript 檔案及原創卷一 PDF，共14個檔案。修改網站後須重新上傳至同一專案；推送 GitHub 不會自動更新 Cloudflare Pages。
+
+GitHub Pages：保留為備用網站，發佈來源為 `main` 分支的根目錄，更新並推送後會重新發佈。根目錄的 `.nojekyll` 保留純靜態檔案；所有站內連結使用相對路徑，以支援專案網址。
 
 重新產生 PDF：修改卷一題目或列印樣式後，執行 `node build-paper1-pdf.cjs`。此指令使用 Playwright 及本機 Microsoft Edge，檢查每題的作答空間、內容寬度及解答隱藏狀態，再輸出 A4 PDF。
 
