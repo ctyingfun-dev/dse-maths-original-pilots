@@ -4,7 +4,7 @@
   })[c]);
   const upright = new Set(["cm", "mm", "km", "mL", "kg", "sin", "cos", "tan", "log", "min", "max", "MODE", "SD", "SHIFT", "EXE", "FMLA", "DSE", "DEG", "P1", "P2", "P3", "P4", "I", "II", "III"]);
   const matching = {"(":")", "[":"]"};
-  const atom = /[0-9.A-Za-zπθ√⁰¹²³⁴⁵⁶⁷⁸⁹⁻₀-₉ₙ₊₋]/;
+  const atom = /[0-9.A-Za-zα-ω√⁰¹²³⁴⁵⁶⁷⁸⁹⁻₀-₉ₙ₊₋]/;
 
   function closeAt(text, start) {
     const stack = [];
@@ -53,6 +53,11 @@
   function inline(text) {
     let result="";
     for(let i=0;i<text.length;) {
+      if(text[i]==="½") {
+        result+=fraction("1","2");
+        i++;
+        continue;
+      }
       const parallel=text.slice(i).match(/^([A-Za-z]+)∥([A-Za-z]+)/);
       if(parallel) {
         result+=`<span class="math-relation"><var>${escape(parallel[1])}</var><span class="math-parallel" role="img" aria-label="平行">//</span><var>${escape(parallel[2])}</var></span>`;
@@ -75,7 +80,7 @@
           if(end>start) {result+=`<sup>${inline(text.slice(start,end))}</sup>`;i=end;continue;}
         }
       }
-      if(/[A-Za-zπθ]/.test(text[i])) {
+      if(/[A-Za-zα-ω]/.test(text[i])) {
         if(text.slice(i,i+3)==="log" && /[₀-₉(]/.test(text[i+3] || "")) {
           result+="log";
           i+=3;
@@ -88,10 +93,10 @@
         i=end;
         continue;
       }
-      if("+-−=<>≤≥×÷".includes(text[i])) {
+      if("+-−=≡<>≤≥×÷".includes(text[i])) {
         const symbol=text[i]==="-"?"−":text[i];
         const before=text.slice(0,i).trimEnd().at(-1);
-        const unary=symbol==="−" && (!before || "=([{,:+−×÷<>≤≥".includes(before));
+        const unary=symbol==="−" && (!before || "=≡([{,:+−×÷<>≤≥".includes(before));
         result+=`<span class="${unary?"math-unary":"math-op"}">${escape(symbol)}</span>`;
         i++;
         continue;
@@ -101,8 +106,11 @@
     return result;
   }
   const ungroup = text => matching[text[0]] && closeAt(text,0)===text.length ? text.slice(1,-1) : text;
+  function fraction(top,bottom) {
+    return `<span class="math-frac" role="math" aria-label="${escape(top)} 除以 ${escape(bottom)}"><span aria-hidden="true">${inline(ungroup(top))}</span><span aria-hidden="true">${inline(ungroup(bottom))}</span></span>`;
+  }
   function render(value) {
-    const text=String(value ?? "");
+    const text=String(value ?? "").replace(/([A-Za-z]+)\/\/(?=[A-Za-z])/g,"$1∥");
     let result="", cursor=0;
     for(let slash=text.indexOf("/");slash>=0;slash=text.indexOf("/",cursor)) {
       const left=leftAt(text,slash), right=rightAt(text,slash);
@@ -113,7 +121,7 @@
       }
       result+=inline(text.slice(cursor,left));
       const top=text.slice(left,slash).trim(), bottom=text.slice(slash+1,right).trim();
-      result+=`<span class="math-frac" role="math" aria-label="${escape(top)} 除以 ${escape(bottom)}"><span aria-hidden="true">${inline(ungroup(top))}</span><span aria-hidden="true">${inline(ungroup(bottom))}</span></span>`;
+      result+=fraction(top,bottom);
       cursor=right;
     }
     return result+inline(text.slice(cursor));

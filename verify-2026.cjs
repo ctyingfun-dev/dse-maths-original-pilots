@@ -12,11 +12,18 @@ function load(paper) {
 
 const p1 = load(1);
 const p2 = load(2);
+assert.match(p1.questions[6].prompt, /按每位學員計算成本，原定學費比成本多 \$160/);
+assert.match(p1.questions[6].prompt, /學費打八折後.*每招收一位學員仍賺 \$48/);
+assert.doesNotMatch(p1.questions[6].prompt, /早鳥|每人定價|每人成本|原定學費為成本加/);
+assert.ok(p1.questions[6].hints.slice(0,2).every(hint=>hint.includes("學費")));
+assert.ok(p1.questions[6].solution[0].steps[0].text.every(line=>line.includes("學費")));
 const mathSandbox={window:{}};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,"paper1/math.js"),"utf8"),mathSandbox);
 const renderMath=mathSandbox.window.mathText;
 assert.ok(renderMath("54.23/80").includes('aria-label="54.23 除以 80"'),"小數分子不可被拆開");
-assert.ok(renderMath(p1.questions[1].prompt).includes('aria-label="((a²b³)⁴) 除以 (a¹¹b⁻²)"'),"乘積冪須完整置於分子");
+assert.ok(renderMath(p1.questions[1].prompt).includes('aria-label="((r³s²)³) 除以 (r¹⁴s⁻⁵)"'),"乘積冪須完整置於分子");
+assert.ok(renderMath("KM//NP").includes('class="math-relation"'),"雙斜線平行關係不得當成分式");
+assert.ok(renderMath("φ/2").includes('aria-label="φ 除以 2"'),"希臘變數分式");
 assert.ok(renderMath("log₂[(G(n+1))/(G(n))]").includes('aria-label="(G(n+1)) 除以 (G(n))"'),"函數比須完整置於分式");
 assert.ok(renderMath("b¹⁴/a³").includes('aria-label="b¹⁴ 除以 a³"'),"多位上標須完整置於分子");
 assert.ok(renderMath("sin∠ABC=(AC sin∠BCA)/80").includes('aria-label="(AC sin∠BCA) 除以 80"'),"三角函數乘積須完整置於分子");
@@ -59,138 +66,98 @@ for (const [start,end] of [[0,9],[9,14],[14,19]]) {
   assert.equal(paper1Marks.slice(start,end).reduce((sum,mark)=>sum+mark,0),35);
 }
 
-// Independently calculate every Paper 1 item, including alternate-root cases.
-const checks = [
-  [1,1, p1.questions[0].answer==="m=(3n-30)/7" && [-10,0,3,20].every(n=>{
-    const m=(3*n-30)/7;
-    return Math.abs(m/3-2-(4*m-n)/5)<1e-12;
-  })],
-  [1,2, p1.questions[1].answer==="b¹⁴/a³" && [2,3,5].every(a=>[1,2,3].every(b=>{
-    const expression=(a*a*b**3)**4/(a**11*b**-2);
-    return Math.abs(expression/(b**14/a**3)-1)<1e-12;
-  }))],
-  [1,3, p1.questions[2].answer==="15" && (-6)*(-6)+3*(-12)===0],
-  [1,4, p1.questions[3].answer==="(3x-2)(2xy+5y-3)" && [-3,0,1,4].every(x=>[-2,0,5].every(y=>
-    6*x*x*y+11*x*y-10*y===y*(3*x-2)*(2*x+5) &&
-    6*x*x*y+11*x*y-10*y-9*x+6===(3*x-2)*(2*x*y+5*y-3)
-  ))],
-  [1,5, p1.questions[4].answer==="320" && 660-320-84===.8*320],
-  [1,6, p1.questions[5].answer==="-5" && [-10,-6,-5.01,-5,-4.99,0,6,10].every(x=>
-    ((2*x-5<7 && 7<=(3-5*x)/4)===(x<=-5))
-  )],
-  [1,7, 0.9*(320+80) === 320+40 && 40/320*100 === 12.5],
-  [1,8, 9/15===15/25 && 16+9===15+10],
-  [1,9, (75.5*2+85.5*4+95.5*6+105.5*5+115.5*3)/20 === 97],
-  [1,10, (() => {
-    const q=p1.questions[9];
-    const valuesFor=w=>q.diagram.rows.flatMap(row=>row.leaves.map(leaf=>10*row.stem+(leaf==="w"?w:leaf)));
-    const median=values=>(values[Math.floor((values.length-1)/2)]+values[Math.floor(values.length/2)])/2;
-    const candidates=Array.from({length:10},(_,i)=>i).filter(w=>{
-      const values=valuesFor(w);
-      const half=values.length/2;
-      return 3*(values.at(-1)-values[0])===7*(median(values.slice(half))-median(values.slice(0,half)));
+const close=(a,b)=>Math.abs(a-b)<1e-8;
+const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const p1Expected=["u=(84-4v)/13","s¹¹/r⁵","25/2","(4r+3)(3rs-7s+5)","530","-9","12%","20 cm","347/6","9/190","36","104","是","不是；v=8 或 289/8","620/1001","否","是","385","有可能；t=3"];
+p1Expected.forEach((answer,i)=>assert.equal(p1.questions[i].answer,answer,`卷一第${i+1}題答案`));
+// Calculate from the new conditions, without reading the worked answers.
+const p1Checks=[
+  [-10,0,3,20].every(v=>{const u=(84-4*v)/13;return close(u/4+3,(5*u+v)/7);}),
+  [2,3,5].every(r=>[1,2,3].every(s=>close(((r**3*s**2)**3/(r**14*s**-5))/(s**11/r**5),1))),
+  close((-3-5)*(-3+25/2-5)+(10-4)*(10-4),0),
+  [-3,0,1,4].every(r=>[-2,0,5].every(s=>
+    12*r*r*s-19*r*s-21*s===s*(4*r+3)*(3*r-7) &&
+    12*r*r*s-19*r*s-21*s+20*r+15===(4*r+3)*(3*r*s-7*s+5))),
+  918-530-70===.6*530,
+  [-20,-9,-61/7,-8.7,0,3,5].every(t=>(5*t+9<24 && 24<=(11-7*t)/3)===(t<=-61/7)) &&
+    5*(-9)+9<24 && 24<=(11+63)/3 && ! (24<=(11+56)/3),
+  .8*(400+160)===400+48 && 48/400*100===12,
+  16/20===20/25 && 9+16===20+5,
+  (35.5*3+45.5*6+55.5*8+65.5*7+75.5*6)/30===347/6 && 3+6===9 && 9+8+7===24,
+  (()=>{
+    const q=p1.questions[9],median=a=>(a[(a.length-2)/2]+a[a.length/2])/2;
+    assert.equal(q.diagram.key,undefined);
+    const valuesFor=u=>q.diagram.rows.flatMap(row=>row.leaves.map(leaf=>10*row.stem+(leaf==="u"?u:leaf)));
+    const candidates=Array.from({length:10},(_,u)=>u).filter(u=>{
+      const a=valuesFor(u);return 2*(a.at(-1)-a[0])===5*(median(a.slice(10))-median(a.slice(0,10)));
     });
-    if(candidates.length!==1 || candidates[0]!==2) return false;
-    const values=valuesFor(candidates[0]);
-    const frequencies=new Map();
-    for(const value of values) frequencies.set(value,(frequencies.get(value)||0)+1);
-    const maximum=Math.max(...frequencies.values());
-    const modes=[...frequencies].filter(([,frequency])=>frequency===maximum).map(([value])=>value);
-    if(values.length!==20 || modes.length!==1 || modes[0]!==36) return false;
+    if(candidates.join(",")!=="7") return false;
+    const a=valuesFor(7),frequencies=new Map();
+    a.forEach(v=>frequencies.set(v,(frequencies.get(v)||0)+1));
+    const modes=[...frequencies].filter(([,f])=>f===Math.max(...frequencies.values())).map(([v])=>v);
     let pairs=0;
-    for(let i=0;i<values.length;i++) for(let j=i+1;j<values.length;j++) pairs+=values[i]+values[j]>2*modes[0];
-    const total=values.length*(values.length-1)/2;
-    const [numerator,denominator]=q.answer.split("/").map(Number);
-    return pairs===7 && total===190 && pairs/total===numerator/denominator;
-  })()],
-  [1,11, p1.questions[10].answer==="16" && -4/9*9+4===0 && -4/9*36+4===-12 && 6+2*Math.hypot(3,4)===16],
-  [1,12, (()=>{
-    const h=[1,4],p=[6,-6],k=[-5,-4],q=[-10,6];
-    const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-    const vertices=[h,p,k,q];
-    const twiceArea=Math.abs(vertices.reduce((sum,a,i)=>{
-      const b=vertices[(i+1)%4];
-      return sum+a[0]*b[1]-a[1]*b[0];
-    },0));
-    return p1.questions[11].answer==="100" && p[1]===-2*p[0]+6 &&
-      vertices.every((a,i)=>Math.abs(distance(a,vertices[(i+1)%4])-5*Math.sqrt(5))<1e-12) &&
-      twiceArea/2===100 && distance(h,k)*distance(p,q)/2===100;
-  })()],
-  [1,13, 4/3*6**3*8/(1+8+27)===64 && 2*3*(3+24)>4*6**2],
-  [1,14, (() => {
-    const q=p1.questions[13], tolerance=1e-8;
-    if(q.answer!=="不是；b=-63 或 1" || q.solution.length!==2 || !q.prompt.includes("商為 x+7") || !q.prompt.includes("是否只有一個")) return false;
-    const candidates=[-63,1];
-    const rootsFor=b=>{
-      const discriminant=144-4*(35+b);
-      const roots=[2];
-      if(discriminant>=-tolerance) {
-        const radical=Math.sqrt(Math.abs(discriminant)<tolerance?0:discriminant);
-        roots.push((-12+radical)/2,(-12-radical)/2);
-      }
-      return roots.filter((root,i)=>roots.findIndex(value=>Math.abs(value-root)<tolerance)===i);
-    };
-    const samples=[-100,...candidates.flatMap(b=>[b-1e-4,b,b+1e-4]),-10,-1,0,10];
-    return samples.every(b=>{
-      const p=x=>(x*x+3*x-10)*(x+7)+b*(x-2);
-      if(p(2)!==0) return false;
-      if(![-3,0,1,2,5].every(x=>Math.abs(p(x)-(x-2)*(x*x+12*x+35+b))<tolerance)) return false;
-      const roots=rootsFor(b);
-      const hasTwo=candidates.some(value=>Math.abs(value-b)<tolerance);
-      return roots.every(root=>Math.abs(p(root))<tolerance) && (roots.length===2)===hasTwo;
-    });
-  })()],
-  [1,15, (()=>{
-    const colors=[...Array(4).fill("R"),...Array(4).fill("W"),...Array(5).fill("B")];
-    let total=0,red=0,union=0;
-    for(let a=0;a<10;a++) for(let b=a+1;b<11;b++) for(let c=b+1;c<12;c++) for(let d=c+1;d<13;d++) {
-      const draw=[a,b,c,d].map(i=>colors[i]);
-      const r=draw.filter(x=>x==="R").length===2,w=draw.filter(x=>x==="W").length===2;
-      total++; red+=r; union+=r||w;
+    for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++) pairs+=a[i]+a[j]>76;
+    return a.length===20 && modes.join(",")==="38" && pairs===9;
+  })(),
+  close(-12/25*25+12,0) && -12/25*100+12===-36 && 10+2*Math.hypot(5,12)===36,
+  (()=>{
+    const vertices=[[-1,4],[-6,-10],[5,0],[10,14]];
+    const area=Math.abs(vertices.reduce((sum,p,i)=>{const n=vertices[(i+1)%4];return sum+p[0]*n[1]-p[1]*n[0];},0))/2;
+    return vertices[1][1]===3*vertices[1][0]+8 && vertices.every((p,i)=>close(distance(p,vertices[(i+1)%4]),Math.sqrt(221))) &&
+      area===104 && close(distance(vertices[0],vertices[2])*distance(vertices[1],vertices[3])/2,104);
+  })(),
+  close(4/3*11**3*27/99,484) && Math.sqrt(484/4)===11 && close(2*(44/3)*(44/3+16/3),1760/3) && 1760/3>4*11**2,
+  (()=>{
+    const f=(t,v)=>(t*t-4*t-12)*(2*t+5)+v*(t+2);
+    const derivative=(t,v)=>6*t*t-6*t-44+v;
+    return [-100,0,8,20,289/8,50].every(v=>[-3,-2,0,2,5].every(t=>close(f(t,v),(t+2)*(2*t*t-7*t-30+v)))) &&
+      close(f(-2,8),0) && close(derivative(-2,8),0) &&
+      close(f(7/4,289/8),0) && close(derivative(7/4,289/8),0) &&
+      [-10,0,7.99,8.01,36,37].every(v=>!close(derivative(-2,v),0) && !close(289-8*v,0));
+  })(),
+  (()=>{
+    let total=0,first=0,union=0;
+    for(let a=0;a<11;a++) for(let b=a+1;b<12;b++) for(let c=b+1;c<13;c++) for(let d=c+1;d<14;d++) {
+      const draw=[a,b,c,d],food=draw.filter(i=>i<5).length===2,book=draw.filter(i=>i>=5&&i<10).length===2;
+      total++;first+=food;union+=food||book;
     }
-    return total===715 && red===216 && union===396 && union/total===36/65 && p1.questions[14].answer==="36/65";
-  })()],
-  [1,16, (()=>{
-    const points=[[5,7],[-2,6],[2,-2]];
-    const reflectedP=[5-2*(5+3*7-11)/10,7-6*(5+3*7-11)/10];
-    return !p1.questions[15].prompt.includes("R(2") && reflectedP[0]===2 && reflectedP[1]===-2 &&
-      points.every(([x,y])=>(x-2)**2+(y-3)**2===25) && 7*2+3===17 && 2+3*3===11 &&
-      3*17+4*(-2)===43 && Math.hypot(17-5,-2-7)===15 && Math.hypot(17-2,0)===15;
-  })()],
-  [1,17, (() => {
-    const rad=x=>x*Math.PI/180, deg=x=>x*180/Math.PI;
-    const ac=Math.sqrt(60**2+90**2-2*60*90*Math.cos(rad(60)));
-    const cad=deg(Math.asin(90*Math.sin(rad(60))/ac));
-    const bca=125-(180-60-cad);
-    const abc=deg(Math.asin(ac*Math.sin(rad(bca))/80));
-    const bad=cad+180-bca-abc;
-    const elevation=deg(Math.asin(60*Math.sin(rad(bad))*Math.sin(rad(65))/80));
-    return Math.abs(ac-30*Math.sqrt(7))<1e-9 && Math.abs(bad-94.2797)<.001 && elevation<50 && p1.questions[16].answer==="是";
-  })()],
-  [1,18, (()=>{
-    const g=n=>5*4**(n-1),t=n=>Math.log2(5)+2*(n-1),sum=k=>k*(Math.log2(5)+k-1);
-    return g(2)===20 && g(5)===1280 && [1,3,10].every(n=>Math.abs(t(n+1)-t(n)-2)<1e-12) &&
-      sum(315)<100000 && sum(316)>100000 && p1.questions[17].answer==="315";
-  })()],
-  [1,19, (()=>{
-    const close=(a,b)=>Math.abs(a-b)<1e-8,d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-    if(p1.questions[18].answer!=="有可能；k=2" || !p1.questions[18].prompt.includes("利用配方法")) return false;
-    return [.25,1,2,3].every(k=>{
-      const a=[2+30*k,7+40*k],b=[2-30*k,7-40*k],c=[2+96*k,7-72*k],m=[2,7];
-      const i=[2+80*k/3,7-20*k],j=[2+119*k/3,7-119*k/4],pointD=[6-45*k,6-119*k/4];
-      const h=x=>-x*x+(4+60*k)*x-900*k*k-80*k+3;
-      const area=6000*k*k,semi=180*k;
-      const weightedI=a.map((value,index)=>(d(b,c)*value+d(a,c)*b[index]+d(a,b)*c[index])/(2*semi));
-      const diagonalX=close(b[0]+i[0],pointD[0]+j[0]),diagonalY=close(b[1]+i[1],pointD[1]+j[1]);
-      return close(h(a[0]),a[1]) && close(14-h(4-b[0]),b[1]) &&
-        close(d(a,m),50*k) && close(d(c,m),120*k) && close(d(a,c),130*k) &&
-        close(d(i,m),area/semi) && weightedI.every((value,index)=>close(value,i[index])) &&
-        close(d(j,a),d(j,b)) && close(d(j,a),d(j,c)) && close(d(i,j),65*k/4) &&
-        diagonalX===close(k,2) && diagonalY===close(k,2) &&
-        !close((j[0]-i[0])*(b[1]-i[1])-(j[1]-i[1])*(b[0]-i[0]),0);
-    });
-  })()],
-  ...require("./verify-paper2.cjs")(p2)
+    return total===1001 && first===360 && union===620;
+  })(),
+  (()=>{
+    const j=[4,6],l=[5,1],center=[-3,2],n=[16/3,11/3];
+    return [j,[-7,9],l].every(p=>close(distance(p,center)**2,65)) &&
+      close((j[0]+l[0])/2-5*(j[1]+l[1])/2+13,0) &&
+      close((j[0]-center[0])*(n[0]-j[0])+(j[1]-center[1])*(n[1]-j[1]),0) &&
+      close((l[0]-center[0])*(n[0]-l[0])+(l[1]-center[1])*(n[1]-l[1]),0) &&
+      close(distance(n,j),distance(n,l)) && !close(distance(j,l)**2,2*distance(n,j)**2);
+  })(),
+  (()=>{
+    const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
+    const jl=Math.sqrt(55**2+76**2-2*55*76*Math.cos(rad(68)));
+    const ljm=deg(Math.acos((55**2+jl**2-76**2)/(110*jl)));
+    const klj=118-(180-68-ljm),jkl=deg(Math.asin(jl*Math.sin(rad(klj))/84));
+    const kjm=360-68-118-jkl,elevation=deg(Math.asin(55*Math.sin(rad(kjm))*Math.sin(rad(62))/75));
+    return Math.abs(jl-75.2946803)<1e-6 && Math.abs(kjm-113.853779)<1e-6 && Math.abs(elevation-36.312302)<1e-6 && elevation<45;
+  })(),
+  (()=>{
+    const a=n=>14*3**(n-1),b=n=>Math.log(a(n))/Math.log(3),sum=j=>j*(2*Math.log(14)/Math.log(3)+j-1)/2;
+    return a(2)===42 && a(5)===1134 && [1,3,10].every(n=>close(b(n+1)-b(n),1)) &&
+      sum(385)<75000 && sum(386)>75000;
+  })(),
+  [.25,1,2,3,4].every(t=>{
+    const j=[-4+12*t,6-9*t],k=[-4-12*t,6+9*t],l=[-4+12*t,6+16*t],n=[-4,6];
+    const p=[-4+9*t/2,6+6*t],q=[-4+21*t/8,6+7*t/2],r=[-1-89*t/8,12+19*t/2];
+    const f=x=>-2*x*x+(48*t-16)*x-288*t*t+183*t-26;
+    const weights=[distance(k,l),distance(j,l),distance(j,k)],perimeter=weights.reduce((a,b)=>a+b);
+    const weighted=j.map((_,i)=>(weights[0]*j[i]+weights[1]*k[i]+weights[2]*l[i])/perimeter);
+    return close(f(j[0]),j[1]) && close(12-f(-8-k[0]),k[1]) &&
+      close(distance(j,n),15*t) && close(distance(l,n),20*t) && close(distance(j,l),25*t) &&
+      weighted.every((v,i)=>close(v,p[i])) && close(distance(p,n),300*t*t/(perimeter/2)) &&
+      close(distance(q,j),distance(q,k)) && close(distance(q,j),distance(q,l)) && close(distance(p,q),25*t/8) &&
+      close(k[0]+p[0],r[0]+q[0])===close(t,3) && close(k[1]+p[1],r[1]+q[1])===close(t,3) &&
+      !close((q[0]-p[0])*(k[1]-p[1])-(q[1]-p[1])*(k[0]-p[0]),0);
+  })
 ];
+const checks=[...p1Checks.map((valid,i)=>[1,i+1,valid]),...require("./verify-paper2.cjs")(p2)];
 for (const [paper,n,valid] of checks) assert.ok(valid, `卷${paper} 第${n}題獨立算式`);
 console.log(`題目結構、答案鍵及 ${checks.length} 項獨立算式核對通過：卷一 ${p1.questions.length} 題、卷二 ${p2.questions.length} 題。卷一評分參考配分為35+35+35=105。`);

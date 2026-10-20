@@ -1,0 +1,14 @@
+請接手我的 DSE 數學原創模擬卷網站，並協助我在兩部電腦之間輪流修改。
+
+GitHub：https://github.com/ctyingfun-dev/dse-maths-original-pilots
+正式網站：https://dse-maths-original-pilots.pages.dev/
+
+請先閱讀專案內 AGENTS.md、HANDOFF.md 和 README.md，再開始工作。我之前的修改要求已寫在文件內，請不要因為看不到舊對話而重設網站設計或題目。
+
+如果本機沒有專案，請 clone 上述 GitHub 儲存庫；如果已有專案，先檢查未提交修改，再 fetch。只有工作目錄乾淨時才 pull --ff-only。不要強行覆蓋任何一部電腦的修改。若我交給你的是 ZIP，請按 HANDOFF.md 的 ZIP 交接方法處理，先和 GitHub 最新版本比對。
+
+請依 HANDOFF.md 準備環境、執行交接檢查及啟動本機預覽，告訴我預覽網址。如果登入或權限需要我處理，只請我完成必要的登入步驟，不要向我要密碼或 token。
+
+這次先完成接手和確認網站能運作，等我再提出修改要求。之後我要求你修改並同步時，請做必要驗證、更新交接記錄、commit 和 push 到同一個 GitHub 儲存庫，最後確認本機與 origin/main 一致，讓我回到另一部電腦時能接續。不要 force push 或刪除未提交內容。
+
+GitHub 同步與正式網站上架分開；只有我說「上架」時才發佈 Cloudflare。不要改網站網址，也不要把 GitHub Pages 當成主要網址。這段接手指令在回到原來電腦時也適用。

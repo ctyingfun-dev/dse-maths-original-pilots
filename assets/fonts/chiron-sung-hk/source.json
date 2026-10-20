@@ -1,0 +1,52 @@
+{
+  "source": "@fontsource-variable/chiron-sung-hk",
+  "version": "5.3.1",
+  "family": "Chiron Sung HK UI",
+  "weights": [
+    600
+  ],
+  "license": "OFL-1.1",
+  "corpus": [
+    "paper1/app.js",
+    "paper2/app.js",
+    "paper1/dse-topics.js",
+    "paper2/dse-topics.js",
+    "year.js",
+    "assets/workspace.js"
+  ],
+  "files": [
+    "ui.css",
+    "LICENSE.txt",
+    "chiron-sung-hk-100-wght-normal.ttf",
+    "chiron-sung-hk-101-wght-normal.ttf",
+    "chiron-sung-hk-102-wght-normal.ttf",
+    "chiron-sung-hk-103-wght-normal.ttf",
+    "chiron-sung-hk-104-wght-normal.ttf",
+    "chiron-sung-hk-105-wght-normal.ttf",
+    "chiron-sung-hk-106-wght-normal.ttf",
+    "chiron-sung-hk-107-wght-normal.ttf",
+    "chiron-sung-hk-108-wght-normal.ttf",
+    "chiron-sung-hk-109-wght-normal.ttf",
+    "chiron-sung-hk-110-wght-normal.ttf",
+    "chiron-sung-hk-111-wght-normal.ttf",
+    "chiron-sung-hk-112-wght-normal.ttf",
+    "chiron-sung-hk-113-wght-normal.ttf",
+    "chiron-sung-hk-114-wght-normal.ttf",
+    "chiron-sung-hk-115-wght-normal.ttf",
+    "chiron-sung-hk-116-wght-normal.ttf",
+    "chiron-sung-hk-117-wght-normal.ttf",
+    "chiron-sung-hk-118-wght-normal.ttf",
+    "chiron-sung-hk-119-wght-normal.ttf",
+    "chiron-sung-hk-28-wght-normal.ttf",
+    "chiron-sung-hk-35-wght-normal.ttf",
+    "chiron-sung-hk-37-wght-normal.ttf",
+    "chiron-sung-hk-65-wght-normal.ttf",
+    "chiron-sung-hk-72-wght-normal.ttf",
+    "chiron-sung-hk-92-wght-normal.ttf",
+    "chiron-sung-hk-93-wght-normal.ttf",
+    "chiron-sung-hk-98-wght-normal.ttf",
+    "chiron-sung-hk-greek-wght-normal.ttf",
+    "chiron-sung-hk-latin-ext-wght-normal.ttf",
+    "chiron-sung-hk-latin-wght-normal.ttf"
+  ]
+}

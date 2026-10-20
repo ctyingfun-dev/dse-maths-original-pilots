@@ -1,19 +1,13 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-let playwright;
-try {
-  playwright = require("playwright");
-} catch {
-  playwright = require(path.join(os.homedir(), ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright"));
-}
-const {chromium} = playwright;
+const {launchBrowser} = require("./scripts/browser-runtime.cjs");
 const root = __dirname;
 const base = (process.env.PREVIEW_URL || "http://127.0.0.1:4284").replace(/\/$/, "");
 const url = paper => `${base}/paper${paper}/`;
 
 (async () => {
-  const browser = await chromium.launch({channel:"msedge",headless:true});
+  const browser = await launchBrowser();
   try {
     for(const paper of [1,2]) for(const width of [1440,1004,390,320]) {
       const context=await browser.newContext({viewport:{width,height:900}});
@@ -23,6 +17,7 @@ const url = paper => `${base}/paper${paper}/`;
       await page.goto(url(paper)+"#practice");
       const total=paper===1?19:45;
       if(await page.locator(".exam-question").count()!==total) throw Error(`卷${paper}題數`);
+      if(/[橫縱横纵½]/.test(await page.locator(".practice-main").textContent())) throw Error(`卷${paper}仍有舊坐標用語或未排版的二分之一`);
       if(!await page.locator("#question-1 var").count()) throw Error(`卷${paper}變數非斜體`);
       if(!await page.locator("#question-1 .math-frac").count()) throw Error(`卷${paper}分數未排版`);
       if(paper===1) {
@@ -32,14 +27,15 @@ const url = paper => `${base}/paper${paper}/`;
         if(!await page.locator("#question-10 .stemleaf").count()) throw Error("幹葉圖缺失");
         if(await page.locator("#question-10 .stemleaf tbody tr").count()!==4) throw Error("卷一第10題幹葉圖未擴充至四行");
         const leaves=(await page.locator("#question-10 .stemleaf tbody td").allTextContents()).flatMap(row=>row.trim().split(/\s+/));
-        if(leaves.length!==20 || leaves.at(-1)!=="w") throw Error("卷一第10題應有20個數據");
+        if(leaves.length!==20 || leaves.at(-1)!=="u") throw Error("卷一第10題應有20個數據");
+        if(await page.locator("#question-10 .key").count()) throw Error("卷一第10題例子行未刪除");
         if(!await page.locator("#question-1 .exam-stem").innerText().then(t=>t.includes("公式主項"))) throw Error("卷一第1題指令未更新");
         if(await page.locator("#question-14 .exam-part").count()!==2 || await page.locator("#question-14 .exam-stem").innerText().then(t=>t.includes("(a)"))) throw Error("卷一第14題應有兩個獨立分題");
         if(!await page.locator("#question-14 .exam-stem").innerText().then(t=>t.includes("商為")&&t.includes("餘式"))) throw Error("卷一第14題缺少原卷的除法關係");
         const q14StemBox=await page.locator("#question-14 .exam-stem").boundingBox();
         const q14PartBox=await page.locator("#question-14 .exam-part").first().boundingBox();
         if(q14PartBox.y<q14StemBox.y+q14StemBox.height) throw Error("卷一第14題分題與題幹重疊");
-        if(!await page.locator("#question-19 .exam-stem").innerText().then(t=>t.startsWith("設 k 為正數，")) || await page.locator("#question-19 .exam-stem br").count()!==3) throw Error("卷一第19題定義未分行");
+        if(!await page.locator("#question-19 .exam-stem").innerText().then(t=>t.startsWith("設 t 為正數，")) || await page.locator("#question-19 .exam-stem br").count()!==3) throw Error("卷一第19題定義未分行");
         const groups=await page.evaluate(()=>window.PILOT.questions.map(q=>({n:q.n,groups:Object.values(q.markGroups||{})})));
         for(const {n,groups:expected} of groups) {
           const printed=await page.locator(`#question-${n} .exam-part-marks`).allTextContents();
@@ -98,13 +94,21 @@ const url = paper => `${base}/paper${paper}/`;
         await page.locator("#question-1 [data-bookmark]").click();
         if(width===1004 || width===320) for(const n of [1,7,9,10,14,19]) await page.locator(`#question-${n}`).screenshot({path:`${root}/reading-q${n}-${width}.png`});
       } else {
+        if(await page.locator("#question-5 .exam-stem .math-op").allTextContents().then(items=>items.filter(text=>text==="≡").length)!==1) throw Error("恆等符號缺失");
+        const halves=page.locator('#question-19 .options .math-frac[aria-label="1 除以 2"]');
+        if(await halves.count()!==3) throw Error("卷二第19題的三個二分之一係數未排成分數");
+        const stacked=await halves.evaluateAll(nodes=>nodes.every(node=>{
+          const [top,bottom]=[...node.children].map(child=>child.getBoundingClientRect());
+          return top.height>0 && bottom.height>0 && bottom.top>=top.bottom-1;
+        }));
+        if(!stacked) throw Error("二分之一不是上下排列");
         if(await page.locator("#question-1 .options label").count()!==4) throw Error("MC 選項缺失");
         if(await page.locator("#question-14 .exam-statements>span").count()!==3) throw Error("羅馬數字敘述沒有逐行排列");
         if(await page.locator("#question-30 .exam-statements>span").count()!==3) throw Error("卷二第30題敘述沒有逐行排列");
         const q26=await page.evaluate(()=>window.PILOT.questions[25]);
         if(q26.correct!=="一對直線" || q26.options.length!==4) throw Error("卷二第26題軌跡型態錯誤");
         const q31=await page.evaluate(()=>window.PILOT.questions[30]);
-        if(q31.correct!=="9×2¹²+21" || !q31.prompt.includes("等於下列何者")) throw Error("卷二第31題問法錯誤");
+        if(q31.correct!=="11×2¹⁰+25" || !q31.prompt.includes("等於下列何者")) throw Error("卷二第31題問法錯誤");
         if(!await page.locator("#question-20 svg").getAttribute("aria-label")) throw Error("卷二第20題圖缺失");
         const columns=await page.locator("#question-1 .options").evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(" ").length);
         if(columns!==1) throw Error("卷二選項不是單列");
@@ -112,15 +116,15 @@ const url = paper => `${base}/paper${paper}/`;
         await page.locator("#question-1 [data-check]").click();
         if(!await page.locator("#question-1 .feedback").count()) throw Error("MC 批改缺失");
         const q42=await page.evaluate(()=>window.PILOT.questions[41]);
-        if(q42.correct!=="91/132" || !q42.prompt.includes("至多2名")) throw Error("卷二第42題未恢復原卷考核結構");
+        if(q42.correct!=="19/42" || !q42.prompt.includes("至多1部")) throw Error("卷二第42題分類概率條件錯誤");
         await page.locator(`#question-42 .options input[value="${q42.answer}"]`).check({force:true});
         await page.locator("#question-42 [data-check]").click();
         if(!await page.locator("#question-42 .feedback").innerText().then(t=>t.includes("答對"))) throw Error("卷二第42題答案批改錯誤");
         if(width===390) await page.locator("#question-42").screenshot({path:`${root}/paper2-q42-390.png`});
         if(await page.locator("#question-44 .question-data tr").count()!==2 || await page.locator("#question-44 .question-data td").count()!==8) throw Error("卷二第44題數據表缺失");
-        if(await page.locator("#question-40 svg text").allTextContents().then(items=>items.includes("M"))) throw Error("卷二第40題圖形不應預先提供輔助點");
-        if(!await page.locator("#question-30 .exam-stem").innerText().then(text=>text.includes("方差"))) throw Error("卷二第30題漏了方差判斷");
-        if(!await page.locator("#question-41 .exam-stem").innerText().then(text=>text.includes("90°≤θ≤360°"))) throw Error("卷二第41題角度範圍錯誤");
+        if(await page.locator("#question-40 svg text").allTextContents().then(items=>items.includes("Q"))) throw Error("卷二第40題圖形不應預先提供輔助點");
+        if(!await page.locator("#question-30 .exam-content").innerText().then(text=>text.includes("方差"))) throw Error("卷二第30題漏了方差判斷");
+        if(!await page.locator("#question-41 .exam-stem").innerText().then(text=>text.includes("60°≤φ≤330°"))) throw Error("卷二第41題角度範圍錯誤");
         for(let n=1;n<=45;n++) {
           const answer=await page.evaluate(n=>window.PILOT.questions[n-1].answer,n);
           await page.locator(`#question-${n} .options input[value="${answer}"]`).check({force:true});
@@ -130,8 +134,9 @@ const url = paper => `${base}/paper${paper}/`;
           if(await feedback.locator(".solution-steps p").count()<2) throw Error(`卷二第${n}題解答未分步`);
           const overflow=await page.locator(`#question-${n} .exam-content, #question-${n} .options label, #question-${n} .feedback`).evaluateAll(elements=>elements.some(el=>el.scrollWidth>el.clientWidth+2));
           if(overflow) throw Error(`卷二第${n}題內容溢出`);
-          if([1004,320].includes(width) && [4,14,23,30,34,40,41,42,44].includes(n)) await page.locator(`#question-${n}`).screenshot({path:`${root}/aligned-paper2-q${n}-${width}.png`});
+          if([1004,320].includes(width) && [4,5,14,19,23,24,27,30,34,35,36,40,41,42,44].includes(n)) await page.locator(`#question-${n}`).screenshot({path:`${root}/aligned-paper2-q${n}-${width}.png`});
         }
+        if(/[橫縱横纵½]/.test(await page.locator(".practice-main").textContent())) throw Error("卷二解答仍有舊坐標用語或未排版的二分之一");
       }
       const fonts=await page.locator(".practice-main").evaluate(el=>getComputedStyle(el).fontFamily);
       if(!fonts.includes("Times New Roman") || !fonts.includes("PMingLiU")) throw Error(`卷${paper} 試卷字體不符`);
@@ -146,7 +151,7 @@ const url = paper => `${base}/paper${paper}/`;
           ? [`${svg.closest(".exam-question").id}: ${el.outerHTML.slice(0,100)}`] : [];
       })));
       if(diagramErrors.length) throw Error(`卷${paper}圖形不是細黑線：${diagramErrors.join("; ")}`);
-      if(paper===2 && width===1440) {
+      if(width===1440) {
         const labelErrors=await page.evaluate(()=>[...document.querySelectorAll(".exam-question .diagram svg")].flatMap(svg=>{
           const points=[...svg.querySelectorAll("path")].flatMap(path=>{
             const length=path.getTotalLength(),steps=Math.ceil(length),samples=[];
@@ -166,7 +171,7 @@ const url = paper => `${base}/paper${paper}/`;
           const errors=[],bounds=svg.viewBox.baseVal;
           for(let i=0;i<labels.length;i++) {
             const {name,box}=labels[i];
-            if(box.x<0||box.y<0||box.x+box.width>bounds.width||box.y+box.height>bounds.height) errors.push(`${name} 出框`);
+            if(box.x<bounds.x||box.y<bounds.y||box.x+box.width>bounds.x+bounds.width||box.y+box.height>bounds.y+bounds.height) errors.push(`${name} 出框`);
             if(points.some(point=>point.x>=box.x-1.5&&point.x<=box.x+box.width+1.5&&point.y>=box.y-1.5&&point.y<=box.y+box.height+1.5)) errors.push(`${name} 碰線`);
             for(let j=i+1;j<labels.length;j++) {
               const next=labels[j];
@@ -175,7 +180,7 @@ const url = paper => `${base}/paper${paper}/`;
           }
           return errors.map(error=>`${svg.closest(".exam-question").id}: ${error}`);
         }));
-        if(labelErrors.length) throw Error(`卷二圖形標記錯位：${labelErrors.join("; ")}`);
+        if(labelErrors.length) throw Error(`卷${paper}圖形標記錯位：${labelErrors.join("; ")}`);
       }
       if(paper===1) {
         if(await page.locator("#question-4 .exam-part").count()!==2) throw Error("卷一第4題分段錯誤");
@@ -183,7 +188,7 @@ const url = paper => `${base}/paper${paper}/`;
         if(!q4.includes("−")||!q4.includes("利用 (a)")) throw Error("卷一第4題負號或題幹錯誤");
       } else {
         const q14=await page.locator("#question-14 .diagram svg text").allTextContents();
-        if(!["L₁","L₂","O","x","y"].every(label=>q14.includes(label))) throw Error("卷二第14題坐標軸或直線標示缺失");
+        if(!["D₁","D₂","O","z","y"].every(label=>q14.includes(label))) throw Error("卷二第14題坐標軸或直線標示缺失");
         const parallels=await page.locator("#question-18 .exam-stem .math-parallel").allTextContents();
         if(parallels.length!==3 || parallels.some(mark=>mark!=="//")) throw Error("平行符號未按試卷呈現");
         if(await page.locator("#question-18 .exam-stem .math-relation").count()!==3) throw Error("平行關係被拆開");
@@ -260,63 +265,41 @@ const url = paper => `${base}/paper${paper}/`;
     await p2topics.close();
     console.log("卷二歷屆DSE課題年份、分部、搜尋、詳情及第42題批改通過");
 
-    const migrated=await browser.newPage({viewport:{width:390,height:800}});
-    await migrated.goto(url(2)+"#papers");
-    await migrated.evaluate(()=>{
-      const key="dse-original-pilot-paper2-2026-v2";
-      localStorage.setItem(key,JSON.stringify({schema:2,paper:2,progress:{
-        answers:{1:"A",22:"B",26:"C",29:"D",30:"D",31:"A",42:"B"},
-        checked:{1:true,22:true,26:true,31:true,42:true},
-        hints:{22:2,26:1,31:1,42:1},saved:[22,30],mode:"untimed",finished:false
-      }}));
-    });
-    await migrated.reload();
-    await migrated.goto(url(2)+"#practice");
-    if(!await migrated.locator('#question-1 .options input[value="A"]').isChecked()) throw Error("舊進度中未改題目遺失");
-    if(!await migrated.locator('#question-29 .options input[value="D"]').isChecked()) throw Error("卷二第29題舊進度遺失");
-    for(const n of [22,26,30,31,42]) {
-      if(await migrated.locator(`#question-${n} .options input:checked`).count()) throw Error(`卷二第${n}題沿用舊答案`);
-      if(await migrated.locator(`#question-${n} .feedback, #question-${n} .hints li`).count()) throw Error(`卷二第${n}題沿用舊批改或提示`);
-    }
-    await migrated.locator("#question-1 [data-hint]").click();
-    const revised=await migrated.evaluate(()=>JSON.parse(localStorage.getItem("dse-original-pilot-paper2-2026-v2")).progress);
-    if(revised.questionRevision!==4 || revised.answers[22] || revised.answers[26] || revised.answers[30] || revised.answers[31] || revised.answers[42] || revised.saved.join(",")!=="22,30") throw Error("卷二題目更新進度遷移錯誤");
-    await migrated.evaluate(()=>localStorage.setItem("dse-original-pilot-paper2-2026-v2",JSON.stringify({
-      schema:2,paper:2,progress:{
-        questionRevision:3,answers:Object.fromEntries(Array.from({length:45},(_,i)=>[i+1,"A"])),
-        checked:Object.fromEntries(Array.from({length:45},(_,i)=>[i+1,true])),
-        hints:Object.fromEntries(Array.from({length:45},(_,i)=>[i+1,1])),saved:[14,22,30,42],mode:"untimed"
+    for(const paper of [1,2]) {
+      const migrated=await browser.newPage({viewport:{width:390,height:800}});
+      migrated.on("dialog",dialog=>dialog.accept());
+      await migrated.goto(url(paper)+"#practice");
+      const key=`dse-original-pilot-paper${paper}-2026-v2`,revision=paper===1?2:5,total=paper===1?19:45;
+      for(const oldRevision of [undefined,paper===1?1:4]) {
+        const legacy={schema:2,paper,progress:{
+          questionRevision:oldRevision,answers:Object.fromEntries(Array.from({length:total},(_,i)=>[i+1,"A"])),
+          checked:Object.fromEntries(Array.from({length:total},(_,i)=>[i+1,true])),
+          hints:Object.fromEntries(Array.from({length:total},(_,i)=>[i+1,1])),
+          saved:[1,14],mode:"untimed",startedAt:12345
+        }};
+        await migrated.evaluate(({key,legacy})=>localStorage.setItem(key,JSON.stringify(legacy)),{key,legacy});
+        await migrated.reload();
+        if(await migrated.locator(".hints li, .feedback, .options input:checked").count()) throw Error(`卷${paper}仍顯示換題前進度`);
+        await migrated.locator("#question-1 [data-hint]").click();
+        const progress=await migrated.evaluate(key=>JSON.parse(localStorage.getItem(key)).progress,key);
+        if(progress.questionRevision!==revision || Object.keys(progress.answers).length || Object.keys(progress.checked).length ||
+          progress.hints[1]!==1 || Object.keys(progress.hints).length!==1 || progress.saved.join(",")!=="1,14" ||
+          progress.startedAt!==12345) throw Error(`卷${paper}換題進度遷移錯誤`);
+        legacy.progress.saved=[2,3];
+        await migrated.goto(url(paper)+"#saved");
+        await migrated.locator("#import-file").setInputFiles({name:"old-progress.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(legacy))});
+        await migrated.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).progress.saved.join(",")==="2,3",key);
+        const imported=await migrated.evaluate(key=>JSON.parse(localStorage.getItem(key)).progress,key);
+        if(imported.questionRevision!==revision || ["answers","checked","hints"].some(field=>Object.keys(imported[field]).length)) throw Error(`卷${paper}匯入舊備份未清除已換題進度`);
+        await migrated.goto(url(paper)+"#practice");
       }
-    })));
-    await migrated.reload();
-    await migrated.locator("#question-1 [data-hint]").click();
-    const currentMigration=await migrated.evaluate(()=>JSON.parse(localStorage.getItem("dse-original-pilot-paper2-2026-v2")).progress);
-    const changed=[4,5,8,9,12,14,15,23,26,30,34,36,40,41,42,44];
-    for(let n=1;n<=45;n++) {
-      if(changed.includes(n)) {
-        if(currentMigration.answers[n] || currentMigration.checked[n] || currentMigration.hints[n]) throw Error(`卷二第${n}題仍沿用換題前進度`);
-      } else if(currentMigration.answers[n]!=="A" || !currentMigration.checked[n] || !currentMigration.hints[n]) throw Error(`卷二第${n}題未改題目的進度遺失`);
+      if(paper===1) {
+        await migrated.goto(url(1)+"#guide");
+        if(await migrated.locator(".marking-scheme").count()!==19) throw Error("技巧站未同步新解答");
+      }
+      await migrated.close();
     }
-    if(currentMigration.saved.join(",")!=="14,22,30,42") throw Error("卷二換題不應刪除收藏");
-    await migrated.close();
-    console.log("卷二換題只清除受影響題目的舊作答，其他進度及收藏保留");
-
-    const migratedP1=await browser.newPage({viewport:{width:390,height:800}});
-    await migratedP1.goto(url(1)+"#papers");
-    await migratedP1.evaluate(()=>localStorage.setItem("dse-original-pilot-paper1-2026-v2",JSON.stringify({
-      schema:2,paper:1,progress:{answers:{1:"舊作答"},hints:{1:2,7:1,14:4},saved:[1,14],mode:"untimed"}
-    })));
-    await migratedP1.reload();
-    await migratedP1.goto(url(1)+"#practice");
-    if(await migratedP1.locator("#question-1 .hints li, #question-14 .hints li").count()) throw Error("卷一仍顯示換題前的提示");
-    if(await migratedP1.locator("#question-7 .hints li").count()!==1) throw Error("卷一未改題目提示遺失");
-    await migratedP1.locator("#question-14 [data-hint]").click();
-    const progressP1=await migratedP1.evaluate(()=>JSON.parse(localStorage.getItem("dse-original-pilot-paper1-2026-v2")).progress);
-    if(progressP1.questionRevision!==1 || progressP1.answers[1]!=="舊作答" || progressP1.saved.join(",")!=="1,14") throw Error("卷一舊作答或收藏遺失");
-    await migratedP1.goto(url(1)+"#guide");
-    if(await migratedP1.locator(".marking-scheme").count()!==19) throw Error("技巧站未同步新解答");
-    await migratedP1.close();
-    console.log("卷一換題清除舊提示，保留原有作答及收藏；技巧站解答同步");
+    console.log("2026兩卷舊進度及舊備份：清除已換題答案、批改及提示，保留收藏和計時資料");
 
     const context=await browser.newContext({viewport:{width:390,height:800},acceptDownloads:true});
     const page=await context.newPage();

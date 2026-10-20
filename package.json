@@ -1,0 +1,14 @@
+{
+  "name": "dse-maths-original-pilots",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.cjs",
+    "check:handoff": "node scripts/check-handoff.cjs",
+    "check:maths": "node verify-2024.cjs && node verify-2025.cjs && node verify-2026.cjs && node verify-notation.cjs",
+    "check:layout": "node qa-workspace.cjs",
+    "check:effects": "node qa-effects.cjs"
+  },
+  "engines": { "node": ">=22" },
+  "devDependencies": { "playwright": "1.62.1" }
+}
