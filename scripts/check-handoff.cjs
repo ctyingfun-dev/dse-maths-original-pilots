@@ -17,7 +17,7 @@ for (const file of files) {
   const bytes = /\.(?:html|css|js|json|txt|svg)$/.test(file) ? Buffer.from(raw.toString("utf8").replace(/\r\n/g, "\n")) : raw;
   fingerprint.update(file + "\0").update(bytes).update("\0");
 }
-for (const file of ["verify-2024.cjs", "verify-2025.cjs", "verify-2026.cjs", "verify-notation.cjs"]) {
+for (const file of ["verify-2023.cjs", "verify-2024.cjs", "verify-2025.cjs", "verify-2026.cjs", "verify-notation.cjs"]) {
   execFileSync(process.execPath, [file], {cwd: root, stdio: "inherit"});
 }
 console.log(`Handoff complete: ${files.length} public assets and required editing documents exist.`);

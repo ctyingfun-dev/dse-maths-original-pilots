@@ -15,7 +15,9 @@ Read HANDOFF.md before editing this project. It contains setup, validation, depl
 - Use Traditional Chinese and direct Hong Kong examination wording. Do not add fill-in-the-blank, missing-term or error-correction questions unless explicitly requested.
 - Preserve the tested mathematical concepts and intended difficulty when adapting papers. Change numbers, variables and contexts meaningfully; update answers, hints, marks and diagrams together. Do not publish original examination scans.
 - Use `x 坐標`, `y 坐標`, `x 軸`, `y 軸`, `x 截距`, `y 截距`. Do not use horizontal/vertical Chinese alternatives for these terms. Preserve actual axis variables such as `t 軸` or `z 截距`.
-- Render identities with `≡` and numeric fractions as stacked fractions, including one half.
+- Render identities with `≡`. All division in questions, options, hints and solutions must use stacked fractions, including nested fractions and fractional exponents; never display a division slash or division sign. Keep parallel relations distinct from division.
+- Use Times New Roman for all Latin letters, digits and mathematical expressions on screen and in PDFs, including superscripts, subscripts and page numbers. Retain the existing Chinese font stacks. Do not redistribute proprietary font files; confirm actual font availability when working on a new device.
+- Keep reference solutions easy to scan: separate setup, substitution, calculations and conclusions into new lines, especially the 2025 papers. Preserve all mathematics and marks; keep grouped expressions, fractions and coordinates intact when inserting line breaks.
 - Every polar-coordinate question must have the adjacent visible label `已取消` in lists, practice and PDFs; retain its question and solution.
 - Prefer `求 c 及 d。` over `求所有可能的有序數對 (c,d)。`. Do not restore deleted stem-and-leaf example/key lines.
 - Paper 1 solutions use nonofficial DSE-style marking schemes, including method/accuracy marks. Do not add automatic marking for Paper 1.

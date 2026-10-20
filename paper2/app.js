@@ -5,8 +5,8 @@
   const curriculumNotice = window.pilotCurriculumNotice;
   const key = `dse-original-pilot-paper${data.paper}-${year}-v2`;
   const schema = 2;
-  const questionRevision = year===2024 ? 1 : year===2025 ? 2 : 5;
-  const questionRevisions = year===2024 ? [
+  const questionRevision = year===2023 || year===2024 ? 1 : year===2025 ? 2 : 5;
+  const questionRevisions = year===2023 || year===2024 ? [
     {revision:1, questions:data.questions.map(q=>q.n)}
   ] : year===2025 ? [
     {revision:2, questions:data.questions.map(q=>q.n)}
@@ -81,6 +81,7 @@
   function diagram(spec) {
     if (!spec) return "";
     const kind = typeof spec === "string" ? spec : spec.type;
+    if (kind.endsWith("2023")) return window.pilotDiagram2023(kind);
     if (kind.endsWith("2024")) return window.pilotDiagram2024(kind);
     if (kind.endsWith("2025")) return window.pilotDiagram2025(kind);
     if (year===2026 && window.pilotDiagram2026) return window.pilotDiagram2026(kind);
@@ -127,7 +128,7 @@
             <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
             <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
             <div class="header-tools">
-              <label class="mock-year">年份 <select id="mock-year">${[2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
+              <label class="mock-year">年份 <select id="mock-year">${[2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
           </div>
@@ -252,7 +253,7 @@
     return `${heading("技巧站")}<div class="guide-list">${topics.map(t=>{const q=data.questions.find(q=>q.topic===t);return `<details><summary>${curriculumNotice(q)}${esc(t)} <small>第 ${q.n} 題示例</small></summary><ol>${q.hints.map(h=>`<li>${math(h)}</li>`).join("")}</ol><strong>自己核對：</strong>${solutionHtml(q)}<button type="button" data-solo="${q.n}">操練第 ${q.n} 題</button></details>`;}).join("")}</div>`;
   }
   function solutionHtml(q) {
-    const lines=q.solution.split(/\n+|(?<=[。；])\s*/u).filter(line=>line.trim());
+    const lines=window.solutionLines(q.solution);
     return `<div class="solution-steps">${lines.map(line=>`<p>${math(line)}</p>`).join("")}</div>`;
   }
   function programsPage() {

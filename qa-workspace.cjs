@@ -26,12 +26,12 @@ async function printSnapshot(page) {
     const page = await browser.newPage();
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
-    for (const paper of [1,2]) for (const year of [2024,2025,2026]) {
+    for (const paper of [1,2]) for (const year of [2023,2024,2025,2026]) {
       await page.setViewportSize({width:1056,height:892});
       await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
       if (!before && paper === 1) {
         const textPreserved = await page.evaluate(() => {
-          const expected = window.PILOT.questions.flatMap(q => q.solution.flatMap(part => part.steps.flatMap(step => step.text))).map(text => {
+          const expected = window.PILOT.questions.flatMap(q => q.solution.flatMap(part => part.steps.flatMap(step => step.text))).flatMap(window.solutionLines).map(text => {
             const element = document.createElement("p");
             element.innerHTML = window.mathText(text);
             return element.textContent;
@@ -116,7 +116,7 @@ async function printSnapshot(page) {
       assert.equal(await page.locator("progress").getAttribute("value"), "1");
     }
     assert.deepEqual(errors, []);
-    console.log(before ? "Baseline screenshots and six print snapshots saved." : "Workspace passed: both papers, five widths, navigation, progress, timing, no duplicated stem, six unchanged print layouts.");
+    console.log(before ? "Baseline screenshots and eight print snapshots saved." : "Workspace passed: four years, both papers, five widths, navigation, progress, timing, no duplicated stem, eight print layouts isolated from screen CSS.");
   } finally {
     await browser.close();
   }

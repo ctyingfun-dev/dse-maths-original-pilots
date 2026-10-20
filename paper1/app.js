@@ -7,7 +7,7 @@
   const schema = 2;
   const marks = year!==2026 ? [0,...data.questions.map(q=>q.marks)] : [0,3,3,3,4,4,4,4,5,5,6,6,7,8,8,4,6,6,7,12];
   const letters = "ABCD";
-  const questionRevision = 2;
+  const questionRevision = year===2023 ? 1 : 2;
   const revisedQuestions = data.questions.map(q=>q.n);
   const blank = () => ({answers:{}, checked:{}, hints:{}, saved:[], questionRevision, startedAt:null, deadline:null, mode:"untimed", finished:false});
   let state = load();
@@ -71,11 +71,12 @@
   function solutionHtml(q) {
     const subtotal = part => part.steps.reduce((sum, step) => sum + parseInt(step.marks, 10), 0);
     const total = q.solution.reduce((sum, part) => sum + subtotal(part), 0);
-    return `<div class="solution-steps"><p class="scheme-key">1M：方法分；1A：準確分。接受其他正確方法及等值答案。</p><table class="marking-scheme"><caption>建議評分參考（非官方）</caption><colgroup><col><col class="scheme-score-column"></colgroup><thead><tr><th scope="col">解答及評分要點</th><th scope="col">分數</th></tr></thead>${q.solution.map(part=>`<tbody>${part.part?`<tr class="scheme-part"><th colspan="2" scope="rowgroup">${esc(part.part)} <span>（${subtotal(part)} 分）</span></th></tr>`:""}${part.steps.map(step=>`<tr class="scheme-step"><td class="scheme-answer">${step.text.map(line=>`<p>${math(line)}</p>`).join("")}</td><td class="scheme-score">${esc(step.marks)}</td></tr>`).join("")}</tbody>`).join("")}<tfoot><tr><th scope="row">全題總分</th><td class="scheme-total">${total}</td></tr></tfoot></table></div>`;
+    return `<div class="solution-steps"><p class="scheme-key">1M：方法分；1A：準確分。接受其他正確方法及等值答案。</p><table class="marking-scheme"><caption>建議評分參考（非官方）</caption><colgroup><col><col class="scheme-score-column"></colgroup><thead><tr><th scope="col">解答及評分要點</th><th scope="col">分數</th></tr></thead>${q.solution.map(part=>`<tbody>${part.part?`<tr class="scheme-part"><th colspan="2" scope="rowgroup">${esc(part.part)} <span>（${subtotal(part)} 分）</span></th></tr>`:""}${part.steps.map(step=>`<tr class="scheme-step"><td class="scheme-answer">${step.text.flatMap(window.solutionLines).map(line=>`<p>${math(line)}</p>`).join("")}</td><td class="scheme-score">${esc(step.marks)}</td></tr>`).join("")}</tbody>`).join("")}<tfoot><tr><th scope="row">全題總分</th><td class="scheme-total">${total}</td></tr></tfoot></table></div>`;
   }
   function diagram(spec) {
     if (!spec) return "";
     const kind = typeof spec === "string" ? spec : spec.type;
+    if (kind.endsWith("2023")) return window.pilotDiagram2023(kind);
     if (kind.endsWith("2024")) return window.pilotDiagram2024(kind);
     if (kind === "table2025") return `<table class="exam-table" aria-label="${esc(spec.label)}"><tbody>${spec.rows.map(row=>`<tr>${row.map((v,i)=>i?`<td>${math(v)}</td>`:`<th scope="row">${esc(v)}</th>`).join("")}</tr>`).join("")}</tbody></table>`;
     if (kind === "frequency") return `<div class="exam-table-pair">${spec.tables.map(table=>`<table class="exam-table" aria-label="${esc(table.label)}"><thead><tr>${table.rows[0].map(value=>`<th scope="col">${esc(value)}</th>`).join("")}</tr></thead><tbody>${table.rows.slice(1).map(row=>`<tr>${row.map(value=>`<td>${math(value)}</td>`).join("")}</tr>`).join("")}</tbody></table>`).join("")}</div>`;
@@ -120,7 +121,7 @@
             <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
             <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
             <div class="header-tools">
-              <label class="mock-year">年份 <select id="mock-year">${[2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
+              <label class="mock-year">年份 <select id="mock-year">${[2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
           </div>

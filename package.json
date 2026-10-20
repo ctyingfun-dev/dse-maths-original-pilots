@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.cjs",
     "check:handoff": "node scripts/check-handoff.cjs",
-    "check:maths": "node verify-2024.cjs && node verify-2025.cjs && node verify-2026.cjs && node verify-notation.cjs",
+    "check:maths": "node verify-2023.cjs && node verify-2024.cjs && node verify-2025.cjs && node verify-2026.cjs && node verify-notation.cjs",
     "check:layout": "node qa-workspace.cjs",
     "check:effects": "node qa-effects.cjs"
   },

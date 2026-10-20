@@ -1,7 +1,7 @@
 /* Screen-only workspace; the printed papers retain their examination layout. */
 :root {
-  --font-ui: "Chiron Hei HK UI", "Microsoft JhengHei", system-ui, sans-serif;
-  --font-title: "Chiron Sung HK UI", "PMingLiU", serif;
+  --font-ui: "Times New Roman", "Chiron Hei HK UI", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-title: "Times New Roman", "Chiron Sung HK UI", "PMingLiU", serif;
   --canvas: #edf7ff;
   --ink: #202a39;
   --secondary: #48576d;

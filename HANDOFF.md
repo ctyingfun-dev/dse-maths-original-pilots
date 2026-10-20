@@ -7,7 +7,7 @@
 - 儲存庫：https://github.com/ctyingfun-dev/dse-maths-original-pilots，主要分支 `main`。
 - 正式網站：https://dse-maths-original-pilots.pages.dev/，Cloudflare Pages 專案 `dse-maths-original-pilots`，Direct Upload。
 - 最新正式發佈：`20261020-clear-glass`。178 個公開檔案已逐一核對線上 SHA-256。已取消卡片內跟隨光標的柔光，保留磨砂、局部亮邊及低於 4 度的傾斜；首頁已使用放慢的莫比烏斯環撥動。題目、解答及 PDF 沒有因這次效果修改而改動。
-- 有 2024、2025、2026 三年份，每年卷一 19 題、卷二 45 題。資料及進度按年份／試卷隔離。
+- 工作版本有 2023、2024、2025、2026 四年份，共 256 題；每年卷一 19 題、卷二 45 題。2023 年及下述排版修訂尚未上架；正式網站仍為上列三年份版本。資料及進度按年份／試卷隔離。
 - 網站為 HTML/CSS/JavaScript 靜態檔案，無資料庫、無建置步驟；僅本機預覽需要 Node.js。字體及 Three.js 均已放在專案內。
 - 網站原始碼、修改規則和工具可以同步；登入、聊天記錄、個人 skill、瀏覽器收藏／作答進度不會隨 Git 自動同步。網站本身的備份功能可匯出／匯入進度，該 JSON 不應上傳 GitHub。
 
@@ -32,6 +32,20 @@ npx playwright install chromium
 ```
 
 Linux 若缺系統函式庫，按 Playwright 診斷安裝其需要的依賴。共用 browser-runtime 先讀本專案套件；本機既有 Codex runtime 只作後備，不是新裝置的必要條件。可設定 `BROWSER_CHANNEL=msedge` 使用已安裝 Edge。Python PDF 檢查另需 pdfplumber、Pillow 等工具；預覽和編輯不需要 Python。
+
+2026-10-20 最新字體要求：所有英文字母、數字及數式使用 Times New Roman，中文仍使用原有字體。網頁以系統已安裝字體優先，不把商業字體檔案放進儲存庫；新電腦須確認有 Times New Roman，否則瀏覽器會使用後備字體。`qa-typography.cjs` 會檢查真正使用的字形，不只看 CSS 宣告。PDF 檢查另需 `pypdfium2`；`qa-pdfs-2023.py --all` 會渲染及核對現有七份 PDF。
+
+## 2023 題庫及排版更新（未上架）
+
+2026-10-20 新增 2023 卷一 19 題、卷二 45 題、12 幅 SVG 幾何圖及兩份練習 PDF。卷一仍為 35+35+35=105 分；卷二第 24 題極坐標標示「已取消」，保留解答。逐題對照見 `SOURCE_ALIGNMENT_2023.md`。預設年份仍為 2026，2023 的兩卷進度及備份與舊年份隔離。
+
+同日按使用者最新要求，所有年份的英文／數字改用 Times New Roman，Unicode 上下標改為真正的上、下標；參考解答在句界、適當的運算步驟開新行，保持原解答及配分。除法一律以分數呈現，包括複合分式、角度／百分率分式及分數指數。七份練習 PDF 一併更新字體及數學排版，沒有加入解答或縮小作答空間。公開檔案清單現為 184 檔。
+
+本機已完成 256 題驗算、用語／全部除法顯示檢查、2023 功能／備份測試、四年份解答逐字及配分保留、五種寬度與字體檢查；首頁及進度隔離測試亦通過。七份 PDF 頁數依序為：2023 卷一 14、卷二 21；2024 卷一 15、卷二 21；2025 卷一 15、卷二 21；2026 卷一 14。重新產生後仍須檢查實際頁數及頁邊。
+
+工作基底為 `b6571c9`；使用者已要求把本次修改提交及推送至 GitHub。本機提交身份沿用儲存庫既有作者，GitHub 存取使用官方裝置授權，不把憑證放入專案。跨裝置同步必須以推送後重新 fetch 並核對 `HEAD` 與 `origin/main` 一致為準，不能把「fetch 成功」當作「有推送權限」。Cloudflare 未更新，仍須等使用者說「上架」。
+
+本次工作版本的網站內容指紋（文字換行正規化）：`6e380dbfb6c9cfaead6fee07c45ca0a84529732f0a231a3e3eb71301fa2ec29d`。首頁動態、互動效果、備份／篩選及四年份工作區回歸測試已通過；七份 PDF 全部渲染並目視檢查。
 
 ## 每次切換電腦
 
@@ -74,7 +88,7 @@ Linux 若缺系統函式庫，按 Playwright 診斷安裝其需要的依賴。�
 
 ## 驗證
 
-`node scripts/check-handoff.cjs` 不需額外套件：檢查公開檔案、交接文件及三年份數學／用語驗證，輸出忽略文字換行差異的網站指紋。它不會證明所有 UI 行為正確，也不代替 Git 遠端同步檢查。
+`node scripts/check-handoff.cjs` 不需額外套件：檢查公開檔案、交接文件及四年份數學／用語驗證，輸出忽略文字換行差異的網站指紋。它不會證明所有 UI 行為正確，也不代替 Git 遠端同步檢查。
 
 啟動本機伺服器後，安裝 Playwright 即可按修改範圍執行：
 
@@ -83,11 +97,14 @@ node qa-workspace.cjs
 node qa-effects.cjs
 node qa-home.cjs
 node qa-orbit.cjs
+node qa-2023.cjs
+node qa-typography.cjs
+node qa-solutions.cjs
 ```
 
-`PREVIEW_URL` 可指定其他本機埠。`qa-workspace.cjs` 涵蓋三年份、兩卷及不同螢幕寬度；沒有歷史列印快照時，仍會檢查 screen CSS 不影響當前列印。舊的 palette/smoke 測試可能包含先前設計的外觀假設，應按當前 AGENTS.md 與真實問題判斷，不能為通過舊測試而恢復已取消設計。不同作業系統的中文字體後備及 PDF 字形可能不同，重新產生 PDF 後必須目視檢查換行、題號及作答空間。
+`PREVIEW_URL` 可指定其他本機埠。`qa-workspace.cjs` 涵蓋四年份、兩卷及不同螢幕寬度；沒有歷史列印快照時，仍會檢查 screen CSS 不影響當前列印。舊的 palette/smoke 測試可能包含先前設計的外觀假設，應按當前 AGENTS.md 與真實問題判斷，不能為通過舊測試而恢復已取消設計。不同作業系統的中文字體後備及 PDF 字形可能不同，重新產生 PDF 後必須目視檢查換行、題號及作答空間。
 
-PDF 產生範例：`node build-paper1-pdf.cjs 2024 1`。現有工具支援 2024/2025 兩卷及 2026 卷一；2026 卷二沒有此作答空間 PDF 模式。未修改題目或列印時不要無故重新產生 PDF。
+PDF 產生範例：`node build-paper1-pdf.cjs 2023 1`。現有工具支援 2023/2024/2025 兩卷及 2026 卷一；2026 卷二沒有此作答空間 PDF 模式。未修改題目或列印時不要無故重新產生 PDF。
 
 ## 上架
 

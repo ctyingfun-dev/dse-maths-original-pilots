@@ -1,4 +1,4 @@
-# 2024／2025／2026 對應原創模擬卷
+# 2023／2024／2025／2026 對應原創模擬卷
 
 網站：[卷一](https://dse-maths-original-pilots.pages.dev/paper1/) · [卷二](https://dse-maths-original-pilots.pages.dev/paper2/)
 
@@ -6,7 +6,11 @@
 
 目前正式版本為 `20261020-clear-glass`（178 個公開檔案）。下文按日期保留較早發佈及設計紀錄，不代表仍應使用舊版樣式或檔案清單。
 
-三個年份、各兩份獨立試版：`paper1/` 每年對應卷一第 1 至 19 道大題，`paper2/` 每年對應卷二第 1 至 45 題。預設 2026，可用頁首年份選單或網址 `?year=2024`、`?year=2025` 切換。題號、課題和主要解題方法逐題對照；題幹、數值、選項和 SVG 示意圖重新編寫，並非考評局試卷或官方答案。
+工作版本共有四個年份、各兩份獨立試版：`paper1/` 每年對應卷一第 1 至 19 道大題，`paper2/` 每年對應卷二第 1 至 45 題。預設 2026，可用頁首年份選單或網址 `?year=2023`、`?year=2024`、`?year=2025` 切換。題號、課題和主要解題方法逐題對照；題幹、數值、選項和 SVG 示意圖重新編寫，並非考評局試卷或官方答案。
+
+2026-10-20 本機新增（未上架）：2023 兩卷共 64 題、卷一建議 M/A 評分、卷二批改及兩份附空白作答空間的 PDF，逐題對照見 `SOURCE_ALIGNMENT_2023.md`。保留其他年份及隔離進度。另按最新要求把所有英文、數字、上下標及數學式改回 Times New Roman，保留中文字體；參考解答改為分步分行，所有除法改用上下排列的分數，包括複合分式及分數指數。七份 PDF 已配合重建，公開清單現為 184 檔。
+
+新增檢查：`node verify-2023.cjs`、`node qa-2023.cjs`、`node qa-solutions.cjs`、`node qa-typography.cjs`、`python qa-pdfs-2023.py --all`。本次檢查全部通過；使用者已要求同步 GitHub，另一部電腦須按 HANDOFF 的流程取得最新 `origin/main`，不要使用舊交接 ZIP 覆蓋。GitHub 同步不代表 Cloudflare 已上架。下文較早的字體、檔案數及發佈紀錄屬歷史，不覆蓋此處及 AGENTS 的最新要求。
 
 2026-10-20 正式發佈 `20261020-starlight`：星空主頁及先前的試卷版面修訂已上架至現有 Cloudflare Production 網站。35 個公開檔案逐一下載並比對 SHA-256，全部與本機一致，包括五份 PDF；線上 `qa-home.cjs` 的七組桌面／手機／橫向尺寸、實際星點運動、點擊／觸控／鍵盤入口、三年份與進度隔離、減少動態、WebGL 恢復及降級入口檢查通過。發佈不含原卷、測試截圖、學生資料或本機紀錄，GitHub 備用網站未同步。核對紀錄位於 `tmp/publish-20261020-starlight-verified.json`，Cloudflare 成功畫面位於 `tmp/cloudflare-published-20261020-starlight.jpg`。
 
