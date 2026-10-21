@@ -33,6 +33,7 @@
 !/qa-2023.cjs
 !/qa-typography.cjs
 !/qa-solutions.cjs
+!/qa-check-answers.cjs
 !/qa-pdfs-2023.py
 !/SOURCE_ALIGNMENT_2023.md
 !/verify-notation.cjs

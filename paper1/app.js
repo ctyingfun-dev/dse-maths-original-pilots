@@ -249,7 +249,7 @@
         <details><summary>自訂 P4 · 多項式長除法</summary><p>把被除式由 x⁴ 至常數排好，缺項補 0，最後輸入一次式除式的兩個係數。</p><p>例：(2x⁴ + x³ + 3x² + 4x + 5) ÷ (x + 2)，依次輸入 2、1、3、4、5、1、2。商為 2x³ - 3x² + 9x - 14，餘數 33。以「除式 × 商 + 餘數」檢查。</p></details>
       </div><p class="note">按鍵參照現有卷一計算機教學整理；此原創試版不附老師自訂 P1–P4 程式原稿，未以實體計算機逐鍵測試。</p>`;
   }
-  function examPrompt(q, screenOnly=false) {
+  function parseExamPrompt(q) {
     const clean=q.prompt.replace(/（輸入[^）]*）/g,"").replace(/(?:只)?輸入[^。]*。/g,"").trim();
     const labels=[...clean.matchAll(/(^|[。！？；，：\n])\s*(\([a-d]\))/g)];
     const stem=labels.length?clean.slice(0,labels[0].index+labels[0][1].length).trim():clean;
@@ -258,6 +258,18 @@
       text:clean.slice(match.index+match[0].length,
         i+1<labels.length?labels[i+1].index+labels[i+1][1].length:undefined).trim()
     })).filter(part=>part.text);
+    const partMarks=Object.fromEntries(parts.map(({label})=>{
+      const steps=(q.solution || []).filter(part=>part.part?.match(/^\(([a-d])\)/)?.[1]===label).flatMap(part=>part.steps);
+      const derived=steps.reduce((sum,step)=>sum+(/^[1-9]\d*[MA]$/.test(step.marks)?parseInt(step.marks,10):NaN),0);
+      return [label,q.markGroups?.[label] ?? derived];
+    }));
+    const complete=parts.length>0 && new Set(parts.map(part=>part.label)).size===parts.length &&
+      parts.every(part=>Number.isInteger(partMarks[part.label]) && partMarks[part.label]>0) &&
+      parts.reduce((sum,part)=>sum+partMarks[part.label],0)===q.marks;
+    return {stem,parts,partMarks,complete};
+  }
+  function examPrompt(q, screenOnly=false, parsed=parseExamPrompt(q)) {
+    const {stem,parts,partMarks}=parsed;
     const partHtml=part=>{
       const bits=part.text.split(/(\((?:i|ii|iii)\))/);
       if(bits.length===1) return `<p>${math(part.text).replace(/\n/g,"<br>")}</p>${diagram(q.partDiagrams?.[part.label])}`;
@@ -267,7 +279,7 @@
       return html;
     };
     const stemHtml=`<p class="exam-stem">${curriculumNotice(q)}${math(stem).replace(/\n/g,"<br>")}</p>${diagram(q.diagram)}`;
-    const renderPart=part=>`<div class="exam-part"><span>(${part.label})</span><div>${partHtml(part)}${q.markGroups?.[part.label]?`<p class="exam-part-marks">（${q.markGroups[part.label]} 分）</p>`:""}</div></div>`;
+    const renderPart=part=>`<div class="exam-part"><span>(${part.label})</span><div>${partHtml(part)}${partMarks[part.label]>0?`<p class="exam-part-marks${q.markGroups?.[part.label]?"":" print-only-marks"}">（${partMarks[part.label]} 分）</p>`:""}</div></div>`;
     if(q.splitPrint&&!screenOnly) return parts.map((part,i)=>`<div class="print-segment">${i===0?stemHtml:`<p class="print-continuation">第 ${q.n} 題（續）</p>`}<div class="exam-parts">${renderPart(part)}</div>${i===parts.length-1?`<div class="exam-marks">（${marks[q.n]} 分）</div>`:""}<div class="print-answer-space" style="--answer-height:${i===0?42:70}mm" aria-hidden="true"></div></div>`).join("");
     return `${stemHtml}${parts.length?`<div class="exam-parts">${parts.map(renderPart).join("")}</div>`:""}`;
   }
@@ -281,7 +293,8 @@
     const answerHeight=marks[q.n]<=4?42:marks[q.n]<=7?70:marks[q.n]<=8?84:112;
     const tools=`<div class="study-tools"><button type="button" class="outline" data-hint="${q.n}" ${shown>=q.hints.length?"disabled":""}>逐步提示 ${shown}/${q.hints.length}</button>${data.paper===2?`<button type="button" data-check="${q.n}" ${selected(q)?"":"disabled"}>批改這題</button>`:""}${inline?"":`<button type="button" class="bookmark" data-bookmark="${q.n}" aria-label="收藏第 ${q.n} 題">${state.saved.includes(q.n)?"★":"☆"}</button>`}</div>${shown?`<ol class="hints">${q.hints.slice(0,shown).map(h=>`<li>${math(h)}</li>`).join("")}</ol>`:""}${feedback}${data.paper===1?`<details class="worked-answer"><summary>參考解答</summary>${solutionHtml(q)}</details>`:""}`;
     if(inline) return `<div class="inline-practice" id="question-${q.n}">${input}${tools}</div>`;
-    return `<article class="question exam-question${q.splitPrint?" split-print":""}" id="question-${q.n}"><div class="exam-body"><h2>${q.n}.</h2><div class="exam-content">${examPrompt(q)}${input}${data.paper===1&&!q.splitPrint?`<div class="exam-marks">（${marks[q.n]} 分）</div><div class="print-answer-space" style="--answer-height:${answerHeight}mm" aria-hidden="true"></div>`:""}</div></div>${tools}</article>`;
+    const parsed=parseExamPrompt(q);
+    return `<article class="question exam-question${q.splitPrint?" split-print":""}${parsed.complete?" print-part-marks":" print-total-marks"}" id="question-${q.n}"><div class="exam-body"><h2>${q.n}.</h2><div class="exam-content">${examPrompt(q,false,parsed)}${input}${data.paper===1&&!q.splitPrint?`<div class="exam-marks">（${marks[q.n]} 分）</div><div class="print-answer-space" style="--answer-height:${answerHeight}mm" aria-hidden="true"></div>`:""}</div></div>${tools}</article>`;
   }
   function sectionTitle(q) {
     if (data.paper===1) return {1:"甲部（1）（35 分）",10:"甲部（2）（35 分）",15:"乙部（35 分）"}[q.n];

@@ -385,6 +385,8 @@ body {
   backdrop-filter: blur(12px);
 }
 .study-tools button, .export-pdf, .paper-intro .start .outline { background: #ffffffb3; }
+.study-tools button[data-check] { background: var(--accent); color: #fff; }
+.study-tools button[data-check]:disabled { background: #eeeaf7; color: #675b7b; opacity: 1; }
 :where(input:not([type="radio"]):not([type="checkbox"]), select, button, .import-label, .export-pdf) {
   background-image: linear-gradient(125deg, #ffffff1f, #ffffff00);
   -webkit-backdrop-filter: blur(12px);

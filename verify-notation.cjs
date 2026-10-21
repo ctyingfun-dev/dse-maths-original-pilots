@@ -35,6 +35,9 @@ for (const paper of [1,2]) {
   assert.equal(render("a⁻⁵"), render("a^(-5)"));
   assert.equal(render("aₙ₊₂"), "<var>a</var><sub><var>n</var><span class=\"math-op\">+</span>2</sub>");
   assert.equal(render("log₂x"), "log<sub>2</sub><var>x</var>");
+  assert.doesNotMatch(render("180 g，10 g，280 g，質量（g），27.9 kg"), /<var>g<\/var>/);
+  assert.match(render("g=t-2975/(2t)"), /^<var>g<\/var>/);
+  assert.match(render("2g及g(t)"), /<var>g<\/var>/);
   assert.equal(render("log_(β)α"), "log<sub><var>β</var></sub><var>α</var>");
   assert.match(render("a⁻⁵b²/((a³b⁴)⁻³)"), /<sup>4<\/sup>/);
   assert.doesNotMatch(render("a⁻⁵b²/((a³b⁴)⁻³)").replace(/<[^>]+>/g,""), /[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]/);
@@ -65,7 +68,7 @@ for (const paper of [1,2]) {
       assert.ok(identity.prompt.includes("≡"));
       if (year === 2026) {
         const q = data.questions;
-        assert.match(q[13].solution, /共同 z 截距/);
+        assert.match(q[13].solution, /共同(?:的)? z 截距/);
         assert.match(q[14].prompt, /z 截距.*y 截距/);
         assert.match(q[23].prompt, /x 坐標/);
         assert.match(q[26].prompt, /圓心的 x 坐標/);

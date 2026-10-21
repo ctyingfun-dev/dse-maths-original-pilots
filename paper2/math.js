@@ -133,7 +133,9 @@
         let end=i+1;
         while(end<text.length && /[A-Za-z]/.test(text[end])) end++;
         const word=text.slice(i,end);
-        result+=upright.has(word) ? escape(word) : `<var>${escape(word)}</var>`;
+        const prefix=text.slice(0,i);
+        const gramUnit=word==="g" && (/\d\s+$/.test(prefix) || /(?:質量|重量|單位)[（(]\s*$/.test(prefix));
+        result+=upright.has(word) || gramUnit ? escape(word) : `<var>${escape(word)}</var>`;
         i=end;
         continue;
       }

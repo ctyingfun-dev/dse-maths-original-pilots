@@ -38,6 +38,7 @@ sup{top:-.5em}sub{bottom:-.2em}
 .exam-part .exam-part-marks{text-align:right;font-size:16px;margin-top:8px}
 .exam-marks{text-align:right;font-size:16px;margin:12px 0 0}
 .print-answer-space,.print-continuation{display:none}
+.exam-part .print-only-marks{display:none}
 .export-pdf{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:7px 12px;border:1px solid var(--border,#b7d2d1);border-radius:6px;background:white;color:var(--accent-strong,#176c66);font-size:14px;font-weight:700;white-space:nowrap}
 .export-pdf:hover{background:var(--accent-soft,#edf6f4)}
 .export-pdf span{font-size:20px;line-height:1}
@@ -135,6 +136,8 @@ sup{top:-.5em}sub{bottom:-.2em}
   .exam-part{grid-template-columns:1.7em minmax(0,1fr);gap:6px}
   .exam-marks{font-size:12pt;margin:2mm 0}
   .exam-part .exam-part-marks{font-size:12pt;margin-top:1mm}
+  .print-part-marks .exam-part .print-only-marks{display:block}
+  .print-part-marks .exam-marks,.print-total-marks .exam-part-marks{display:none}
   .print-answer-space{display:block;min-height:var(--answer-height);border:0;background:none}
   .split-print{break-inside:auto}
   .split-print .exam-body{display:block}
