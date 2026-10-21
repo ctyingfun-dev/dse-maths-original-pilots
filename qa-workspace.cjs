@@ -31,12 +31,13 @@ async function printSnapshot(page) {
       await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
       if (!before && paper === 1) {
         const textPreserved = await page.evaluate(() => {
-          const expected = window.PILOT.questions.flatMap(q => q.solution.flatMap(part => part.steps.flatMap(step => step.text))).flatMap(window.solutionLines).map(text => {
+          const plain = text => {
             const element = document.createElement("p");
             element.innerHTML = window.mathText(text);
-            return element.textContent;
-          });
-          return JSON.stringify(expected) === JSON.stringify([...document.querySelectorAll(".scheme-answer p")].map(p => p.textContent));
+            return element.textContent.replace(/\s+/g, "");
+          };
+          const expected = window.PILOT.questions.flatMap(q => q.solution.flatMap(part => part.steps.map(step => step.text.map(plain).join(""))));
+          return JSON.stringify(expected) === JSON.stringify([...document.querySelectorAll(".scheme-answer")].map(cell => cell.textContent.replace(/\s+/g, "")));
         });
         assert.ok(textPreserved, `Mathematical answer text changed in ${year}`);
       }

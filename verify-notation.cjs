@@ -15,11 +15,12 @@ for (const paper of [1,2]) {
   const {mathText:render,solutionLines} = load(`paper${paper}/math.js`);
   const lines=text=>Array.from(solutionLines(text));
   assert.deepEqual(lines("設 h=7c 及 j=5c。"),["設 h=7c 及 j=5c。"]);
-  assert.deepEqual(lines("R(10,5-h)；由共線，(5-h)/10=(-10)/5。"),["R(10,5-h)；","由共線，","(5-h)/10=(-10)/5。"]);
-  assert.deepEqual(lines("周界=40+45+10=95 cm。"),["周界=40+45+10","=95 cm。"]);
-  assert.deepEqual(lines("sin h=3/5、cos h=4/5。"),["sin h=3/5、","cos h=4/5。"]);
+  assert.deepEqual(lines("R(10,5-h)；由共線，(5-h)/10=(-10)/5。"),["R(10,5-h)；","由共線，(5-h)/10=(-10)/5。"]);
+  assert.deepEqual(lines("周界=40+45+10=95 cm。"),["周界=40+45+10=95 cm。"]);
+  assert.deepEqual(lines("sin h=3/5、cos h=4/5。"),["sin h=3/5、cos h=4/5。"]);
   assert.deepEqual(lines("f=7、8、9。"),["f=7、8、9。"]);
-  assert.deepEqual(lines("F(x)=(x+1)/(x-1)=2。"),["F(x)=(x+1)/(x-1)","=2。"]);
+  assert.deepEqual(lines("F(x)=(x+1)/(x-1)=2。"),["F(x)=(x+1)/(x-1)=2。"]);
+  assert.deepEqual(lines("log₁₁α+log₁₁β=log₁₁(11²)=2。"),["log₁₁α+log₁₁β=log₁₁(11²)=2。"]);
   assert.equal(render("logᵣ625"),"log<sub><var>r</var></sub>625");
   for(const [source,top,bottom] of [
     ["sin∠KJL/7","sin∠KJL","7"],["sin65°/8","sin65°","8"],
@@ -29,7 +30,14 @@ for (const paper of [1,2]) {
     ["(120-595/12)(119-169/2)/2","(120-595/12)(119-169/2)","2"]
   ]) assert.ok(render(source).includes(`aria-label="${top} 除以 ${bottom}"`),source);
   assert.match(render("x^(2/3)"), /<sup><span class="math-frac"/);
-  assert.match(render("√(a/b)"), /√\(<span class="math-frac"/);
+  assert.match(render("√(a/b)"), /<msqrt><mtext><span class="math-radicand"><span class="math-frac"/);
+  for(const source of ["√t","√58","√207.5393863","√(34/5)","√((3√3)²+3²)","33/(5√58)","1/√3","√[(Σx²)/N-((Σx)/N)²]"]) {
+    const rendered=render(source);
+    assert.equal((rendered.match(/<msqrt>/g)||[]).length,(source.match(/√/g)||[]).length,source);
+    assert.doesNotMatch(rendered.replace(/<[^>]+>/g,""),/√/,source);
+  }
+  assert.match(render("6√10π"), /<span class="math-radicand">10<\/span><\/mtext><\/msqrt><\/math><var>π<\/var>$/);
+  assert.match(render("√3d"), /<span class="math-radicand">3<\/span><\/mtext><\/msqrt><\/math><var>d<\/var>$/);
   assert.equal(render("12÷5"),render("12/5"));
   assert.equal(render("a⁴b¹⁴"), "<var>a</var><sup>4</sup><var>b</var><sup>14</sup>");
   assert.equal(render("a⁻⁵"), render("a^(-5)"));
@@ -38,6 +46,7 @@ for (const paper of [1,2]) {
   assert.doesNotMatch(render("180 g，10 g，280 g，質量（g），27.9 kg"), /<var>g<\/var>/);
   assert.match(render("g=t-2975/(2t)"), /^<var>g<\/var>/);
   assert.match(render("2g及g(t)"), /<var>g<\/var>/);
+  for(const criterion of ["SAS","SSS","ASA","AAS","RHS"]) assert.equal(render(criterion),criterion);
   assert.equal(render("log_(β)α"), "log<sub><var>β</var></sub><var>α</var>");
   assert.match(render("a⁻⁵b²/((a³b⁴)⁻³)"), /<sup>4<\/sup>/);
   assert.doesNotMatch(render("a⁻⁵b²/((a³b⁴)⁻³)").replace(/<[^>]+>/g,""), /[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]/);
@@ -55,11 +64,13 @@ for (const paper of [1,2]) {
     const data = Object.values(load(`paper${paper}/data-${year}.js`))[0];
     assert.equal(data.questions.length, paper === 1 ? 19 : 45);
     assert.doesNotMatch(JSON.stringify(data), /[橫縱横纵]|恆等於|恒等于/);
+    assert.doesNotMatch(JSON.stringify(data), /角邊角|角角邊|邊角邊|邊邊邊|斜邊直角邊/);
     for(const q of data.questions) {
       const solution=Array.isArray(q.solution)?q.solution.flatMap(p=>p.steps.flatMap(s=>s.text)):[q.solution];
       for(const text of [q.prompt,q.answer,q.correct,...q.hints,...solution,...(q.options||[])].filter(Boolean)) {
         const visible=render(text).replace(/<span class="math-parallel"[^>]*>.*?<\/span>/g,"").replace(/<[^>]+>/g,"");
         assert.doesNotMatch(visible,/[\/÷]/,`${year} P${paper} Q${q.n}: ${text}`);
+        assert.doesNotMatch(visible,/√/,`${year} P${paper} Q${q.n}: uncovered root: ${text}`);
       }
     }
     questions += data.questions.length;
@@ -83,6 +94,7 @@ for (const paper of [1,2]) {
   const topics = load(`paper${paper}/dse-topics.js`).DSE_TOPICS;
   const items = topics.groups || topics.questions;
   assert.doesNotMatch(JSON.stringify(items), /[橫縱横纵]/);
+  assert.doesNotMatch(JSON.stringify(items), /角邊角|角角邊|邊角邊|邊邊邊|斜邊直角邊/);
   summaries += items.length;
 }
 console.log(`Notation verified: ${questions} questions, ${summaries} topic summaries, both math renderers.`);

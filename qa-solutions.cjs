@@ -30,7 +30,7 @@ const output=path.join(__dirname,"tmp/qa-solutions");
           const lines=[...document.querySelectorAll(`#question-${q.n} ${selector}`)];
           const source=window.PILOT.paper===1?q.solution.flatMap(p=>p.steps.flatMap(s=>s.text)):[q.solution];
           return {n:q.n,preserved:source.map(plain).join("")===lines.map(n=>n.textContent.replace(/\s+/g,"")).join(""),
-            lines:lines.length,expected:source.flatMap(window.solutionLines).length,
+            lines:lines.length,expected:(window.PILOT.paper===1?q.solution.flatMap(p=>p.steps.map(s=>s.text)):[q.solution]).flatMap(window.solutionLayout).reduce((sum,b)=>sum+(b.type==="text"?1:b.rows.length),0),
             marks:[...document.querySelectorAll(`#question-${q.n} .scheme-score`)].reduce((s,n)=>s+parseInt(n.textContent,10),0),total:q.marks};
         });
       });
@@ -38,17 +38,17 @@ const output=path.join(__dirname,"tmp/qa-solutions");
       assert.ok(check.every(q=>q.lines===q.expected));
       if(paper===1) assert.ok(check.every(q=>q.marks===q.total));
       else assert.equal(await page.locator(".feedback.success").count(),45);
-      for(const width of [1440,1056,768,390,320]) {
+      for(const width of [1440,1056,768,691,455,390,320]) {
         await page.setViewportSize({width,height:892});
         await page.evaluate(()=>document.fonts.ready);
-        const overflow=await page.locator(".scheme-answer p,.scheme-score,.solution-steps p").evaluateAll(nodes=>nodes.filter(n=>n.scrollWidth>n.clientWidth+2).map(n=>({q:n.closest("article").id,text:n.textContent})));
-        assert.deepEqual(overflow,[]);
+        const overflow=await page.locator(".scheme-answer p,.scheme-score,.solution-steps p,.math-root").evaluateAll(nodes=>nodes.filter(n=>n.clientWidth && n.scrollWidth>n.clientWidth+2 && ![n,n.closest(".solution-calculation")].some(parent=>parent && getComputedStyle(parent).overflowX==="auto")).map(n=>({q:n.closest("article")?.id,text:n.textContent})));
+        assert.deepEqual(overflow,[],`${year} P${paper} ${width}`);
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
         if(year===2025&&[1056,390].includes(width)) for(const n of paper===1?[8,14,18,19]:[8,36,40,45]) {
           await page.locator(`#question-${n} .solution-steps`).screenshot({path:path.join(output,`2025-p${paper}-q${n}-${width}.png`)});
         }
       }
-      console.log(`${year} P${paper}: all original solution text and marks preserved; ${check.reduce((s,q)=>s+q.lines,0)} readable lines; five widths passed.`);
+      console.log(`${year} P${paper}: all original solution text and marks preserved; ${check.reduce((s,q)=>s+q.lines,0)} readable lines; seven widths passed.`);
     }
     assert.deepEqual(errors,[]);
   } finally {await browser.close();}

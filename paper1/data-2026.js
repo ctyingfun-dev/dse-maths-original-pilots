@@ -39,7 +39,7 @@
     [part("(a)",step("1M","設 KL=d cm，則 NP=d cm，LN=LK+KN=(d+5) cm。","由 KM//NP，∠LKM=∠LNP（同位角）。","又 ∠KLM=∠NLP（共同角），故 △LKM∼△LNP（兩角相等）。","對應邊成比例：KM/NP=LK/LN。","代入得 16/d=d/(d+5)。"),
       step("1A","交叉相乘得 16(d+5)=d²。","展開及移項得 d²-16d-80=0。","因式分解得 (d-20)(d+4)=0，故 d=20 或 -4。","長度必須為正，捨去 -4，所以 KL=20 cm。")),
       part("(b)",step("1A","JK=JM+MK=9+16=25 cm。","LN=LK+KN=20+5=25 cm，故 JK=LN。","又已知 KL=NP=20 cm。"),
-        step("1A","J、M、K 共線，且 KM//NP，所以 JK//NP。","又 KL 與 LN 共線，故 ∠JKL=∠LNP（同位角）。"),step("1A","兩組對應邊 JK=LN、KL=NP，且夾角 ∠JKL=∠LNP。","所以 △JKL≅△LNP（邊角邊）。"))],
+        step("1A","J、M、K 共線，且 KM//NP，所以 JK//NP。","又 KL 與 LN 共線，故 ∠JKL=∠LNP（同位角）。"),step("1A","兩組對應邊 JK=LN、KL=NP，且夾角 ∠JKL=∠LNP。","所以 △JKL≅△LNP（SAS）。"))],
     ["先設 KL=d，並以 d 表示 LN。","由平行線找 △LKM 與 △LNP 的對應邊。","代入 KL=NP，解二次方程並捨去負根。","(b) 計算 JK 及 LN，再找兩組等長邊的夾角。"],
     {diagram:"joinedParallel"});
   add("頻數與組中值","下列頻數分布表及累積頻數分布表顯示30台機器的保養時間（分鐘）。\n(a) 求 p 及 q。\n(b) 求該分布的估計平均保養時間。",5,"347/6",

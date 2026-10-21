@@ -5,7 +5,7 @@ const crypto = require("node:crypto");
 const {execFileSync} = require("node:child_process");
 const {files} = require("./publish.cjs");
 const root = path.resolve(__dirname, "..");
-const required = [...files, "AGENTS.md", "HANDOFF.md", "CODEX_PROMPT.txt", "server.cjs", "package.json", "package-lock.json", "scripts/browser-runtime.cjs", "scripts/publish.cjs"];
+const required = [...files, "AGENTS.md", "HANDOFF.md", "SOLUTION_STYLE.md", "CODEX_PROMPT.txt", "server.cjs", "package.json", "package-lock.json", "scripts/browser-runtime.cjs", "scripts/publish.cjs"];
 assert.equal(new Set(files).size, files.length, "Duplicate public files");
 for (const file of required) {
   assert.ok(fs.statSync(path.join(root, file)).isFile(), `Missing file: ${file}`);
@@ -17,7 +17,7 @@ for (const file of files) {
   const bytes = /\.(?:html|css|js|json|txt|svg)$/.test(file) ? Buffer.from(raw.toString("utf8").replace(/\r\n/g, "\n")) : raw;
   fingerprint.update(file + "\0").update(bytes).update("\0");
 }
-for (const file of ["verify-2023.cjs", "verify-2024.cjs", "verify-2025.cjs", "verify-2026.cjs", "verify-notation.cjs"]) {
+for (const file of ["verify-2023.cjs", "verify-2024.cjs", "verify-2025.cjs", "verify-2026.cjs", "verify-notation.cjs", "verify-solution-layout.cjs"]) {
   execFileSync(process.execPath, [file], {cwd: root, stdio: "inherit"});
 }
 console.log(`Handoff complete: ${files.length} public assets and required editing documents exist.`);

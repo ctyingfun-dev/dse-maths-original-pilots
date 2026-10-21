@@ -33,6 +33,9 @@
 !/qa-2023.cjs
 !/qa-typography.cjs
 !/qa-solutions.cjs
+!/qa-marking-layout.cjs
+!/verify-solution-layout.cjs
+!/SOLUTION_STYLE.md
 !/qa-check-answers.cjs
 !/qa-pdfs-2023.py
 !/SOURCE_ALIGNMENT_2023.md

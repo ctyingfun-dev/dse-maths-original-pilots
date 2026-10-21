@@ -3,7 +3,7 @@
 GitHub：https://github.com/ctyingfun-dev/dse-maths-original-pilots
 正式網站：https://dse-maths-original-pilots.pages.dev/
 
-請先閱讀專案內 AGENTS.md、HANDOFF.md 和 README.md，再開始工作。我之前的修改要求已寫在文件內，請不要因為看不到舊對話而重設網站設計或題目。
+請先閱讀專案內 AGENTS.md、HANDOFF.md 和 README.md，再開始工作。新增或修改解答前也須閱讀 SOLUTION_STYLE.md：最新要求是參照使用者提供的評卷參考，按步驟左對齊，不用對齊等號；根號要有頂線，分式及根號內部不可拆行。我之前的修改要求已寫在文件內，請不要因為看不到舊對話而重設網站設計或題目。
 
 如果本機沒有專案，請 clone 上述 GitHub 儲存庫；如果已有專案，先檢查未提交修改，再 fetch。只有工作目錄乾淨時才 pull --ff-only。不要強行覆蓋任何一部電腦的修改。若我交給你的是 ZIP，請按 HANDOFF.md 的 ZIP 交接方法處理，先和 GitHub 最新版本比對。
 

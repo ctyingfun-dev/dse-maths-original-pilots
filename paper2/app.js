@@ -253,8 +253,7 @@
     return `${heading("技巧站")}<div class="guide-list">${topics.map(t=>{const q=data.questions.find(q=>q.topic===t);return `<details><summary>${curriculumNotice(q)}${esc(t)} <small>第 ${q.n} 題示例</small></summary><ol>${q.hints.map(h=>`<li>${math(h)}</li>`).join("")}</ol><strong>自己核對：</strong>${solutionHtml(q)}<button type="button" data-solo="${q.n}">操練第 ${q.n} 題</button></details>`;}).join("")}</div>`;
   }
   function solutionHtml(q) {
-    const lines=window.solutionLines(q.solution);
-    return `<div class="solution-steps">${lines.map(line=>`<p>${math(line)}</p>`).join("")}</div>`;
+    return `<div class="solution-steps">${window.solutionHtml(q.solution)}</div>`;
   }
   function programsPage() {
     return `${heading("計算機 Program","fx-50FH II")}

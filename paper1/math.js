@@ -4,6 +4,7 @@
   })[c]);
   const upright = new Set(["cm", "mm", "km", "mL", "kg", "sin", "cos", "tan", "log", "min", "max", "MODE", "SD", "SHIFT", "EXE", "FMLA", "DSE", "DEG", "P1", "P2", "P3", "P4", "I", "II", "III"]);
   const matching = {"(":")", "[":"]"};
+  for(const criterion of ["SAS","SSS","ASA","AAS","RHS"]) upright.add(criterion);
   const superscripts = Object.fromEntries([..."⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱᵗ"].map((c,i)=>[c,"0123456789+-=()nit"[i]]));
   const subscripts = Object.fromEntries([..."₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₙᵣₛₕ"].map((c,i)=>[c,"0123456789+-=()nrsh"[i]]));
   const atom = /[0-9.A-Za-zα-ωℓ√∠°%⁰¹²³⁴⁵⁶⁷⁸⁹⁻ⁿᵗ₀-₉ₙ₊₋ᵣₛₕ]/;
@@ -77,6 +78,15 @@
   function inline(text) {
     let result="";
     for(let i=0;i<text.length;) {
+      if(text[i]==="√") {
+        const start=i+1,end=rootEnd(text,start);
+        if(end>start) {
+          const value=text.slice(start,end);
+          result+=`<math class="math-root" aria-label="${escape(value)} 的平方根"><msqrt><mtext><span class="math-radicand">${render(ungroup(value))}</span></mtext></msqrt></math>`;
+          i=end;
+          continue;
+        }
+      }
       const script = superscripts[text[i]] ? [superscripts,"sup"] : subscripts[text[i]] ? [subscripts,"sub"] : null;
       if(script) {
         let value="";
@@ -152,6 +162,17 @@
     return result;
   }
   const ungroup = text => matching[text[0]] && closeAt(text,0)===text.length ? text.slice(1,-1) : text;
+  // Ungrouped roots cover one number or variable, not the following product (e.g. 6√10π).
+  function rootEnd(text,start) {
+    if(matching[text[start]]) return closeAt(text,start);
+    if(text[start]==="√") return rootEnd(text,start+1);
+    const value=text.slice(start).match(/^(?:\d+(?:\.\d+)?|[A-Za-zα-ωℓ])/);
+    if(!value) return start;
+    let end=start+value[0].length;
+    while(superscripts[text[end]] || subscripts[text[end]]) end++;
+    if(text[end]==="^" && text[end+1]==="(") end=closeAt(text,end+1);
+    return end;
+  }
   function fraction(top,bottom) {
     return `<span class="math-frac" role="math" aria-label="${escape(top)} 除以 ${escape(bottom)}"><span aria-hidden="true">${render(ungroup(top))}</span><span aria-hidden="true">${render(ungroup(bottom))}</span></span>`;
   }
@@ -165,12 +186,12 @@
   window.mathText=render;
   window.solutionLines=value=>{
     const lines=[],stack=[];
-    let start=0,previousRelation=-1;
+    let start=0;
     const text=String(value),brackets={"(":")","[":"]","{":"}","（":"）"};
     const push=end=>{
       const line=text.slice(start,end).trim();
       if(line) lines.push(line);
-      start=end;previousRelation=-1;
+      start=end;
     };
     // Break only between mathematical statements, never inside grouped expressions.
     for(let i=0;i<text.length;i++) {
@@ -178,14 +199,60 @@
       if(brackets[c]) stack.push(brackets[c]);
       else if(c===stack.at(-1)) stack.pop();
       if(stack.length) continue;
-      if("\n，。；".includes(c)) push(i+1);
-      else if(c==="、" && previousRelation>=0 && /^[^，。；、=]*=/.test(text.slice(i+1))) push(i+1);
-      else if("=≡≈".includes(c)) {
-        if(previousRelation>=0 && !/[\p{Script=Han}、]/u.test(text.slice(previousRelation+1,i))) push(i);
-        previousRelation=i;
-      }
+      if("\n。；".includes(c)) push(i+1);
     }
     push(text.length);
     return lines;
   };
+  function relations(text) {
+    const stack=[],found=[];
+    for(let i=0;i<text.length;i++) {
+      if(matching[text[i]]) stack.push(matching[text[i]]);
+      else if(text[i]===stack.at(-1)) stack.pop();
+      else if(!stack.length && "=≡≈".includes(text[i])) found.push(i);
+    }
+    return found;
+  }
+  function equation(text) {
+    const at=relations(text),first=at[0];
+    if(first===undefined || /[，：；]/.test(text.slice(0,first))) return null;
+    const rhs=text.slice(first+1);
+    // Explanatory prose stays intact; only mathematical statements form calculation blocks.
+    if(/[，：；、]/.test(rhs) || /[\p{Script=Han}]/u.test(rhs.replace(/(?:平方單位|立方單位|單位|平方厘米|立方厘米|厘米|分鐘|小時|歲|元|個|倍|種|天)/g,""))) return null;
+    const rows=[];
+    const split=at.length>1 && (text.length>36 || (text.length>28 && (text.match(/\//g)||[]).length>1));
+    let lhs=text.slice(0,first),start=first;
+    for(const next of split?at.slice(1):[]) {
+      // A short final value belongs to the calculation before it, not an orphan '=2'.
+      if(/^[=≈][+-]?[\d.]+(?:\s*(?:cm|mm|kg|g|°|%))?[。；]?$/.test(text.slice(next))) break;
+      rows.push({lhs,relation:text[start],rhs:text.slice(start+1,next)});
+      lhs="";start=next;
+    }
+    rows.push({lhs,relation:text[start],rhs:text.slice(start+1)});
+    return rows;
+  }
+  window.solutionLayout=values=>{
+    const blocks=[];
+    const append=text=>{
+      const rows=equation(text);
+      if(rows) {
+        const previous=blocks.at(-1);
+        if(!rows[0].lhs && previous?.type==="calculation") previous.rows.push(...rows);
+        else blocks.push({type:"calculation",rows});
+      } else blocks.push({type:"text",text});
+    };
+    for(const text of (Array.isArray(values)?values:[values]).flatMap(window.solutionLines)) {
+      // Keep a complete reason together, then put its formula on the following line.
+      const boundary=[...text.matchAll(/[，：]/g)].find(match=>
+        /[\p{Script=Han}]/u.test(text.slice(0,match.index)) && equation(text.slice(match.index+1)));
+      if(boundary) {
+        append(text.slice(0,boundary.index+1));
+        append(text.slice(boundary.index+1));
+      } else append(text);
+    }
+    return blocks;
+  };
+  window.solutionHtml=values=>window.solutionLayout(values).map(block=>block.type==="text"
+    ? `<p class="solution-text">${render(block.text)}</p>`
+    : `<div class="solution-calculation">${block.rows.map(row=>`<p class="solution-equation">${render(row.lhs)}${render(row.relation)}${render(row.rhs)}</p>`).join("")}</div>`).join("");
 })();

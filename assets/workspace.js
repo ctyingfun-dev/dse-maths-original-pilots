@@ -76,7 +76,6 @@
   function groupSolutionMath(line) {
     const fragment = document.createDocumentFragment();
     let parts = [];
-    let depth = 0;
     const flush = () => {
       if (!parts.length) return;
       const expression = document.createElement("span");
@@ -85,7 +84,7 @@
       fragment.append(expression);
       parts = [];
     };
-    // Keep bracketed operations and their units together, with breaks at relations.
+    // Line breaks are authored by the solution renderer; keep each inline expression intact.
     for (const node of [...line.childNodes]) {
       const tokens = node.nodeType === Node.TEXT_NODE
         ? node.textContent.split(/([\p{Script=Han}，。；：、！？\n]+)/u).filter(Boolean).map(text => document.createTextNode(text))
@@ -100,14 +99,7 @@
           flush();
           if (token.textContent) fragment.append(token);
         } else {
-          if (!depth && token.nodeType === Node.ELEMENT_NODE && token.classList.contains("math-op") && /^[=≡<>≤≥≠≈]$/.test(token.textContent)) flush();
           parts.push(token);
-          if (token.nodeType === Node.TEXT_NODE) {
-            for (const char of token.textContent) {
-              if ("([".includes(char)) depth++;
-              if (")]".includes(char)) depth = Math.max(0, depth - 1);
-            }
-          }
         }
       }
     }
@@ -122,7 +114,7 @@
       surface.classList.add("glass-surface");
       if (surface.matches(".paper-intro, .result, .paper-part .number-grid button, .guide-list > details, .lessons > details, .dse-detail, .year-detail")) surface.dataset.glassTilt = "";
     });
-    document.querySelectorAll(".scheme-answer p:not([data-math-grouped])").forEach(groupSolutionMath);
+    document.querySelectorAll(".solution-text:not([data-math-grouped]),.solution-equation:not([data-math-grouped])").forEach(groupSolutionMath);
     document.querySelectorAll(".result-index:not([data-orbit-ready])").forEach(index => {
       index.dataset.orbitReady = "true";
       index.insertAdjacentHTML("beforeend", orbitMark());
