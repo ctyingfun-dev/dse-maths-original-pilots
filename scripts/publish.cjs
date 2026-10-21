@@ -39,11 +39,27 @@ const files = [
   "paper2/diagrams-2023.js",
   "output/pdf/dse-original-2023-paper1-practice.pdf",
   "output/pdf/dse-original-2023-paper2-practice.pdf",
+  "paper1/data-2022.js",
+  "paper1/diagrams-2022.js",
+  "paper2/data-2022.js",
+  "paper2/diagrams-2022.js",
+  "output/pdf/dse-original-2022-paper1-practice.pdf",
+  "output/pdf/dse-original-2022-paper2-practice.pdf",
 ];
 const hash = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 
 async function main() {
   assert.equal(new Set(files).size, files.length, "Duplicate release assets");
+  if (process.argv[2] === "stage") {
+    fs.mkdirSync(path.dirname(staging), { recursive: true });
+    // Exclusive mkdir claims this release atomically, including against concurrent runs.
+    try {
+      fs.mkdirSync(staging);
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      throw new Error(`Staging directory already exists: ${staging}. Choose a new release label; existing files were preserved.`, { cause: error });
+    }
+  }
   const manifest = [];
   for (const relative of files) {
     const local = fs.readFileSync(path.join(root, relative));
@@ -60,13 +76,14 @@ async function main() {
       const target = path.resolve(staging, relative);
       assert.ok(target.startsWith(staging + path.sep));
       fs.mkdirSync(path.dirname(target), { recursive: true });
-      fs.copyFileSync(path.join(root, relative), target);
+      fs.copyFileSync(path.join(root, relative), target, fs.constants.COPYFILE_EXCL);
     }
     manifest.push(entry);
   }
   fs.mkdirSync(path.join(root, "tmp"), { recursive: true });
   fs.writeFileSync(path.join(root, "tmp", `publish-${release}-${process.argv[2] === "verify" ? "verified" : "manifest"}.json`),
-    JSON.stringify({ site: "https://dse-maths-original-pilots.pages.dev", checkedAt: new Date().toISOString(), files: manifest }, null, 2));
+    JSON.stringify({ site: "https://dse-maths-original-pilots.pages.dev", checkedAt: new Date().toISOString(), files: manifest }, null, 2),
+    process.argv[2] === "stage" ? { flag: "wx" } : undefined);
   console.log(`${process.argv[2] === "verify" ? "Verified" : "Staged"} ${files.length} files.`);
 }
 

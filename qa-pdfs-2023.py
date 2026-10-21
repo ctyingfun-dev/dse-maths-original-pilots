@@ -10,7 +10,7 @@ root = Path(__file__).resolve().parent
 qa = root / "tmp" / "qa-pdfs-times"
 qa.mkdir(parents=True, exist_ok=True)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
-years = [2023, 2024, 2025, 2026] if "--all" in sys.argv else [2023]
+years = [2022, 2023, 2024, 2025, 2026] if "--all" in sys.argv else [2022] if "--2022" in sys.argv else [2023]
 for year in years:
     for paper, expected in [(1, 19), (2, 45)]:
         if year == 2026 and paper == 2:
@@ -36,7 +36,7 @@ for year in years:
                 }
             assert numbers == list(range(1, expected + 1)), (year, paper, numbers)
             assert str(year) in all_text
-            if year == 2023 and paper == 2:
+            if year in [2022, 2023] and paper == 2:
                 assert "≡" in all_text
                 assert all_text.count("已取消") == 1
         document = pypdfium2.PdfDocument(source)

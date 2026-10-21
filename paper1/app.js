@@ -7,7 +7,7 @@
   const schema = 2;
   const marks = year!==2026 ? [0,...data.questions.map(q=>q.marks)] : [0,3,3,3,4,4,4,4,5,5,6,6,7,8,8,4,6,6,7,12];
   const letters = "ABCD";
-  const questionRevision = year===2023 ? 1 : 2;
+  const questionRevision = year===2022 || year===2023 ? 1 : 2;
   const revisedQuestions = data.questions.map(q=>q.n);
   const blank = () => ({answers:{}, checked:{}, hints:{}, saved:[], questionRevision, startedAt:null, deadline:null, mode:"untimed", finished:false});
   let state = load();
@@ -76,6 +76,7 @@
   function diagram(spec) {
     if (!spec) return "";
     const kind = typeof spec === "string" ? spec : spec.type;
+    if (kind.endsWith("2022")) return window.pilotDiagram2022(kind);
     if (kind.endsWith("2023")) return window.pilotDiagram2023(kind);
     if (kind.endsWith("2024")) return window.pilotDiagram2024(kind);
     if (kind === "table2025") return `<table class="exam-table" aria-label="${esc(spec.label)}"><tbody>${spec.rows.map(row=>`<tr>${row.map((v,i)=>i?`<td>${math(v)}</td>`:`<th scope="row">${esc(v)}</th>`).join("")}</tr>`).join("")}</tbody></table>`;
@@ -121,7 +122,7 @@
             <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
             <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
             <div class="header-tools">
-              <label class="mock-year">年份 <select id="mock-year">${[2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
+              <label class="mock-year">年份 <select id="mock-year">${[2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
           </div>
@@ -279,8 +280,8 @@
       return html;
     };
     const stemHtml=`<p class="exam-stem">${curriculumNotice(q)}${math(stem).replace(/\n/g,"<br>")}</p>${diagram(q.diagram)}`;
-    const renderPart=part=>`<div class="exam-part"><span>(${part.label})</span><div>${partHtml(part)}${partMarks[part.label]>0?`<p class="exam-part-marks${q.markGroups?.[part.label]?"":" print-only-marks"}">（${partMarks[part.label]} 分）</p>`:""}</div></div>`;
-    if(q.splitPrint&&!screenOnly) return parts.map((part,i)=>`<div class="print-segment">${i===0?stemHtml:`<p class="print-continuation">第 ${q.n} 題（續）</p>`}<div class="exam-parts">${renderPart(part)}</div>${i===parts.length-1?`<div class="exam-marks">（${marks[q.n]} 分）</div>`:""}<div class="print-answer-space" style="--answer-height:${i===0?42:70}mm" aria-hidden="true"></div></div>`).join("");
+    const renderPart=part=>`<div class="exam-part"><span>(${part.label})</span><div>${partHtml(part)}${parsed.complete?`<p class="exam-part-marks">（${partMarks[part.label]} 分）</p>`:""}</div></div>`;
+    if(q.splitPrint&&!screenOnly) return parts.map((part,i)=>`<div class="print-segment">${i===0?stemHtml:`<p class="print-continuation">第 ${q.n} 題（續）</p>`}<div class="exam-parts">${renderPart(part)}</div>${i===parts.length-1&&!parsed.complete?`<div class="exam-marks">（${marks[q.n]} 分）</div>`:""}<div class="print-answer-space" style="--answer-height:${i===0?42:70}mm" aria-hidden="true"></div></div>`).join("");
     return `${stemHtml}${parts.length?`<div class="exam-parts">${parts.map(renderPart).join("")}</div>`:""}`;
   }
   function form(q, inline=false) {
@@ -294,7 +295,7 @@
     const tools=`<div class="study-tools"><button type="button" class="outline" data-hint="${q.n}" ${shown>=q.hints.length?"disabled":""}>逐步提示 ${shown}/${q.hints.length}</button>${data.paper===2?`<button type="button" data-check="${q.n}" ${selected(q)?"":"disabled"}>批改這題</button>`:""}${inline?"":`<button type="button" class="bookmark" data-bookmark="${q.n}" aria-label="收藏第 ${q.n} 題">${state.saved.includes(q.n)?"★":"☆"}</button>`}</div>${shown?`<ol class="hints">${q.hints.slice(0,shown).map(h=>`<li>${math(h)}</li>`).join("")}</ol>`:""}${feedback}${data.paper===1?`<details class="worked-answer"><summary>參考解答</summary>${solutionHtml(q)}</details>`:""}`;
     if(inline) return `<div class="inline-practice" id="question-${q.n}">${input}${tools}</div>`;
     const parsed=parseExamPrompt(q);
-    return `<article class="question exam-question${q.splitPrint?" split-print":""}${parsed.complete?" print-part-marks":" print-total-marks"}" id="question-${q.n}"><div class="exam-body"><h2>${q.n}.</h2><div class="exam-content">${examPrompt(q,false,parsed)}${input}${data.paper===1&&!q.splitPrint?`<div class="exam-marks">（${marks[q.n]} 分）</div><div class="print-answer-space" style="--answer-height:${answerHeight}mm" aria-hidden="true"></div>`:""}</div></div>${tools}</article>`;
+    return `<article class="question exam-question${q.splitPrint?" split-print":""}${parsed.complete?" print-part-marks":" print-total-marks"}" id="question-${q.n}"><div class="exam-body"><h2>${q.n}.</h2><div class="exam-content">${examPrompt(q,false,parsed)}${input}${data.paper===1&&!q.splitPrint?`${parsed.complete?"":`<div class="exam-marks">（${marks[q.n]} 分）</div>`}<div class="print-answer-space" style="--answer-height:${answerHeight}mm" aria-hidden="true"></div>`:""}</div></div>${tools}</article>`;
   }
   function sectionTitle(q) {
     if (data.paper===1) return {1:"甲部（1）（35 分）",10:"甲部（2）（35 分）",15:"乙部（35 分）"}[q.n];

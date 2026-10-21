@@ -102,11 +102,11 @@ async function layout(page, width, height) {
         assert.ok(page.url().includes("/paper1/?year=2024"));
       }
     }
-    for (const year of [2023, 2024, 2025, 2026]) for (const paper of [1, 2]) {
+    for (const year of [2022, 2023, 2024, 2025, 2026]) for (const paper of [1, 2]) {
       await page.goto(`${base}/paper${paper}/?year=${year}#find`);
       const key = `dse-original-pilot-paper${paper}-${year}-v2`;
       const progress = await page.evaluate(({ key, paper, year }) => {
-        const progress = { schema: 2, paper, year, progress: { answers: { "1": "A" }, checked: { "1": true }, hints: { "1": 1 }, saved: [2], startedAt: null, deadline: null, mode: "untimed", finished: false, questionRevision: year === 2023 ? 1 : paper === 1 ? 2 : year === 2024 ? 1 : year === 2025 ? 2 : 5 } };
+        const progress = { schema: 2, paper, year, progress: { answers: { "1": "A" }, checked: { "1": true }, hints: { "1": 1 }, saved: [2], startedAt: null, deadline: null, mode: "untimed", finished: false, questionRevision: year === 2022 || year === 2023 ? 1 : paper === 1 ? 2 : year === 2024 ? 1 : year === 2025 ? 2 : 5 } };
         localStorage.setItem(key, JSON.stringify(progress));
         return localStorage.getItem(key);
       }, { key, paper, year });

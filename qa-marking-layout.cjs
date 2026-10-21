@@ -9,8 +9,19 @@ const output=path.join(__dirname,"tmp/qa-marking-layout");
   const browser=await launchBrowser();
   try {
     const page=await browser.newPage();
-    for(const paper of [1,2]) for(const year of [2023,2024,2025,2026]) {
+    for(const paper of [1,2]) for(const year of [2022,2023,2024,2025,2026]) {
       await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
+      if(paper===1) for(const media of ["screen","print"]) {
+        await page.emulateMedia({media});
+        const marks=await page.locator(".exam-question").evaluateAll(nodes=>nodes.map(node=>{
+          const items=[...node.querySelectorAll(".exam-content .exam-part-marks,.exam-content .exam-marks")].filter(item=>item.getClientRects().length);
+          const q=window.PILOT.questions.find(q=>node.id===`question-${q.n}`);
+          return {n:q.n,total:items.reduce((sum,item)=>sum+Number(item.textContent.match(/\d+/)[0]),0),expected:q.marks,
+            repeated:items.some(item=>item.classList.contains("exam-part-marks"))&&items.some(item=>item.classList.contains("exam-marks"))};
+        }));
+        assert.deepEqual(marks.filter(q=>q.total!==q.expected||q.repeated),[],`${year} ${media}: marks must appear exactly once`);
+      }
+      await page.emulateMedia({media:"screen"});
       if(paper===1) await page.locator(".worked-answer").evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
       else await page.evaluate(()=>{
         for(const q of window.PILOT.questions) {

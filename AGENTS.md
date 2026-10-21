@@ -26,8 +26,9 @@ Read HANDOFF.md before editing this project. It contains setup, validation, depl
 - Prefer `求 c 及 d。` over `求所有可能的有序數對 (c,d)。`. Do not restore deleted stem-and-leaf example/key lines.
 - Paper 1 solutions use nonofficial DSE-style marking schemes, including method/accuracy marks. Do not add automatic marking for Paper 1.
 - State triangle congruence criteria as `SAS`, `SSS`, `ASA`, `AAS` or `RHS`, in upright Times New Roman. Do not use Chinese criterion labels such as 角邊角 or 邊角邊; retain the actual supporting equalities and their geometric reasons.
+- State triangle similarity criteria as upright `AA`, `兩邊成比例且夾角相等`, or `三邊成比例`, with the actual corresponding angles or side ratios shown. Do not use vague labels such as 等角 or confuse similarity criteria with congruence criteria.
 - Keep questions single-instance when expanded. Preserve hints, marking, favourites, backups and isolated year/paper progress. Onscreen questions have no blank answer area; exported practice PDFs retain blank working space.
-- In question PDFs, show subpart marks without repeating the whole-question total at the end. Retain the sole total for questions without subparts. Confirm printed marks sum to the original question total and preserve all blank working space.
+- On screen and in question PDFs, show subpart marks without repeating the whole-question total at the end. Retain the sole total for questions without subparts. Confirm displayed marks sum to the original question total and preserve all blank PDF working space. This applies to every existing and future year.
 
 ## Confirmed Interface
 

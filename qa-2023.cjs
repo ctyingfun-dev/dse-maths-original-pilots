@@ -62,9 +62,10 @@ async function labelChecks(page) {
         await page.setViewportSize({width,height:892});
         await page.evaluate(()=>document.fonts.ready);
         await labelChecks(page);
-        const overflow=await page.locator(".exam-stem,.exam-part p,.scheme-answer p,.scheme-score,.options label,.feedback p,.exam-table,.stemleaf").evaluateAll(nodes=>nodes.filter(n=>n.scrollWidth>n.clientWidth+2).map(n=>({n:n.closest("article")?.id,text:n.textContent.slice(0,70)})));
-        assert.deepEqual(overflow,[]);
-        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+        // Indivisible mathematics may scroll locally, but the page must still fit.
+        const overflow=await page.locator(".exam-stem,.exam-part p,.scheme-answer p,.scheme-score,.options label,.feedback p,.exam-table,.stemleaf").evaluateAll(nodes=>nodes.filter(n=>n.scrollWidth>n.clientWidth+2 && ![n,n.closest(".solution-calculation")].some(parent=>parent && getComputedStyle(parent).overflowX==="auto")).map(n=>({n:n.closest("article")?.id,text:n.textContent.slice(0,70)})));
+        assert.deepEqual(overflow,[],`2023 P${paper} at ${width}px: uncontained content overflow`);
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`2023 P${paper} at ${width}px: page overflow`);
         assert.equal(await page.locator(".print-answer-space:visible").count(),0);
         if([1056,390].includes(width)) {
           await page.evaluate(()=>scrollTo(0,0));
@@ -77,7 +78,7 @@ async function labelChecks(page) {
       await page.locator("#question-1 [data-bookmark]").click();
       const key=year=>`dse-original-pilot-paper${paper}-${year}-v2`;
       const before=await page.evaluate(key=>localStorage.getItem(key),key(2023));
-      for(const year of [2024,2025,2026]) {
+      for(const year of [2022,2024,2025,2026]) {
         await page.locator("#mock-year").selectOption(String(year));
         await page.waitForURL(new RegExp(`year=${year}`));
         assert.equal(await page.evaluate(()=>window.PILOT.year),year);
@@ -125,7 +126,7 @@ async function labelChecks(page) {
         await page.locator('[data-result="1"] [data-check]').click();
         assert.equal(await page.locator('[data-result="1"] .feedback.error').count(),1);
       }
-      for(const query of ["","?year=2022"]) {
+      for(const query of ["","?year=2021"]) {
         await page.goto(`${base}/paper${paper}/${query}#papers`);
         assert.equal(await page.evaluate(()=>window.PILOT.year),2026);
       }

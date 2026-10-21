@@ -46,7 +46,7 @@ for (const paper of [1,2]) {
   assert.doesNotMatch(render("180 g，10 g，280 g，質量（g），27.9 kg"), /<var>g<\/var>/);
   assert.match(render("g=t-2975/(2t)"), /^<var>g<\/var>/);
   assert.match(render("2g及g(t)"), /<var>g<\/var>/);
-  for(const criterion of ["SAS","SSS","ASA","AAS","RHS"]) assert.equal(render(criterion),criterion);
+  for(const criterion of ["SAS","SSS","ASA","AAS","RHS","AA"]) assert.equal(render(criterion),criterion);
   assert.equal(render("log_(β)α"), "log<sub><var>β</var></sub><var>α</var>");
   assert.match(render("a⁻⁵b²/((a³b⁴)⁻³)"), /<sup>4<\/sup>/);
   assert.doesNotMatch(render("a⁻⁵b²/((a³b⁴)⁻³)").replace(/<[^>]+>/g,""), /[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]/);
@@ -60,7 +60,7 @@ for (const paper of [1,2]) {
   assert.match(render("a≡b"), /<span class="math-op">≡<\/span>/);
   assert.match(render("a≡-2"), /<span class="math-unary">−<\/span>2/);
   assert.match(render("x 坐標及 y 坐標"), /<var>x<\/var> 坐標及 <var>y<\/var> 坐標/);
-  for (const year of [2023,2024,2025,2026]) {
+  for (const year of [2022,2023,2024,2025,2026]) {
     const data = Object.values(load(`paper${paper}/data-${year}.js`))[0];
     assert.equal(data.questions.length, paper === 1 ? 19 : 45);
     assert.doesNotMatch(JSON.stringify(data), /[橫縱横纵]|恆等於|恒等于/);
@@ -75,7 +75,7 @@ for (const paper of [1,2]) {
     }
     questions += data.questions.length;
     if (paper === 2) {
-      const identity = data.questions[year === 2024 ? 5 : year === 2025 ? 2 : 4];
+      const identity = data.questions[year === 2024 ? 5 : year === 2022 || year === 2025 ? 2 : 4];
       assert.ok(identity.prompt.includes("≡"));
       if (year === 2026) {
         const q = data.questions;

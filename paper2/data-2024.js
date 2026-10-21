@@ -74,7 +74,7 @@
     ["圓錐體積公式有 1/3，圓柱沒有。","用同一個倍數表示兩個高度。"]);
   add("正方形與相似面積","圖中 JKLM 為正方形，N 為 KL 的中點，P 在 JM 上且 JP:PM=2:1。Q 在 KL 的延長線上，PQ//JN。LM 與 PQ 相交於 R，JN 與 KR 相交於 S。若 △KNS 的面積為 6 cm²，求四邊形 JPRS 的面積。","256/3 cm²",
     ["80 cm²","84 cm²","272/3 cm²"],
-    "設正方形邊長為 s，PM=s/3、KN=s/2。\n由 △MPR∼△KNJ，MR/MJ=PM/KN=(s/3)/(s/2)=2/3。\n所以 MR=2s/3，LR=s-2s/3=s/3。\nPQ//JN 給 LQ/LR=KN/JK=1/2，LQ=s/6，KQ=s+s/6=7s/6。\n△KNS∼△KQR，長度比=KN/KQ=(s/2)/(7s/6)=3/7。\n面積比為長度比的平方，△KQR 面積=6×(7/3)²=98/3。\n△KLR 與 △KQR 同高，面積=KL/KQ×98/3=(6/7)×98/3=28。\n另由底乘高的一半，△KLR 面積=s×(s/3)/2=s²/6。\n所以 s²=28×6=168。\n△JKS 面積=△JKN 面積-6=s×(s/2)/2-6=42-6=36。\n△MPR 面積=(s/3)×(2s/3)/2=s²/9=56/3。\n所求面積=168-36-28-56/3=256/3 cm²。",
+    "設正方形邊長為 s，PM=s/3、KN=s/2。\n正方形的鄰邊互相垂直，所以 ∠PMR=∠NKJ=90°。\n由 PM//KN、PR//NJ，∠MPR=∠KNJ。\n故 △MPR∼△KNJ（AA）。\n對應邊成比例，MR/JK=PM/KN=(s/3)/(s/2)=2/3。\n所以 MR=2s/3，LR=s-2s/3=s/3。\n正方形的鄰邊互相垂直，所以 ∠QLR=∠NKJ=90°。\nK、N、L、Q 共線，且 QR//NJ，故 ∠LQR=∠KNJ（同位角）。\n故 △LQR∼△KNJ（AA）。\n對應邊成比例，LQ/LR=KN/JK=1/2。\nLQ=s/6，KQ=s+s/6=7s/6。\nK、N、Q 共線，K、S、R 共線，故 ∠NKS=∠QKR（共同角）。\n由 NS//QR，∠KNS=∠KQR（同位角）。\n故 △KNS∼△KQR（AA）。\n長度比=KN/KQ=(s/2)/(7s/6)=3/7。\n面積比為長度比的平方，△KQR 面積=6×(7/3)²=98/3。\n△KLR 與 △KQR 同高，面積=KL/KQ×98/3=(6/7)×98/3=28。\n另由底乘高的一半，△KLR 面積=s×(s/3)/2=s²/6。\n所以 s²=28×6=168。\n△JKS 面積=△JKN 面積-6=s×(s/2)/2-6=42-6=36。\n△MPR 面積=(s/3)×(2s/3)/2=s²/9=56/3。\n所求面積=168-36-28-56/3=256/3 cm²。",
     ["先利用 PQ//JN 找 MR 與正方形邊長的比。","相似三角形的面積比須把長度比平方。","把目標四邊形看成正方形扣除三個三角形。"],
     {diagram:{type:"squareAreas2024"}});
   add("畢氏定理與周界","圖中 J、K、L 共線。已知 JM=39 cm、KL=8 cm、LM=17 cm、KM=15 cm、LN=33 cm，且 ∠JLN=90°。求四邊形 JMLN 的周界。","144 cm",
@@ -93,7 +93,7 @@
     ["先用內角和求邊數。","正 n 邊形的兩類對稱數目均與 n 有關。"]);
   add("菱形、長方形與相似","圖中 JKLM 為菱形，JL 與 KM 相交於 N。P 為一點，使 NP//KL，且 LPRQ 為長方形；Q 在 JL 的延長線上，R 在 KL 的延長線上。LM 與 NP 相交於 S。下列哪些敘述必然正確？I LS=PS；II ∠JKN+∠QLR=90°；III △JMN∼△RLP。","I、II及III",
     ["只有 I、II","只有 I、III","只有 II、III"],
-    "菱形對角線互相垂直且平分。設 N(0,0)、J(-a,0)、K(0,-b)、L(a,0)、M(0,b)，a、b>0。\nNP//KL，斜率為 b/a，故 NP：y=bx/a。\n長方形 LP 垂直於 JL，所以 P 的 x 坐標為 a，得 P(a,b)。\nR 在 KL 的延長線 y=bx/a-b 上且與 P 同高，得 R(2a,b)。\nLM：y=b-bx/a，與 NP 聯立得 S(a/2,b/2)。\nLS²=(a/2)²+(b/2)²=PS²，所以 LS=PS，I 正確。\n∠JKN、∠QLR 的正切為 a/b、b/a，兩銳角互餘，所以和為 90°，II 正確。\n△JMN 的邊為 a、b、√(a²+b²)；△RLP 對應邊亦相同。\n兩三角形全等（SSS），故相似，III 正確。\n所以 I、II、III 均正確。",
+    "菱形對角線互相垂直且平分。設 N(0,0)、J(-a,0)、K(0,-b)、L(a,0)、M(0,b)，a、b>0。\nNP//KL，斜率為 b/a，故 NP：y=bx/a。\n長方形 LP 垂直於 JL，所以 P 的 x 坐標為 a，得 P(a,b)。\nR 在 KL 的延長線 y=bx/a-b 上且與 P 同高，得 R(2a,b)。\nLM：y=b-bx/a，與 NP 聯立得 S(a/2,b/2)。\nLS²=(a/2)²+(b/2)²=PS²，所以 LS=PS，I 正確。\n∠JKN、∠QLR 的正切為 a/b、b/a，兩銳角互餘，所以和為 90°，II 正確。\nJN=RP=a，MN=LP=b，JM=RL=√(a²+b²)。\n故 △JMN≅△RLP（SSS）。\n全等三角形必相似，所以 △JMN∼△RLP，III 正確。\n所以 I、II、III 均正確。",
     ["菱形的對角線互相垂直並且互相平分。","保留兩條不同的半對角線長度，不要自行假設為正方形。","兩個正切互為倒數的銳角互餘。"],
     {diagram:{type:"rhombusRectangle2024"}});
   add("直徑與圓周角","圖中 J、K、L、M、N 依次位於同一圓上，JL、KN 均為直徑，JL 與 KM 相交於 Q。若 ∠JKN=37°、∠MKN=21°，求 ∠JQM。","95°",

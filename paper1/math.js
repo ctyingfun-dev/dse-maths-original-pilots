@@ -4,7 +4,7 @@
   })[c]);
   const upright = new Set(["cm", "mm", "km", "mL", "kg", "sin", "cos", "tan", "log", "min", "max", "MODE", "SD", "SHIFT", "EXE", "FMLA", "DSE", "DEG", "P1", "P2", "P3", "P4", "I", "II", "III"]);
   const matching = {"(":")", "[":"]"};
-  for(const criterion of ["SAS","SSS","ASA","AAS","RHS"]) upright.add(criterion);
+  for(const criterion of ["SAS","SSS","ASA","AAS","RHS","AA"]) upright.add(criterion);
   const superscripts = Object.fromEntries([..."⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱᵗ"].map((c,i)=>[c,"0123456789+-=()nit"[i]]));
   const subscripts = Object.fromEntries([..."₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₙᵣₛₕ"].map((c,i)=>[c,"0123456789+-=()nrsh"[i]]));
   const atom = /[0-9.A-Za-zα-ωℓ√∠°%⁰¹²³⁴⁵⁶⁷⁸⁹⁻ⁿᵗ₀-₉ₙ₊₋ᵣₛₕ]/;

@@ -30,11 +30,20 @@
 !/verify-2025.cjs
 !/verify-2024.cjs
 !/verify-2023.cjs
+!/verify-2022.cjs
+!/verify-2022-paper1.cjs
+!/verify-2022-paper2.cjs
+!/qa-2022.cjs
+!/qa-2022-diagrams.cjs
+!/qa-pdfs-2022.py
+!/SOURCE_ALIGNMENT_2022.md
 !/qa-2023.cjs
 !/qa-typography.cjs
 !/qa-solutions.cjs
 !/qa-marking-layout.cjs
 !/verify-solution-layout.cjs
+!/verify-similarity.cjs
+!/verify-publish.cjs
 !/SOLUTION_STYLE.md
 !/qa-check-answers.cjs
 !/qa-pdfs-2023.py
@@ -81,6 +90,8 @@
 !/paper1/data-2025.js
 !/paper1/data-2024.js
 !/paper1/data-2023.js
+!/paper1/data-2022.js
+!/paper1/diagrams-2022.js
 !/paper1/diagrams-2023.js
 !/paper1/diagrams-2024.js
 !/paper1/dse-topics.js
@@ -92,6 +103,8 @@
 !/paper2/data-2025.js
 !/paper2/data-2024.js
 !/paper2/data-2023.js
+!/paper2/data-2022.js
+!/paper2/diagrams-2022.js
 !/paper2/diagrams-2023.js
 !/paper2/diagrams-2024.js
 !/paper2/diagrams-2025.js
@@ -108,3 +121,5 @@
 !/output/pdf/dse-original-2024-paper2-practice.pdf
 !/output/pdf/dse-original-2023-paper1-practice.pdf
 !/output/pdf/dse-original-2023-paper2-practice.pdf
+!/output/pdf/dse-original-2022-paper1-practice.pdf
+!/output/pdf/dse-original-2022-paper2-practice.pdf
