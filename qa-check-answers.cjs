@@ -20,7 +20,7 @@ async function checkButtonContrast(page, minimum) {
 (async()=>{
   const browser=await launchBrowser();
   try {
-    for(const year of [2022,2023,2024,2025,2026]) {
+    for(const year of [2021,2022,2023,2024,2025,2026]) {
       const context=await browser.newContext();
       const page=await context.newPage(),errors=[];
       page.on('pageerror',e=>errors.push(e.message));

@@ -37,6 +37,13 @@
 !/qa-2022-diagrams.cjs
 !/qa-pdfs-2022.py
 !/SOURCE_ALIGNMENT_2022.md
+!/SOURCE_ALIGNMENT_2021.md
+!/verify-2021.cjs
+!/verify-2021-paper1.cjs
+!/verify-2021-paper2.cjs
+!/qa-2021.cjs
+!/qa-2021-diagrams.cjs
+!/qa-pdfs-2021.py
 !/qa-2023.cjs
 !/qa-typography.cjs
 !/qa-solutions.cjs
@@ -92,6 +99,8 @@
 !/paper1/data-2023.js
 !/paper1/data-2022.js
 !/paper1/diagrams-2022.js
+!/paper1/data-2021.js
+!/paper1/diagrams-2021.js
 !/paper1/diagrams-2023.js
 !/paper1/diagrams-2024.js
 !/paper1/dse-topics.js
@@ -105,6 +114,8 @@
 !/paper2/data-2023.js
 !/paper2/data-2022.js
 !/paper2/diagrams-2022.js
+!/paper2/data-2021.js
+!/paper2/diagrams-2021.js
 !/paper2/diagrams-2023.js
 !/paper2/diagrams-2024.js
 !/paper2/diagrams-2025.js
@@ -123,3 +134,5 @@
 !/output/pdf/dse-original-2023-paper2-practice.pdf
 !/output/pdf/dse-original-2022-paper1-practice.pdf
 !/output/pdf/dse-original-2022-paper2-practice.pdf
+!/output/pdf/dse-original-2021-paper1-practice.pdf
+!/output/pdf/dse-original-2021-paper2-practice.pdf

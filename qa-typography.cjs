@@ -9,7 +9,7 @@ const output=path.join(__dirname,"tmp/qa-typography");
   const browser=await launchBrowser();
   try {
     const page=await browser.newPage();
-    for(const paper of [1,2]) for(const year of [2022,2023,2024,2025,2026]) {
+    for(const paper of [1,2]) for(const year of [2021,2022,2023,2024,2025,2026]) {
       for(const route of ["practice","find","papers","years","topics","guide","saved"]) {
         await page.goto(`${base}/paper${paper}/?year=${year}#${route}`);
         if(route==="practice") await page.locator(".worked-answer").evaluateAll(nodes=>nodes.forEach(n=>n.open=true));

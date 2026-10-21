@@ -83,7 +83,7 @@ async function labelChecks(page) {
       await page.locator("#question-1 [data-bookmark]").click();
       const key=year=>`dse-original-pilot-paper${paper}-${year}-v2`;
       const before=await page.evaluate(key=>localStorage.getItem(key),key(2022));
-      for(const year of [2023,2024,2025,2026]) {
+      for(const year of [2021,2023,2024,2025,2026]) {
         await page.locator("#mock-year").selectOption(String(year));
         await page.waitForURL(new RegExp(`year=${year}`));
         assert.equal(await page.evaluate(()=>window.PILOT.year),year);
@@ -156,7 +156,7 @@ async function labelChecks(page) {
         await page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).progress.questionRevision===2,key(2022));
         assertMigration(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).progress,key(2022)));
       }
-      for(const query of ["","?year=2021"]) {
+      for(const query of ["","?year=2020"]) {
         await page.goto(`${base}/paper${paper}/${query}#papers`);
         assert.equal(await page.evaluate(()=>window.PILOT.year),2026);
       }
