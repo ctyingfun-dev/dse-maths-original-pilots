@@ -52,6 +52,10 @@ def intact_prompt_groups(questions, printed):
         groups += re.findall(r"\b[a-z]\s*=\s*[a-z]{1,3}\^[A-Za-z0-9]+\b", prompt)
         groups += re.findall(r"\b[a-z]{2}[+-][a-z][+-]\d+\b", prompt)
         groups += re.findall(r"log\d+\[[^\]\n]+\][<>\u2264\u2265=]\d+(?:\.\d+)?", prompt)
+        groups += re.findall(r"\d+(?:\.\d+)?\s*(?:cm|mm|kg|名|枚)", prompt)
+        # MathML places the source log_(r) base as a subscript in extracted text.
+        groups += [formula.replace("_(", "").replace(")", "") for formula in
+                   re.findall(r"y=(?:\d+[a-z]\+)?log_\([a-z]\)x", prompt)]
         lines = [re.sub(r"\s+", "", line).replace("\u2212", "-").replace("\u22ef", "...")
                  for line in printed[number].splitlines()]
         for group in groups:

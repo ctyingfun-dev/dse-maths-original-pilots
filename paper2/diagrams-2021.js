@@ -38,22 +38,22 @@
     angles2021:()=>{
       const slope=Math.tan(67*r),diagonal=Math.tan(35*r),mx=slope/(slope-diagonal),ex=slope/(slope+diagonal);
       const map=([x,y])=>[25+190*x,265-190*y];
-      const [J,K,L,M,E]=[[0,0],[.5,slope/2],[1,0],[mx,mx*diagonal],[ex,ex*diagonal]].map(map);
+      const [J,K,L,M,N]=[[0,0],[.5,slope/2],[1,0],[mx,mx*diagonal],[ex,ex*diagonal]].map(map);
       return {box:"0 0 335 300",body:poly([J,K,L,M,J,L])+tick(J,K)+tick(K,L)+parallel(J,K,.76)+parallel(L,M)+arc(L,J,M,25)+
-        labels([[J[0]-18,J[1]+17,"J"],[K[0]-5,K[1]-13,"K"],[L[0]+4,L[1]+21,"L"],[M[0]+7,M[1]-8,"M"],[E[0]+14,E[1]+10,"E"]])};
+        labels([[J[0]-18,J[1]+17,"J"],[K[0]-5,K[1]-13,"K"],[L[0]+4,L[1]+21,"L"],[M[0]+7,M[1]-8,"M"],[N[0]+14,N[1]+10,"N"]])};
     },
     rectangle2021:()=>{
       const map=([x,y])=>[35+12*x,260-12*y];
-      // E is the orthogonal projection of K onto JL; F is K reflected in E.
-      const [J,K,L,M,E,F,G]=[[0,0],[20,0],[20,12],[0,12],[250/17,150/17],[160/17,300/17],[12.8,12]].map(map);
-      return {box:"0 0 320 300",body:poly([J,K,L,M,J])+poly([J,L])+poly([K,F,L])+right(K,E,L)+
-        labels([[J[0]-17,J[1]+18,"J"],[K[0]+6,K[1]+18,"K"],[L[0]+9,L[1]+3,"L"],[M[0]-20,M[1]+3,"M"],[E[0]-22,E[1]+25,"E"],[F[0]-5,F[1]-12,"F"],[G[0]-20,G[1]+17,"G"]])};
+      // N is the orthogonal projection of K onto JL; P is K reflected in N.
+      const [J,K,L,M,N,P,Q]=[[0,0],[20,0],[20,12],[0,12],[250/17,150/17],[160/17,300/17],[12.8,12]].map(map);
+      return {box:"0 0 320 300",body:poly([J,K,L,M,J])+poly([J,L])+poly([K,P,L])+right(K,N,L)+
+        labels([[J[0]-17,J[1]+18,"J"],[K[0]+6,K[1]+18,"K"],[L[0]+9,L[1]+3,"L"],[M[0]-20,M[1]+3,"M"],[N[0]-22,N[1]+25,"N"],[P[0]-5,P[1]-12,"P"],[Q[0]-20,Q[1]+17,"Q"]])};
     },
     square2021:()=>{
       const map=([x,y])=>[30+76*x,270-76*y];
-      const [J,K,L,M,E,F]=[[0,0],[3,0],[3,3],[0,3],[2,0],[3,2/3]].map(map);
-      return {box:"0 0 310 305",body:poly([J,K,L,M,J])+poly([M,E,F,M])+right(M,E,F)+
-        labels([[J[0]-17,J[1]+20,"J"],[K[0]+8,K[1]+20,"K"],[L[0]+8,L[1]-8,"L"],[M[0]-17,M[1]-10,"M"],[E[0]-5,E[1]+23,"E"],[F[0]+10,F[1]+4,"F"]])};
+      const [J,K,L,M,N,P]=[[0,0],[3,0],[3,3],[0,3],[2,0],[3,2/3]].map(map);
+      return {box:"0 0 310 305",body:poly([J,K,L,M,J])+poly([M,N,P,M])+right(M,N,P)+
+        labels([[J[0]-17,J[1]+20,"J"],[K[0]+8,K[1]+20,"K"],[L[0]+8,L[1]-8,"L"],[M[0]-17,M[1]-10,"M"],[N[0]-5,N[1]+23,"N"],[P[0]+10,P[1]+4,"P"]])};
     },
     circle2021:()=>{
       const angles=[0,86,122,208,280],points=angles.map(a=>polar(a,160,155,112)),[J,K,L,M,N]=points;
@@ -90,16 +90,16 @@
     },
     intersection2021:()=>{
       const t=180/639,map=([x,y])=>[35+.28*x,221.32-.28*y];
-      const [J,K,L,M,E,F,G,H]=[[0,594],[864,594],[864,0],[0,0],[576,594],[864,324],[432,0],[576-144*t,594-594*t]].map(map);
-      return {box:"0 0 320 260",body:poly([J,K,L,M,J])+poly([J,F])+poly([E,G])+poly([M,H])+
-        labels([[J[0]-14,J[1]-10,"J"],[K[0]+6,K[1]-10,"K"],[L[0]+7,L[1]+20,"L"],[M[0]-18,M[1]+20,"M"],[E[0]-4,E[1]-12,"E"],[F[0]+10,F[1]+4,"F"],[G[0]-5,G[1]+24,"G"],[H[0]+12,H[1]-4,"H"]])};
+      const [J,K,L,M,N,P,Q,R]=[[0,594],[864,594],[864,0],[0,0],[576,594],[864,324],[432,0],[576-144*t,594-594*t]].map(map);
+      return {box:"0 0 320 260",body:poly([J,K,L,M,J])+poly([J,P])+poly([N,Q])+poly([M,R])+
+        labels([[J[0]-14,J[1]-10,"J"],[K[0]+6,K[1]-10,"K"],[L[0]+7,L[1]+20,"L"],[M[0]-18,M[1]+20,"M"],[N[0]-4,N[1]-12,"N"],[P[0]+10,P[1]+4,"P"],[Q[0]-5,Q[1]+24,"Q"],[R[0]+12,R[1]-4,"R"]])};
     },
     tangent2021:()=>{
       const cx=145,cy=180,radius=90,[J,K,L,M]=[0,204,180,76].map(a=>polar(a,cx,cy,radius));
       const c=Math.cos(76*r),s=Math.sin(76*r),slope=Math.tan(12*r),ex=(1-s*slope)/(c+s*slope);
-      const E=[cx+radius*ex,cy-radius*slope*(ex+1)],F=[M[0]-70*s,M[1]-70*c];
-      return {box:"0 0 340 295",body:circle(cx,cy,radius)+poly([J,L,K,J])+poly([L,M])+poly([L,E,F])+parallel(J,K)+parallel(E,L)+arc(J,L,K,22)+
-        labels([[J[0]+10,J[1]+4,"J"],[K[0]-17,K[1]+20,"K"],[L[0]-20,L[1]+4,"L"],[M[0]-5,M[1]-12,"M"],[E[0]+9,E[1]+5,"E"],[F[0]-22,F[1]+2,"F"]])};
+      const N=[cx+radius*ex,cy-radius*slope*(ex+1)],P=[M[0]-70*s,M[1]-70*c];
+      return {box:"0 0 340 295",body:circle(cx,cy,radius)+poly([J,L,K,J])+poly([L,M])+poly([L,N,P])+parallel(J,K)+parallel(N,L)+arc(J,L,K,22)+
+        labels([[J[0]+10,J[1]+4,"J"],[K[0]-17,K[1]+20,"K"],[L[0]-20,L[1]+4,"L"],[M[0]-5,M[1]-12,"M"],[N[0]+9,N[1]+5,"N"],[P[0]-22,P[1]+2,"P"]])};
     }
   };
   window.pilotDiagram2021=kind=>{

@@ -104,37 +104,38 @@ async function geometryChecks(page, paper) {
     assert.deepEqual(data[13].labels, ["1", "2", "3"]);
   }
   {
-    const [[J, K, L, M]] = ps(18), E = intersection(J, M, K, L);
+    const [[J, K, L, M]] = ps(18), N = intersection(J, M, K, L);
     near(distance(J, K), distance(K, L), "P2 Q18 JK=KL");
     near(cross(sub(K, J), sub(M, L)), 0, "P2 Q18 JK parallel LM");
     near(angle(J, M, L), 32, "P2 Q18 JML");
-    near(angle(J, E, K), 102, "P2 Q18 JEK, not JEL");
+    near(angle(J, N, K), 102, "P2 Q18 JNK, not JNL");
     near(angle(L, J, M), 35, "P2 Q18 target LJM");
-    assert.ok(dot(sub(E, J), sub(E, M)) < 0 && dot(sub(E, K), sub(E, L)) < 0);
-    assert.deepEqual(data[18].labels.sort(), ["E", "J", "K", "L", "M"]);
+    assert.ok(dot(sub(N, J), sub(N, M)) < 0 && dot(sub(N, K), sub(N, L)) < 0);
+    assert.deepEqual(data[18].labels.sort(), ["J", "K", "L", "M", "N"]);
   }
   {
-    const [[J, K, L, M], , [, F]] = ps(19), E = intersection(J, L, K, F), G = intersection(K, F, L, M);
+    const [[J, K, L, M], , [, P]] = ps(19), N = intersection(J, L, K, P), Q = intersection(K, P, L, M);
     near(dot(sub(J, K), sub(L, K)), 0, "P2 Q19 rectangle");
     near(distance(J, K) / distance(K, L), 20 / 12, "P2 Q19 side ratio");
-    near(dot(sub(K, E), sub(L, E)), 0, "P2 Q19 KE perpendicular JL");
-    near(distance(K, E), distance(F, E), "P2 Q19 E midpoint KF");
-    near(distance(L, F), distance(J, M), "P2 Q19 LF=JM");
-    near(distance(M, G) / distance(M, L), 12.8 / 20, "P2 Q19 G position");
-    near(angle(M, J, E), angle(M, G, F), "P2 Q19 assertion I");
-    near(angle(K, L, E), angle(L, G, E), "P2 Q19 assertion II");
-    near(distance(K, L), distance(F, L), "P2 Q19 assertion III");
-    assert.deepEqual(data[19].labels.sort(), ["E", "F", "G", "J", "K", "L", "M"]);
+    near(dot(sub(K, N), sub(L, N)), 0, "P2 Q19 KN perpendicular JL");
+    near(distance(K, N), distance(P, N), "P2 Q19 N midpoint KP");
+    near(distance(L, P), distance(J, M), "P2 Q19 LP=JM");
+    near(distance(M, Q) / distance(M, L), 12.8 / 20, "P2 Q19 Q position");
+    near(angle(M, J, N), angle(M, Q, P), "P2 Q19 assertion I");
+    near(angle(K, L, N), angle(L, Q, N), "P2 Q19 assertion II");
+    near(distance(K, L), distance(P, L), "P2 Q19 assertion III");
+    assert.deepEqual(data[19].labels.sort(), ["J", "K", "L", "M", "N", "P", "Q"]);
   }
   {
-    const [[J, K, L, M], [, E, F]] = ps(20);
+    const [[J, K, L, M], [, N, P]] = ps(20);
     near(distance(J, K), distance(K, L), "P2 Q20 square");
     near(dot(sub(J, K), sub(L, K)), 0, "P2 Q20 square right angle");
-    near(distance(J, E) / distance(E, K), 2, "P2 Q20 JE=2EK");
-    near(dot(sub(M, E), sub(F, E)), 0, "P2 Q20 ME perpendicular EF");
-    near(cross(sub(F, K), sub(L, K)), 0, "P2 Q20 F on KL");
-    near(area(L, M, F) / area(M, E, F), 21 / 13, "P2 Q20 target area ratio");
+    near(distance(J, N) / distance(N, K), 2, "P2 Q20 JN=2NK");
+    near(dot(sub(M, N), sub(P, N)), 0, "P2 Q20 MN perpendicular NP");
+    near(cross(sub(P, K), sub(L, K)), 0, "P2 Q20 P on KL");
+    near(area(L, M, P) / area(M, N, P), 21 / 13, "P2 Q20 target area ratio");
     assert.ok(data[20].labels.every(label => /^[A-Z]$/.test(label)), "Q20 construction coordinates must not be visible lengths");
+    assert.deepEqual(data[20].labels.sort(), ["J", "K", "L", "M", "N", "P"]);
   }
   {
     const [[J, L, M, , N], [K]] = ps(22), [cx, cy, radius] = data[22].circles[0];
@@ -179,29 +180,29 @@ async function geometryChecks(page, paper) {
     assert.deepEqual(data[34].labels, ["−6", "2", "O", "log3 x", "log3 y"]);
   }
   {
-    const [[J, K, L, M], [, F], [E, G], [, H]] = ps(38), scale = distance(J, K) / 864;
+    const [[J, K, L, M], [, P], [N, Q], [, R]] = ps(38), scale = distance(J, K) / 864;
     near(dot(sub(J, K), sub(L, K)), 0, "P2 Q38 rectangle");
     near(distance(K, L) / scale, 594, "P2 Q38 KL");
-    near(distance(J, E) / scale, 576, "P2 Q38 JE");
-    near(distance(K, F) / scale, 270, "P2 Q38 KF");
-    near(distance(L, G) / scale, 432, "P2 Q38 LG");
-    near(cross(sub(H, J), sub(F, J)), 0, "P2 Q38 H on JF");
-    near(cross(sub(H, E), sub(G, E)), 0, "P2 Q38 H on EG");
-    near(distance(H, intersection(J, F, E, G)), 0, "P2 Q38 exact intersection");
-    assert.equal(Math.round(distance(M, H) / scale), 685, "P2 Q38 rounded MH");
-    assert.deepEqual(data[38].labels.sort(), ["E", "F", "G", "H", "J", "K", "L", "M"]);
+    near(distance(J, N) / scale, 576, "P2 Q38 JN");
+    near(distance(K, P) / scale, 270, "P2 Q38 KP");
+    near(distance(L, Q) / scale, 432, "P2 Q38 LQ");
+    near(cross(sub(R, J), sub(P, J)), 0, "P2 Q38 R on JP");
+    near(cross(sub(R, N), sub(Q, N)), 0, "P2 Q38 R on NQ");
+    near(distance(R, intersection(J, P, N, Q)), 0, "P2 Q38 exact intersection");
+    assert.equal(Math.round(distance(M, R) / scale), 685, "P2 Q38 rounded MR");
+    assert.deepEqual(data[38].labels.sort(), ["J", "K", "L", "M", "N", "P", "Q", "R"]);
   }
   {
-    const [[J, L, K], [, M], [, E, F]] = ps(39), [cx, cy, radius] = data[39].circles[0], O = [cx, cy];
+    const [[J, L, K], [, M], [, N, P]] = ps(39), [cx, cy, radius] = data[39].circles[0], O = [cx, cy];
     for (const point of [J, K, L, M]) near(distance(point, O), radius, "P2 Q39 cyclic vertices");
     near(distance(J, L), 2 * radius, "P2 Q39 JL diameter");
-    near(cross(sub(M, E), sub(F, E)), 0, "P2 Q39 tangent E M F collinear");
-    near(dot(sub(M, O), sub(E, F)), 0, "P2 Q39 tangent perpendicular radius");
-    near(cross(sub(K, J), sub(E, L)), 0, "P2 Q39 JK parallel LE");
-    near(angle(L, M, F), 52, "P2 Q39 LMF");
-    near(angle(L, E, M), 26, "P2 Q39 LEM");
+    near(cross(sub(M, N), sub(P, N)), 0, "P2 Q39 tangent N M P collinear");
+    near(dot(sub(M, O), sub(N, P)), 0, "P2 Q39 tangent perpendicular radius");
+    near(cross(sub(K, J), sub(N, L)), 0, "P2 Q39 JK parallel LN");
+    near(angle(L, M, P), 52, "P2 Q39 LMP");
+    near(angle(L, N, M), 26, "P2 Q39 LNM");
     near(angle(J, L, K), 78, "P2 Q39 target JLK");
-    assert.deepEqual(data[39].labels.sort(), ["E", "F", "J", "K", "L", "M"]);
+    assert.deepEqual(data[39].labels.sort(), ["J", "K", "L", "M", "N", "P"]);
   }
 }
 

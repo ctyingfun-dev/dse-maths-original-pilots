@@ -309,6 +309,28 @@ function diagram(q) {
   return { svg, paths, labels };
 }
 
+// Retired letters are question-local names, not a global rule for operators,
+// units, coordinates, sequence indices or other contextual parameters.
+function naming(q, retired, ...solutionFragments) {
+  const oldNames = new RegExp(`[${retired}]`);
+  for (const text of [q.prompt, q.correct, ...q.options, ...q.hints, q.solution]) {
+    assert.doesNotMatch(text, oldNames, `Retired Q${q.n} name`);
+  }
+  for (const fragment of solutionFragments) {
+    assert.ok(q.solution.includes(fragment), `Missing renamed Q${q.n} solution: ${fragment}`);
+  }
+  if (q.diagram) {
+    const expected = {
+      18: ["J", "K", "L", "M", "N"],
+      19: ["J", "K", "L", "M", "N", "P", "Q"],
+      20: ["J", "K", "L", "M", "N", "P"],
+      38: ["J", "K", "L", "M", "N", "P", "Q", "R"],
+      39: ["J", "K", "L", "M", "N", "P"]
+    };
+    assert.deepEqual(diagram(q).labels.map(label => label.text), expected[q.n], `Q${q.n} SVG name drift`);
+  }
+}
+
 function check(n, work) {
   assert.ok(!checked.has(n));
   const q = paper.questions[n - 1];
@@ -360,29 +382,32 @@ check(1, q => {
   assert.ok(q.solution.split("\n").some(line => /^3\^/.test(line) && line.includes("=(3²)^") && line.includes("=9^")), "Show the final base conversion as a connected solution step");
 });
 check(2, q => {
-  stem(q, "t(2t-b)=b(3-t)", "b 為公式主項");
-  const samples = [-4, -1, 0, 0.25, 1, 3, 5].map(t => ({ t }));
-  expressions(q, samples, ({ t }) => {
-    const residual = b => t * (2 * t - b) - b * (3 - t);
+  stem(q, "x(2x-y)=y(3-x)", "y 為公式主項");
+  naming(q, "tb", "2x²-yx=3y-yx", "y=2x²/3");
+  const samples = [-4, -1, 0, 0.25, 1, 3, 5].map(x => ({ x }));
+  expressions(q, samples, ({ x }) => {
+    const residual = y => x * (2 * x - y) - y * (3 - x);
     const coefficient = residual(1) - residual(0);
     assert.notEqual(coefficient, 0);
-    const b = -residual(0) / coefficient;
-    near(residual(b), 0);
-    return b;
+    const y = -residual(0) / coefficient;
+    near(residual(y), 0);
+    return y;
   });
-  assert.match(q.solution, /t=0/);
+  assert.match(q.solution, /x=0/);
 });
 check(3, q => {
-  stem(q, "(p+2q)(p-2q)(p+3)");
-  const samples = [-4, -1, 0, 1, 2, 3].flatMap(p => [-3, -1, 0, 1, 4].map(q => ({ p, q })));
-  expressions(q, samples, ({ p, q }) => (p + 2 * q) * (p - 2 * q) * (p + 3));
+  stem(q, "(x+2y)(x-2y)(x+3)");
+  naming(q, "pq", "x³+3x²-4xy²-12y²");
+  const samples = [-4, -1, 0, 1, 2, 3].flatMap(x => [-3, -1, 0, 1, 4].map(y => ({ x, y })));
+  expressions(q, samples, ({ x, y }) => (x + 2 * y) * (x - 2 * y) * (x + 3));
 });
 check(4, q => {
-  stem(q, "4/(t-4)-9/(t-9)", "t≠4", "t≠9");
-  const samples = [-4, -1, 0, 1, 3.9, 4.1, 8.9, 9.1, 20].map(t => ({ t }));
-  expressions(q, samples, ({ t }) => 4 / (t - 4) - 9 / (t - 9));
-  for (const t of [4, 9]) assert.throws(() => value(q.correct, { t }), /Zero denominator/);
-  assert.match(q.solution, /t≠4、9/);
+  stem(q, "4/(x-4)-9/(x-9)", "x≠4", "x≠9");
+  naming(q, "t", "5x/[(x-4)(9-x)]", "x≠4、9");
+  const samples = [-4, -1, 0, 1, 3.9, 4.1, 8.9, 9.1, 20].map(x => ({ x }));
+  expressions(q, samples, ({ x }) => 4 / (x - 4) - 9 / (x - 9));
+  for (const x of [4, 9]) assert.throws(() => value(q.correct, { x }), /Zero denominator/);
+  assert.match(q.solution, /x≠4、9/);
 });
 check(5, q => {
   stem(q, "12.48", "二位小數");
@@ -390,7 +415,8 @@ check(5, q => {
   expressions(q, samples, ({ x }) => Math.floor(x * 100 + 0.5 + 1e-10) === 1248, condition);
 });
 check(6, q => {
-  stem(q, "a(t+4)+b(2t-3)≡c(t+1)", "a:b", "非零");
+  stem(q, "a(x+4)+b(2x-3)≡c(x+1)", "a:b", "非零");
+  naming(q, "t", "(a+2b)x+4a-3b");
   const meanings = q.options.map(option => {
     const [a, b] = option.split(":").map(Number);
     assert.ok(a !== 0 && b !== 0);
@@ -399,11 +425,12 @@ check(6, q => {
   distinct(q, meanings);
   unique(q, option => {
     const [a, b] = option.split(":").map(Number), c = a + 2 * b;
-    return [-3, 0, 1, 5].every(t => close(a * (t + 4) + b * (2 * t - 3), c * (t + 1)));
+    return [-3, 0, 1, 5].every(x => close(a * (x + 4) + b * (2 * x - 3), c * (x + 1)));
   });
 });
 check(7, q => {
-  stem(q, "g(t)=(t+a)(t-4)+b", "g(0)=g(10)=3", "求 b");
+  stem(q, "h(x)=(x+a)(x-4)+b", "h(0)=h(10)=3", "求 b");
+  naming(q, "gt", "代入 x=0", "代入 x=10");
   const [a, b] = solve2(-4, 1, 3, 10 - 4, 1, 3 - 10 * (10 - 4));
   near((0 + a) * (0 - 4) + b, 3);
   near((10 + a) * (10 - 4) + b, 3);
@@ -411,15 +438,16 @@ check(7, q => {
   numeric(q, b);
 });
 check(8, q => {
-  stem(q, "t+2", "餘數為 12", "t-2 整除", "t²-4 的餘式");
+  stem(q, "G(x)", "x+2", "餘數為 12", "x-2 整除", "x²-4 的餘式");
+  naming(q, "Ft", "G(x)=(x²-4)Q(x)+ax+b", "G(-2)=12", "G(2)=0");
   const [a, b] = solve2(-2, 1, 12, 2, 1, 0);
-  const samples = [-5, -2, -1, 0, 2, 4].map(t => ({ t }));
-  expressions(q, samples, ({ t }) => a * t + b);
-  for (const t of [-2, 2]) {
-    const quotient = t ** 3 - 4 * t + 1;
-    near((t * t - 4) * quotient + a * t + b, t === -2 ? 12 : 0);
+  const samples = [-5, -2, -1, 0, 2, 4].map(x => ({ x }));
+  expressions(q, samples, ({ x }) => a * x + b);
+  for (const x of [-2, 2]) {
+    const quotient = x ** 3 - 4 * x + 1;
+    near((x * x - 4) * quotient + a * x + b, x === -2 ? 12 : 0);
   }
-  assert.match(q.solution, /餘式.*at\+b/);
+  assert.match(q.solution, /餘式.*ax\+b/);
 });
 check(9, q => {
   stem(q, "38%", "45%", "60%", "非兒童書中有 x%");
@@ -430,18 +458,20 @@ check(9, q => {
   numeric(q, 100 * adultScience / adults);
 });
 check(10, q => {
-  stem(q, "5t+9≤2(t-3) 或 8-3t>17");
-  const samples = [-100, -5.001, -5, -4.999, -4, -3.001, -3, -2.999, 0, 100].map(t => ({ t }));
-  expressions(q, samples, ({ t }) => 5 * t + 9 <= 2 * (t - 3) || 8 - 3 * t > 17, condition);
+  stem(q, "5x+9≤2(x-3) 或 8-3x>17");
+  naming(q, "t", "x≤-5", "x<-3");
+  const samples = [-100, -5.001, -5, -4.999, -4, -3.001, -3, -2.999, 0, 100].map(x => ({ x }));
+  expressions(q, samples, ({ x }) => 5 * x + 9 <= 2 * (x - 3) || 8 - 3 * x > 17, condition);
 });
 check(11, q => {
-  stem(q, "(3u+2v)/(2u+5v)=4/3", "(u+3v)/(2u-v)", "各分母均不為零");
+  stem(q, "(3x+2y)/(2x+5y)=4/3", "(x+3y)/(2x-y)", "各分母均不為零");
+  naming(q, "uv", "x=14y", "(x+3y)/(2x-y)");
   const ratio = (4 * 5 - 3 * 2) / (3 * 3 - 4 * 2);
-  const answers = [-7, -1, 0.125, 1, 6].map(v => {
-    const u = ratio * v;
-    assert.ok(u !== 0 && v !== 0 && 2 * u + 5 * v !== 0 && 2 * u - v !== 0);
-    near((3 * u + 2 * v) / (2 * u + 5 * v), 4 / 3);
-    return (u + 3 * v) / (2 * u - v);
+  const answers = [-7, -1, 0.125, 1, 6].map(y => {
+    const x = ratio * y;
+    assert.ok(x !== 0 && y !== 0 && 2 * x + 5 * y !== 0 && 2 * x - y !== 0);
+    near((3 * x + 2 * y) / (2 * x + 5 * y), 4 / 3);
+    return (x + 3 * y) / (2 * x - y);
   });
   answers.forEach(answer => near(answer, answers[0]));
   numeric(q, answers[0]);
@@ -477,7 +507,7 @@ check(14, q => {
   statements(q, [0, 1, 2].map(i => truths.every(row => row[i])));
 });
 check(15, q => {
-  stem(q, "正六邊形", "邊長為 6 cm", "432 cm³", "總表面面積", "最接近");
+  stem(q, "正六邊形", "邊長 6 cm", "432 cm³", "總表面面積", "最接近");
   const vertices = Array.from({ length: 6 }, (_, i) => polar(i * 60, 6));
   const base = sum(vertices.map((v, i) => det(v, vertices[(i + 1) % 6]))) / 2;
   const height = 432 / base, perimeter = sum(vertices.map((v, i) => distance(v, vertices[(i + 1) % 6])));
@@ -509,23 +539,25 @@ check(17, q => {
   statements(q, [close(radius, 6), close(perimeter, 3 * Math.PI), close(Math.PI * circleRadius ** 2, 18 * Math.PI)]);
 });
 check(18, q => {
-  stem(q, "JK=KL", "∠JML=32°", "∠JEK=102°");
+  stem(q, "JK=KL", "∠JML=32°", "∠JNK=102°");
+  naming(q, "E", "∠JKN=180°-32°-102°=46°");
   assert.match(q.prompt, /JK(?:∥|\/\/)LM/);
-  const { a: J, b: K, c: L, d: M, e: E } = parallelIsosceles(32, 102);
-  near(angle(J, E, L), 180 - 102);
+  const { a: J, b: K, c: L, d: M, e: N } = parallelIsosceles(32, 102);
+  near(angle(J, N, L), 180 - 102);
   near(angle(K, J, L), angle(J, L, K));
   numeric(q, angle(L, J, M), "°");
 });
 check(19, q => {
-  stem(q, "JKLM", "LF=JM");
+  stem(q, "JKLM", "LP=JM");
+  naming(q, "EFG", "△KLN∼△LQN（AA）", "△KLN≅△PLN（RHS）");
   const truths = [[20, 12], [4, 3], [9, 2], [1.01, 1]].map(([w, h]) => {
-    const { a: J, b: K, c: L, d: M, e: E, f: F, g: G } = rectangleReflection(w, h);
-    const sameAngle = close(angle(M, J, E), angle(M, G, F));
-    const similar = close(angle(K, L, E), angle(L, G, E)) && close(angle(K, E, L), angle(L, E, G)) &&
-      close(distance(K, L) / distance(L, G), distance(L, E) / distance(G, E)) &&
-      close(distance(L, E) / distance(G, E), distance(E, K) / distance(E, L));
-    const congruent = close(distance(K, L), distance(F, L)) && close(distance(L, E), distance(L, E)) && close(distance(K, E), distance(F, E));
-    near(angle(K, E, L), 90);
+    const { a: J, b: K, c: L, d: M, e: N, f: P, g: Q } = rectangleReflection(w, h);
+    const sameAngle = close(angle(M, J, N), angle(M, Q, P));
+    const similar = close(angle(K, L, N), angle(L, Q, N)) && close(angle(K, N, L), angle(L, N, Q)) &&
+      close(distance(K, L) / distance(L, Q), distance(L, N) / distance(Q, N)) &&
+      close(distance(L, N) / distance(Q, N), distance(N, K) / distance(N, L));
+    const congruent = close(distance(K, L), distance(P, L)) && close(distance(L, N), distance(L, N)) && close(distance(K, N), distance(P, N));
+    near(angle(K, N, L), 90);
     return [sameAngle, similar, congruent];
   });
   statements(q, [0, 1, 2].map(i => truths.every(row => row[i])));
@@ -533,16 +565,17 @@ check(19, q => {
   assert.match(q.solution, /RHS|SSS/);
 });
 check(20, q => {
-  stem(q, "正方形", "JE=2EK", "13");
-  const { a: J, b: K, c: L, d: M, e: E, f: F } = squarePerpendicular(2);
-  const smallArea = area(M, E, F), scale = Math.sqrt(13 / smallArea);
-  const scaled = [J, K, L, M, E, F].map(p => p.map(x => x * scale));
+  stem(q, "正方形", "JN=2NK", "13");
+  naming(q, "EF", "∠NJM=∠PKN=90°", "△LMP 面積");
+  const { a: J, b: K, c: L, d: M, e: N, f: P } = squarePerpendicular(2);
+  const smallArea = area(M, N, P), scale = Math.sqrt(13 / smallArea);
+  const scaled = [J, K, L, M, N, P].map(p => p.map(x => x * scale));
   near(area(scaled[3], scaled[4], scaled[5]), 13);
-  near(angle(M, E, F), 90);
-  numeric(q, area(L, M, F) * scale ** 2, " cm²");
+  near(angle(M, N, P), 90);
+  numeric(q, area(L, M, P) * scale ** 2, " cm²");
 });
 check(21, q => {
-  stem(q, "JKLMNPQR", "正八邊形", "I JQ∥KP", "II KM=NQ", "III ∠LJQ=3∠KMR");
+  stem(q, "頂點依次為 J、K、L、M、N、P、Q、R", "正八邊形", "I JQ∥KP", "II KM=NQ", "III ∠LJQ=3∠KMR");
   const [J, K, L, M, N, P, Q, R] = Array.from({ length: 8 }, (_, i) => polar(i * 45));
   statements(q, [close(det(sub(Q, J), sub(P, K)), 0), close(distance(K, M), distance(N, Q)), close(angle(L, J, Q), 3 * angle(K, M, R))]);
   near(angle(J, Q, K), angle(Q, K, P));
@@ -561,11 +594,12 @@ check(22, q => {
   numeric(q, angle(L, J, M), "°");
 });
 check(23, q => {
-  stem(q, "(-9,4)", "對 y 軸反射", "逆時針旋轉 90°", "R 的 x 坐標");
-  const P = [-9, 4], Q = [-P[0], P[1]], rotation = 90 * r;
-  const R = [Q[0] * Math.cos(rotation) - Q[1] * Math.sin(rotation), Q[0] * Math.sin(rotation) + Q[1] * Math.cos(rotation)];
-  near(norm(R), norm(P));
-  numeric(q, R[0]);
+  stem(q, "(-9,4)", "對 y 軸反射", "逆時針旋轉 90°", "L 的 x 坐標");
+  naming(q, "PQR", "K=(9,4)", "L=(-4,9)");
+  const J = [-9, 4], K = [-J[0], J[1]], rotation = 90 * r;
+  const L = [K[0] * Math.cos(rotation) - K[1] * Math.sin(rotation), K[0] * Math.sin(rotation) + K[1] * Math.cos(rotation)];
+  near(norm(L), norm(J));
+  numeric(q, L[0]);
 });
 check(24, q => {
   stem(q, "LM/JK");
@@ -581,7 +615,8 @@ check(24, q => {
   }, (option, { alpha, beta }) => value(option.replace(/(sin|cos|tan)([αβ])/g, (_, fn, theta) => `(${Math[fn]((theta === "α" ? alpha : beta) * r)})`)));
 });
 check(25, q => {
-  stem(q, "(-3,5)", "(1,8)", "PJ=JK");
+  stem(q, "(-3,5)", "(1,8)", "RJ=JK");
+  naming(q, "P", "RJ=JK", "設 R(x,y)");
   const J = [-3, 5], K = [1, 8], radius = distance(J, K);
   assert.ok(radius > 0);
   const points = Array.from({ length: 12 }, (_, i) => polar(i * 30, radius).map((x, j) => x + J[j]));
@@ -590,14 +625,16 @@ check(25, q => {
   assert.ok(!close(equationValue(q.correct, { x: J[0], y: J[1] }), 0), "The centre is not on the fixed-distance locus");
 });
 check(26, q => {
-  stem(q, "(-2,5)", "(4,-1)", "(8,7)", "JP", "中線");
-  const J = [-2, 5], K = [4, -1], L = [8, 7], P = interpolate(K, L, 0.5);
-  near(distance(K, P), distance(L, P));
+  stem(q, "(-2,5)", "(4,-1)", "(8,7)", "JN", "中線");
+  naming(q, "P", "N=((4+8)/2,(-1+7)/2)=(6,3)", "JN 的斜率");
+  const J = [-2, 5], K = [4, -1], L = [8, 7], N = interpolate(K, L, 0.5);
+  near(distance(K, N), distance(L, N));
   assert.ok(area(J, K, L) > 0);
-  loci(q, [-2, -1, 0, 0.5, 1, 3].map(t => interpolate(J, P, t)));
+  loci(q, [-2, -1, 0, 0.5, 1, 3].map(t => interpolate(J, N, t)));
 });
 check(27, q => {
-  stem(q, "斜率為 -3", "x²+y²+8x-14y-15=0", "兩個相異點", "(s,t)");
+  stem(q, "斜率為 -3", "x²+y²+8x-14y-15=0", "兩個相異交點", "(s,t)");
+  naming(q, "PQ", "弦 JK", "代入弦中點 (s,t)");
   const centre = [-4, 7], radiusSquared = 4 ** 2 + 7 ** 2 + 15;
   const midpoints = [-0.9, -0.5, 0, 0.5, 0.9].map(t => {
     const offset = t * Math.sqrt(radiusSquared * 10), constant = -(3 * centre[0] + centre[1]) + offset;
@@ -649,7 +686,8 @@ check(30, q => {
   numeric(q, remaining);
 });
 check(31, q => {
-  stem(q, "p²q³r", "p⁵q⁶r⁴", "p⁵q³r²", "p⁴q⁵r⁴");
+  stem(q, "x²y³z", "x⁵y⁶z⁴", "x⁵y³z²", "x⁴y⁵z⁴");
+  naming(q, "pqr", "x²y⁶z");
   const minimum = [2, 3, 1], maximum = [5, 6, 4], first = [5, 3, 2], second = [4, 5, 4];
   const valid = [];
   for (let p = 0; p <= 5; p++) for (let q = 0; q <= 6; q++) for (let r = 0; r <= 4; r++) {
@@ -657,7 +695,7 @@ check(31, q => {
     if (third.every((exponent, i) => Math.min(first[i], second[i], exponent) === minimum[i] && Math.max(first[i], second[i], exponent) === maximum[i])) valid.push(third);
   }
   assert.equal(valid.length, 1, "The HCF/LCM conditions must uniquely determine all three exponents, beyond the listed options");
-  const meanings = q.options.map(option => ["p", "q", "r"].map(letter => {
+  const meanings = q.options.map(option => ["x", "y", "z"].map(letter => {
     const match = option.match(new RegExp(`${letter}([⁰¹²³⁴⁵⁶⁷⁸⁹]*)`));
     assert.ok(match);
     return match[1] ? Number([...match[1]].map(x => superscripts[x]).join("")) : 1;
@@ -678,14 +716,15 @@ check(32, q => {
   assert.equal(expected.toString(16).length, 14);
 });
 check(33, q => {
-  stem(q, "均為正數", "q≠1", "r≠1", "y=2p+log_(q)x", "y=log_(r)x", "OT:OS");
+  stem(q, "均為正數", "q≠1", "r≠1", "y=2p+log_(q)x", "y=log_(r)x", "OK:OJ");
+  naming(q, "ST", "J=(q^(-2p),0)", "K=(1,0)", "OK:OJ=q^(2p):1");
   const samples = [0.5, 1, 2].flatMap(p => [0.25, 0.5, 2, 3].flatMap(q => [0.2, 0.5, 4, 5].map(r => ({ p, q, r }))));
   expressions(q, samples, ({ p, q, r }) => {
-    const S = Math.exp(-2 * p * Math.log(q)), T = Math.exp(0 * Math.log(r));
-    assert.ok(S > 0 && T > 0);
-    near(2 * p + Math.log(S) / Math.log(q), 0);
-    near(Math.log(T) / Math.log(r), 0);
-    return T / S;
+    const J = Math.exp(-2 * p * Math.log(q)), K = Math.exp(0 * Math.log(r));
+    assert.ok(J > 0 && K > 0);
+    near(2 * p + Math.log(J) / Math.log(q), 0);
+    near(Math.log(K) / Math.log(r), 0);
+    return K / J;
   }, (option, sample) => {
     const [a, b] = option.split(":").map(part => value(part, sample));
     assert.ok(a > 0 && b > 0);
@@ -742,40 +781,44 @@ check(36, q => {
   assert.doesNotMatch(q.solution, /ac=b²/, "Do not replace the four-term product with a three-term identity");
 });
 check(37, q => {
-  stem(q, "對所有實數 t", "t²+ht+2h+5≥0");
+  stem(q, "對所有實數 x", "x²+hx+2h+5≥0");
+  naming(q, "t", "(x-1)²", "(x+5)²");
   const samples = [-20, -10, -2.001, -2, -1.999, 0, 2, 9.999, 10, 10.001, 20].map(h => ({ h }));
   expressions(q, samples, ({ h }) => {
-    const vertex = -h / 2, f = t => t * t + h * t + 2 * h + 5, minimum = f(vertex);
-    for (const t of [-20, -1, 0, 2, 20]) near(f(t), (t - vertex) ** 2 + minimum);
+    const vertex = -h / 2, f = x => x * x + h * x + 2 * h + 5, minimum = f(vertex);
+    for (const x of [-20, -1, 0, 2, 20]) near(f(x), (x - vertex) ** 2 + minimum);
     return minimum >= 0;
   }, condition);
   for (const h of [-2, 10]) near((-h / 2) ** 2 + h * (-h / 2) + 2 * h + 5, 0);
 });
 check(38, q => {
-  stem(q, "864", "594", "576", "270", "432");
-  const J = [0, 594], K = [864, 594], L = [864, 0], M = [0, 0], E = [576, 594], F = [864, 594 - 270], G = [864 - 432, 0];
-  const H = intersect(J, F, E, G);
+  stem(q, "JK=864 cm", "KL=594 cm", "JN=576 cm", "KP=270 cm", "LQ=432 cm", "JP 與 NQ 相交於 R", "求 MR");
+  naming(q, "EFGH", "N=(576,594)", "P=(864,594-270)=(864,324)", "Q=(864-432,0)=(432,0)", "R 的 x 坐標", "MR=685 cm");
+  const J = [0, 594], K = [864, 594], L = [864, 0], M = [0, 0], N = [576, 594], P = [864, 594 - 270], Q = [864 - 432, 0];
+  const R = intersect(J, P, N, Q);
   near(distance(J, K), 864);
   near(distance(K, L), 594);
-  near(distance(J, E), 576);
-  near(distance(K, F), 270);
-  near(distance(L, G), 432);
-  for (const [a, b] of [[J, F], [E, G]]) {
-    near(det(sub(H, a), sub(b, a)), 0);
-    assert.ok(dot(sub(H, a), sub(b, a)) > 0 && dot(sub(H, b), sub(a, b)) > 0);
+  near(distance(J, N), 576);
+  near(distance(K, P), 270);
+  near(distance(L, Q), 432);
+  for (const [a, b] of [[J, P], [N, Q]]) {
+    near(det(sub(R, a), sub(b, a)), 0);
+    assert.ok(dot(sub(R, a), sub(b, a)) > 0 && dot(sub(R, b), sub(a, b)) > 0);
   }
-  numeric(q, Math.round(distance(M, H)), " cm");
+  numeric(q, Math.round(distance(M, R)), " cm");
 });
 check(39, q => {
-  stem(q, "∠LMF=52°", "∠LEM=26°");
-  const { a: J, b: K, c: L, d: M, e: E } = tangentParallel(52, 26);
+  stem(q, "∠LMP=52°", "∠LNM=26°");
+  naming(q, "EF", "∠LMP=52°", "P、M、N 共線", "∠JLN");
+  const { a: J, b: K, c: L, d: M, e: N } = tangentParallel(52, 26);
   near(angle(L, K, J), 90);
-  near(det(sub(K, J), sub(E, L)), 0);
+  near(det(sub(K, J), sub(N, L)), 0);
   near(angle(L, J, M), 52);
   numeric(q, angle(J, L, K), "°");
 });
 check(40, q => {
-  stem(q, "3x=4y", "x²+y²-30x-10y+161=0", "MN 為直徑");
+  stem(q, "3x=4y", "x²+y²-30x-10y+161=0", "JK 為直徑");
+  naming(q, "MN", "JK 的中點為 H", "△CHJ", "HJ 是新圓的半徑");
   const centre = [15, 5], radiusSquared = dot(centre, centre) - 161;
   const chord = circleChord(centre, radiusSquared, 3, -4, 0);
   // Parameterize the original line independently to cross-check both endpoints.
@@ -789,14 +832,15 @@ check(40, q => {
   loci(q, Array.from({ length: 12 }, (_, i) => polar(i * 30, radius).map((x, j) => x + chord.midpoint[j])));
 });
 check(41, q => {
-  stem(q, "P 的坐標為 (18,-12)", "垂心為 H(10,2)", "Q 的 y 坐標");
-  const O = [0, 0], P = [18, -12], H = [10, 2], altitudePH = sub(P, H);
-  const Q = solve2(...P, dot(H, P), ...altitudePH, 0);
-  assert.ok(area(O, P, Q) > 0, "The triangle must be nondegenerate");
-  near(dot(sub(Q, H), sub(P, O)), 0);
-  near(dot(sub(P, H), sub(Q, O)), 0);
-  near(dot(sub(O, H), sub(Q, P)), 0);
-  numeric(q, Q[1]);
+  stem(q, "J 的坐標為 (18,-12)", "垂心為 H(10,2)", "K 的 y 坐標");
+  naming(q, "PQ", "KH⊥OJ", "JH⊥OK", "K 的 y 坐標");
+  const O = [0, 0], J = [18, -12], H = [10, 2], altitudeJH = sub(J, H);
+  const K = solve2(...J, dot(H, J), ...altitudeJH, 0);
+  assert.ok(area(O, J, K) > 0, "The triangle must be nondegenerate");
+  near(dot(sub(K, H), sub(J, O)), 0);
+  near(dot(sub(J, H), sub(K, O)), 0);
+  near(dot(sub(O, H), sub(K, J)), 0);
+  numeric(q, K[1]);
 });
 check(42, q => {
   stem(q, "16 名設計員", "9 名工程師", "7 人", "至多 4 名設計員");
@@ -846,7 +890,8 @@ check(44, q => {
   numeric(q, score, " 分");
 });
 check(45, q => {
-  stem(q, "{T(1),T(2),…,T(31)}", "{T(41),T(42),…,T(71)}", "I x₁>x₂", "II y₁=y₂", "III z₁<z₂");
+  stem(q, "{U(1),U(2),…,U(31)}", "{U(41),U(42),…,U(71)}", "I x₁>x₂", "II y₁=y₂", "III z₁<z₂");
+  naming(q, "T", "U(n)=a+(n-1)d", "U(n+40)=U(n)+40d");
   const truths = [-19, 0, 5].flatMap(a => [-3, -0.5, 0, 0.5, 4].map(d => {
     const first = Array.from({ length: 31 }, (_, i) => a + i * d), second = Array.from({ length: 31 }, (_, i) => a + (i + 40) * d);
     first.forEach((x, i) => near(second[i] - x, 40 * d));

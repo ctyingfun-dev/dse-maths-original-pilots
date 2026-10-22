@@ -89,25 +89,25 @@ check(1,()=>{
 });
 
 check(2,()=>{
-  input(2,"(7-5u)/v=8","主項","v≠0");
+  input(2,"(7-5x)/y=8","主項","y≠0");
   const uNumerator=padd(constant(7),pscale(K,-8));
   pequal(padd(constant(7),pscale(uNumerator,-1)),pscale(K,8),"Q2: clearing denominator identity");
   for(const v of [-10,-1,-.1,.1,1,7])near((7-5*((7-8*v)/5))/v,8);
-  answer(2,"u=(7-8v)/5");
-  worked(2,"7-5u=8v","7-8v");
-  return {subjectNumerator:[7,-8],denominator:5,domain:"v != 0"};
+  answer(2,"x=(7-8y)/5");
+  worked(2,"7-5x=8y","7-8y");
+  return {subjectNumerator:[7,-8],denominator:5,domain:"y != 0"};
 });
 
 check(3,()=>{
-  input(3,"8u²+2uv-3v²","10u-5v-8u²-2uv+3v²");
+  input(3,"8x²+2xy-3y²","10x-5y-8x²-2xy+3y²");
   const first=padd(pscale(psquare(X),8),pscale(pmul(X,K),2),pscale(psquare(K),-3));
   const common=padd(pscale(X,2),pscale(K,-1)), other=padd(pscale(X,4),pscale(K,3));
   pequal(first,pmul(common,other),"Q3a: exact bivariate expansion");
   const second=padd(pscale(X,10),pscale(K,-5),pscale(first,-1));
   pequal(second,pmul(common,padd(constant(5),pscale(other,-1))),"Q3b: grouping identity");
-  answer(3,"(4u+3v)(2u-v)；(2u-v)(5-4u-3v)");
-  worked(3,"(4u+3v)(2u-v)","(2u-v)(5-4u-3v)");
-  return {quadraticCoefficients:[8,2,-3],commonFactor:"2u-v",domain:"all real u,v"};
+  answer(3,"(4x+3y)(2x-y)；(2x-y)(5-4x-3y)");
+  worked(3,"(4x+3y)(2x-y)","(2x-y)(5-4x-3y)");
+  return {quadraticCoefficients:[8,2,-3],commonFactor:"2x-y",domain:"all real x,y"};
 });
 
 check(4,()=>{
@@ -202,7 +202,7 @@ check(9,()=>{
 });
 
 check(10,()=>{
-  input(10,"(x-3)²","F(2)=0","F(7)=60","F(x)+4");
+  input(10,"(x-3)²","h(2)=0","h(7)=60","h(x)+4");
   const coefficient=(60-0)/((7-3)**2-(2-3)**2),constantTerm=-coefficient*(2-3)**2;
   const polynomial=padd(pscale(psquare(padd(X,constant(-3))),coefficient),constant(constantTerm));
   const expanded=padd(pscale(psquare(X),4),pscale(X,-24),constant(32));
@@ -211,7 +211,7 @@ check(10,()=>{
   const f0=peval(polynomial,0),yIntercept=f0+4;
   pequal(padd(polynomial,constant(4)),pscale(psquare(padd(X,constant(-3))),4),"Q10: unique double root after vertical shift");
   answer(10,`${f0}；${yIntercept}；3`);
-  worked(10,"4(x-3)²-4",`F(0)=4(0-3)²-4=36-4=${f0}`,String(yIntercept),"x=3");
+  worked(10,"4(x-3)²-4",`h(0)=4(0-3)²-4=36-4=${f0}`,String(yIntercept),"x=3");
   return {constant:constantTerm,coefficient,f0,yIntercept,xIntercept:3,multiplicity:2,domain:"all real x"};
 });
 
@@ -256,8 +256,8 @@ check(12,()=>{
   const discriminant=8**2-4*2*12;
   assert(discriminant<0);
   pequal(residual,padd(pscale(psquare(padd(X,constant(2))),2),constant(4)),"Q12: residual is positive for every real x");
-  answer(12,`c=${c}；x+2為因式；不正確`);
-  worked(12,`c=${c}`,"p(-2)=", "(x-4)(x+2)(2x²+8x+12)",String(discriminant));
+  answer(12,`c=${c}；x+2為因式；不全為實數`);
+  worked(12,`c=${c}`,"g(-2)=", "(x-4)(x+2)(2x²+8x+12)",String(discriminant));
   return {c,quarticCoefficients:[0,1,2,3,4].map(i=>p[`${i},0`]||0),realRoots:[-2,4],
     residualCoefficients:[12,8,2],residualDiscriminant:discriminant,nonrealRootCount:2};
 });
@@ -391,7 +391,7 @@ check(18,()=>{
 });
 
 check(19,()=>{
-  input(19,"x²-24kx-10x+144k²+127k+31","正","f(10-x)","(5,6-2k)","(-19,18)","長方形");
+  input(19,"x²-24kx-10x+144k²+127k+31","正","q(10-x)","(5,6-2k)","(-19,18)","長方形");
   const qx=padd(constant(5),pscale(K,12)),qy=padd(constant(6),pscale(K,7));
   const f=padd(psquare(X),pscale(pmul(X,K),-24),pscale(X,-10),pscale(psquare(K),144),pscale(K,127),constant(31));
   pequal(f,padd(psquare(padd(X,pscale(qx,-1))),qy),"Q19a: exact completing-square identity for all real x,k");
@@ -402,19 +402,19 @@ check(19,()=>{
   pequal(reflectedF,padd(psquare(padd(X,pscale(r[0],-1))),r[1]),"Q19b: exact transformed vertex identity");
   const u=[constant(5),padd(constant(6),pscale(K,3))];
   const line=p=>padd(pscale(p[0],3),pscale(p[1],-4),pscale(K,-8),constant(9));
-  pequal(line(q),{},"Q19c(i): Q on QS for all k");pequal(line(s),{},"Q19c(i): S on QS for all k");
-  pequal(pdot(psub(q,s),psub(q,s)),pscale(psquare(K),225),"Q19: QS=15k since k>0");
-  pequal(pdot(psub(r,s),psub(r,s)),pscale(psquare(K),225),"Q19: RS=15k since k>0");
-  pequal(pdot(psub(q,r),psub(q,r)),pscale(psquare(K),576),"Q19: QR=24k since k>0");
-  pequal(line(u),pscale(K,-20),"Q19: distance to QS =20k/5=4k");
-  pequal(padd(qy,pscale(u[1],-1)),pscale(K,4),"Q19: distance to QR=4k");
+  pequal(line(q),{},"Q19c(i): J on JL for all k");pequal(line(s),{},"Q19c(i): L on JL for all k");
+  pequal(pdot(psub(q,s),psub(q,s)),pscale(psquare(K),225),"Q19: JL=15k since k>0");
+  pequal(pdot(psub(r,s),psub(r,s)),pscale(psquare(K),225),"Q19: KL=15k since k>0");
+  pequal(pdot(psub(q,r),psub(q,r)),pscale(psquare(K),576),"Q19: JK=24k since k>0");
+  pequal(line(u),pscale(K,-20),"Q19: distance to JL =20k/5=4k");
+  pequal(padd(qy,pscale(u[1],-1)),pscale(K,4),"Q19: distance to JK=4k");
   // Scale rational coordinates by five to keep every symbolic check integral.
   const fiveT=[padd(constant(25),pscale(K,12)),padd(constant(30),pscale(K,-1))];
   const fiveS=s.map(p=>pscale(p,5)),fiveU=u.map(p=>pscale(p,5));
   const fiveST=psub(fiveT,fiveS),fiveTU=psub(fiveU,fiveT);
   pequal(pdot(fiveST,fiveTU),{},"Q19: tangent and radius perpendicular for all k");
-  pequal(pdot(fiveTU,fiveTU),pscale(psquare(K),400),"Q19: UT=4k");
-  pequal(pdot(fiveST,fiveST),pscale(psquare(K),225),"Q19: ST=3k");
+  pequal(pdot(fiveTU,fiveTU),pscale(psquare(K),400),"Q19: NM=4k");
+  pequal(pdot(fiveST,fiveST),pscale(psquare(K),225),"Q19: LM=3k");
   const fiveV=fiveS.map((p,i)=>padd(p,fiveU[i],pscale(fiveT[i],-1)));
   pequal(fiveV[0],padd(constant(25),pscale(K,-12)),"Q19: rectangle fourth vertex x");
   pequal(fiveV[1],padd(constant(30),pscale(K,6)),"Q19: rectangle fourth vertex y");
@@ -431,12 +431,12 @@ check(19,()=>{
     for(const [a,b] of [[Q,R],[R,S],[S,Q]])near(lineDistance(U,a,b),inradius);
     near(distance(U,T),inradius);near(dot(sub(T,S),sub(U,T)),0);
     near(cross(sub(T,S),sub(Q,S)),0);
-    assert(dot(sub(T,S),sub(T,Q))<0,"Q19: tangency point is on segment QS");
+    assert(dot(sub(T,S),sub(T,Q))<0,"Q19: tangency point is on segment JL");
     near(distance(S,T),3*parameter);near(area(S,T,U)+area(S,U,V),12*parameter**2);
     near(cross(sub(T,S),sub(U,V)),0);near(cross(sub(U,T),sub(V,S)),0);
     near(peval(f,Q[0],parameter),Q[1]);near(peval(f,10-R[0],parameter),R[1]);
   }
-  answer(19,`Q(5+12k,6+7k)；R(5-12k,6+7k)；3x-4y-8k+9=0；(x-5)²+[y-(6+3k)]²=16k²；有，k=${kFromX}`);
+  answer(19,`J(5+12k,6+7k)；K(5-12k,6+7k)；3x-4y-8k+9=0；(x-5)²+[y-(6+3k)]²=16k²；有，k=${kFromX}`);
   worked(19,"(x-12k-5)²+7k+6","(5+12k,6+7k)","(5-12k,6+7k)","3x-4y-8k+9=0",
     "15k","108k²","27k","4k","(5,6+3k)","(x-5)²+[y-(6+3k)]²=16k²",`k=${kFromX}`);
   return {vertexQ:"(5+12k,6+7k)",vertexR:"(5-12k,6+7k)",lineQS:"3x-4y-8k+9=0",sides:"15k,15k,24k",
@@ -450,23 +450,23 @@ assert.deepEqual([sum(sourceMarks.slice(0,9)),sum(sourceMarks.slice(9,14)),sum(s
 
 // Link independently computed quantities to the derivations, not only answer keys.
 worked(1,"(p⁻³q²)⁴=p⁻¹²q⁸","p^(2-12)q^(3+8)=p⁻¹⁰q¹¹");
-worked(2,"-5u=8v-7");
-worked(3,"8u²+2uv-3v²=4u(2u-v)+3v(2u-v)","5(2u-v)-(4u+3v)(2u-v)");
+worked(2,"-5x=8y-7");
+worked(3,"8x²+2xy-3y²=4x(2x-y)+3y(2x-y)","5(2x-y)-(4x+3y)(2x-y)");
 worked(4,"5(2x-3)+36>16(x-2)","53>6x","x≥-6","共有 8 個");
 const r5=records.get(5),r6=records.get(6),r8=records.get(8),r9=records.get(9),r11=records.get(11),r14=records.get(14),r18=records.get(18);
 worked(5,"x+33=3(4x-33)",`11x=${11*r5.initialB}`,`總數=${r5.initialB}+${r5.initialA}=${r5.total} 個`);
 worked(6,"0.85(c+96)=1.25c",`c=${r6.cost}`,`標價=${r6.cost}+96=${r6.marked} 元`);
-worked(7,"OA=OB=r","(180°-60°)/2=60°","等邊三角形");
+worked(7,"OU=OV=r","(180°-60°)/2=60°","等邊三角形");
 worked(8,`28×96/2=${r8.outerArea} cm²`,"KM:JL=21:28=3:4",`${r8.outerArea}×9/16=${r8.smallArea} cm²`);
 worked(9,"(k+28)/(k+52)=2/3",`Q₁=${r9.quartiles[0]}`,`Q₃=${r9.quartiles[1]}`,
   "第 18、19 項","第 54、55 項",`σ=√[${r9.totalSquared}/${r9.total}-(${r9.totalX}/${r9.total})²]`,
   `分布域=36-31=${r9.range} 篇`,`四分位數間距=34-32=${r9.iqr} 篇`,`${r9.sd.toPrecision(3)} 篇`);
-worked(10,"a+b=0","a+16b=60","b=4，a=-4","y 截距=F(0)+4=32+4=36","4(x-3)²=0");
+worked(10,"a+b=0","a+16b=60","b=4，a=-4","y 截距=h(0)+4=32+4=36","4(x-3)²=0");
 worked(11,`平均值=${r11.totalX}/${r11.total}=${r11.mean} 個`,"第 20、21 項","中位數為 3 個","眾數為 2 個",
   `(${r11.totalX}+6n)/(${r11.total}+n)=5`,`n=${r11.meanAddition}`,"小於 5 的數據共 25 項","第 26 至 30 項",
   `(4+5)/2=${r11.medianBefore}`,`當 n=${r11.minimumMedianAddition}`,`4+n<13`,"n=9 會出現兩個眾數 2 及 6");
-worked(12,"p(x)≡(x²+2x+2)(2x²-24)+cx+c-8","26×8+5c-8=0","p(-2)=2×(-16)+32=0",
-  "因式定理","p(x)≡2x⁴+4x³-20x²-88x-96","Δ=8²-4×2×12=64-96=-32<0","實根只有 4 及 -2");
+worked(12,"g(x)≡(x²+2x+2)(2x²-24)+cx+c-8","26×8+5c-8=0","g(-2)=2×(-16)+32=0",
+  "因式定理","g(x)≡2x⁴+4x³-20x²-88x-96","Δ=8²-4×2×12=64-96=-32<0","實根只有 4 及 -2");
 worked(13,"OG=20<25","OH=GH=10","OG⊥MN","HM=HN","HM=√(GM²-GH²)","√(25²-10²)=√525","HM=5√21","MN=2HM=10√21",
   "面積=10√21×20/2=100√21 平方單位");
 worked(14,`πr²×15/3=${r14.coneVolumePi}π`,`π×16²×h/3=${r14.largeVolumePi}π`,
@@ -483,11 +483,11 @@ worked(18,"h=JKsin55°=LMsin65°",`LM=52sin55°/sin65°≈${r18.lm.toFixed(6)} c
   "(JL²+JM²-LM²)/(2×JL×JM)",`∠LJM≈${r18.angleLJM.toFixed(6)}°`,"NH⊥LM","LM⊥平面 JNH","JH⊥LM",
   "所求二面角為 ∠JHN",`NH=NMsin65°≈${r18.nh.toFixed(6)} cm`,`tanθ=JN/NH`,
   `θ=tan⁻¹[(52cos55°)/(NMsin65°)]≈${r18.dihedral.toFixed(6)}°`,`${r18.dihedral.toFixed(6)}°>25°`);
-worked(19,"k>0","10-(5+12k)=5-12k","9k/(12k)=3/4","QR=24k","垂直距離為 9k",
-  "QS=RS=√[(12k)²+(9k)²]=15k","24k×9k/2=108k²","(24k+15k+15k)/2=27k",
-  "r=108k²/(27k)=4k","6+7k-4k=6+3k","半徑 UT 垂直切線 QS",
-  "y-(6+3k)=-4(x-5)/3","T(5+12k/5,6-k/5)","5-12k/5=-19","6+6k/5=18",
-  "S(5,-14)、T(29,4)、U(5,36)、V(-19,18)","中點均為 (5,11)","ST⊥UT","k=10>0");
+worked(19,"k>0","10-(5+12k)=5-12k","9k/(12k)=3/4","JK=24k","垂直距離為 9k",
+  "JL=KL=√[(12k)²+(9k)²]=15k","24k×9k/2=108k²","(24k+15k+15k)/2=27k",
+  "r=108k²/(27k)=4k","6+7k-4k=6+3k","半徑 NM 垂直切線 JL",
+  "y-(6+3k)=-4(x-5)/3","M(5+12k/5,6-k/5)","5-12k/5=-19","6+6k/5=18",
+  "L(5,-14)、M(29,4)、N(5,36)、P(-19,18)","中點均為 (5,11)","LM⊥NM","k=10>0");
 
 const load = file => {
   const context={window:{}};
@@ -495,8 +495,24 @@ const load = file => {
   return context.window;
 };
 
+const namingRules = [
+  {n:2, expected:"(7-5x)/y=8", stale:/[uv]/},
+  {n:3, expected:"8x²+2xy-3y²", stale:/[uv]/},
+  {n:7, expected:"∠UOV", stale:/AOB|OAB|OA|OB|AB/},
+  {n:10, expected:"h(x)", stale:/F\(|G/},
+  {n:12, expected:"g(x)", stale:/p\(|宣稱/},
+  {n:19, expected:"q(x)", stale:/f\(|[QRSTUV]/}
+];
+const textLeaves = value => typeof value === "string" ? [value] :
+  value && typeof value === "object" ? Object.values(value).flatMap(textLeaves) : [];
+
 function verifyData(data,render=true) {
   assert.equal(data.year,2021);assert.equal(data.paper,1);assert.equal(data.questions.length,19);
+  for(const {n,expected,stale} of namingRules) {
+    const q=data.questions[n-1];
+    assert(q.prompt.includes(expected),`Q${n}: revised mathematical name in prompt`);
+    assert.doesNotMatch(textLeaves(q).join("\n"),stale,`Q${n}: stale name or old question wording`);
+  }
   const allSteps=q=>q.solution.flatMap(part=>part.steps.flatMap(step=>step.text));
   const contains=(text,fragments,label)=>{
     for(const fragment of fragments)assert(text.includes(fragment),`${label}: missing ${JSON.stringify(fragment)}`);
@@ -611,6 +627,9 @@ function mutationTests(data,svg) {
     for(const part of d.questions[8].solution)for(const step of part.steps)step.text=step.text.map(t=>t.replace("78895/72","78895/71"));
   });
   reject("Q11 changed frequency table",d=>{d.questions[10].diagram.rows[1][1]="14";});
+  for(const [n,oldHint] of [[2,"u"],[3,"v"],[7,"∠AOB"],[10,"F(0)"],[12,"p(4)"],[19,"UT"]]) {
+    reject(`Q${n} stale hint name`,d=>{d.questions[n-1].hints.push(oldHint);});
+  }
   reject("Q18 mistaken dihedral",d=>{
     for(const part of d.questions[17].solution)for(const step of part.steps)step.text=step.text.map(t=>t.replaceAll(r18.dihedral.toFixed(6),"24.000000"));
   });
