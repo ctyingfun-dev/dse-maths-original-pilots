@@ -111,7 +111,7 @@ check(3,()=>{
 });
 
 check(4,()=>{
-  input(4,"5(2x-3)/4+9>4(x-2)","x+6≥0","正整數");
+  input(4,"5(2x-3)/4+9>4(x-2)","x+6≥0","正整數","求使兩個不等式同時成立的 x 值範圍");
   const lower=-6, upper=(4*9-5*3+4*8)/(4*4-5*2);
   const original=x=>5*(2*x-3)/4+9>4*(x-2) && x+6>=0;
   // The difference is (53-6x)/4; its slope fixes the inequality direction.
@@ -319,7 +319,7 @@ check(15,()=>{
 });
 
 check(16,()=>{
-  input(16,"y 截距為 4","(3,10)","互相垂直","7x-4y","包括邊界");
+  input(16,"y 截距為 4","(3,10)","互相垂直","7x-4y","包括邊界","求一組不等式，使其解集恰好表示 R");
   const intersection=[3,10],yIntercept=4,m1=(intersection[1]-yIntercept)/intersection[0],m2=-1/m1;
   const b2=intersection[1]-m2*intersection[0];
   near(m1*m2,-1);
