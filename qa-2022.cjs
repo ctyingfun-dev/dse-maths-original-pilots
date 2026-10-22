@@ -156,7 +156,7 @@ async function labelChecks(page) {
         await page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).progress.questionRevision===2,key(2022));
         assertMigration(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).progress,key(2022)));
       }
-      for(const query of ["","?year=2020"]) {
+      for(const query of ["","?year=2019"]) {
         await page.goto(`${base}/paper${paper}/${query}#papers`);
         assert.equal(await page.evaluate(()=>window.PILOT.year),2026);
       }

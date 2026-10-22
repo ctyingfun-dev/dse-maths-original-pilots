@@ -19,7 +19,7 @@ for(const paper of [1,2]) {
   assert.doesNotMatch(html("y=-119(119-169)/(2t)=5950/(2t)=2975/t。"),/equation-left|equation-relation|equation-right/);
   const substitution=layout("代入 b=40、h=8：B(j)=j[80+8(j-1)]/2。");
   assert.equal(substitution[0].text,"代入 b=40、h=8：");
-  for(const year of [2021,2022,2023,2024,2025,2026]) {
+  for(const year of [2020,2021,2022,2023,2024,2025,2026]) {
     const data=Object.values(load(`paper${paper}/data-${year}.js`))[0];
     for(const q of data.questions) {
       const groups=paper===1?q.solution.flatMap(part=>part.steps.map(step=>step.text)):[q.solution];

@@ -9,7 +9,7 @@ const output=path.join(__dirname,"tmp/qa-marking-layout");
   const browser=await launchBrowser();
   try {
     const page=await browser.newPage();
-    for(const paper of [1,2]) for(const year of [2021,2022,2023,2024,2025,2026]) {
+    for(const paper of [1,2]) for(const year of [2020,2021,2022,2023,2024,2025,2026]) {
       await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
       if(paper===1) for(const media of ["screen","print"]) {
         await page.emulateMedia({media});

@@ -5,11 +5,11 @@
   const curriculumNotice = window.pilotCurriculumNotice;
   const key = `dse-original-pilot-paper${data.paper}-${year}-v2`;
   const schema = 2;
-  const questionRevision = year===2021 || year===2023 || year===2024 ? 1 : year===2022 || year===2025 ? 2 : 5;
+  const questionRevision = year===2020 || year===2021 || year===2023 || year===2024 ? 1 : year===2022 || year===2025 ? 2 : 5;
   const questionRevisions = year===2022 ? [
     {revision:1, questions:data.questions.map(q=>q.n)},
     {revision:2, questions:[20,23,24,27,28,31,37]}
-  ] : year===2021 || year===2023 || year===2024 ? [
+  ] : year===2020 || year===2021 || year===2023 || year===2024 ? [
     {revision:1, questions:data.questions.map(q=>q.n)}
   ] : year===2025 ? [
     {revision:2, questions:data.questions.map(q=>q.n)}
@@ -84,6 +84,7 @@
   function diagram(spec) {
     if (!spec) return "";
     const kind = typeof spec === "string" ? spec : spec.type;
+    if (kind.endsWith("2020")) return window.pilotDiagram2020(kind);
     if (kind.endsWith("2021")) return window.pilotDiagram2021(kind);
     if (kind.endsWith("2022")) return window.pilotDiagram2022(kind);
     if (kind.endsWith("2023")) return window.pilotDiagram2023(kind);
@@ -133,7 +134,7 @@
             <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
             <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
             <div class="header-tools">
-              <label class="mock-year">年份 <select id="mock-year">${[2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
+              <label class="mock-year">年份 <select id="mock-year">${[2020,2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
           </div>
@@ -303,7 +304,7 @@
       ? `<div class="options" role="group" aria-label="第 ${q.n} 題選項">${q.options.map((o,i)=>`<label class="${selected(q)===letters[i]?"chosen":""}"><input type="radio" name="answer-${q.n}" value="${letters[i]}" ${selected(q)===letters[i]?"checked":""}><b>${letters[i]}.</b><span>${math(o)}<span class="option-stop" aria-hidden="true">。</span></span></label>`).join("")}</div>`
       : `<label class="answer-field"><span>作答區</span><textarea data-answer="${q.n}" rows="${Math.min(20,marks[q.n]*2+4)}" aria-label="第 ${q.n} 題作答區">${esc(selected(q))}</textarea></label>`;
     const shown=state.hints[q.n] || 0;
-    const choices=q.diagram?`<div class="exam-choice-layout">${input}${diagram(q.diagram)}</div>`:input;
+    const choices=q.diagram?`<div class="exam-choice-layout${q.stackChoices?' exam-choice-layout--stacked':''}">${input}${diagram(q.diagram)}</div>`:input;
     const tools=`<div class="study-tools"><button type="button" class="outline" data-hint="${q.n}" ${shown>=q.hints.length?"disabled":""}>逐步提示 ${shown}/${q.hints.length}</button><button type="button" data-check="${q.n}" ${selected(q)?"":"disabled"}>批改這題</button>${inline?"":`<button type="button" class="bookmark" data-bookmark="${q.n}" aria-label="收藏第 ${q.n} 題">${state.saved.includes(q.n)?"★":"☆"}</button>`}</div>${shown?`<ol class="hints">${q.hints.slice(0,shown).map(h=>`<li>${math(h)}</li>`).join("")}</ol>`:""}${feedback}`;
     if(inline) return `<div class="inline-practice" id="question-${q.n}">${input}${tools}</div>`;
     return `<article class="question exam-question" id="question-${q.n}"><div class="exam-body"><h2>${q.n}.</h2><div class="exam-content">${examPrompt(q)}${choices}${year!==2026?'<div class="print-answer-space" aria-hidden="true"></div>':""}</div></div>${tools}</article>`;

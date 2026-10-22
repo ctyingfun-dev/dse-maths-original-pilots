@@ -26,7 +26,7 @@ async function printSnapshot(page) {
     const page = await browser.newPage();
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
-    for (const paper of [1,2]) for (const year of [2021,2022,2023,2024,2025,2026]) {
+    for (const paper of [1,2]) for (const year of [2020,2021,2022,2023,2024,2025,2026]) {
       await page.setViewportSize({width:1056,height:892});
       await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
       if (!before && paper === 1) {
@@ -117,7 +117,7 @@ async function printSnapshot(page) {
       assert.equal(await page.locator("progress").getAttribute("value"), "1");
     }
     assert.deepEqual(errors, []);
-    console.log(before ? "Baseline screenshots and twelve print snapshots saved." : "Workspace passed: six years, both papers, five widths, navigation, progress, timing, no duplicated stem, twelve print layouts isolated from screen CSS.");
+    console.log(before ? "Baseline screenshots and fourteen print snapshots saved." : "Workspace passed: seven years, both papers, five widths, navigation, progress, timing, no duplicated stem, fourteen print layouts isolated from screen CSS.");
   } finally {
     await browser.close();
   }

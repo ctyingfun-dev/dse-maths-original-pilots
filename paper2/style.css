@@ -229,6 +229,8 @@ sup{top:-.5em}sub{bottom:-.2em}
   .print-answer-space{display:block;min-height:36mm;border:0;background:none}
 }
 .year-controls label{display:grid;gap:5px;font-size:.8rem;font-weight:700;color:var(--secondary,#526771)}
+.exam-choice-layout--stacked{grid-template-columns:minmax(0,1fr)}
+.exam-choice-layout--stacked .diagram{order:-1;margin:0 auto 8px}
 .year-controls select{min-width:140px;min-height:42px;border:1px solid var(--border,#cbd7da);border-radius:5px;background:white;padding:7px 10px;color:var(--ink,#20313a)}
 .year-controls button{width:42px;min-width:42px;min-height:42px;padding:0;background:white;color:var(--accent,#087d70);border:1px solid var(--border,#cbd7da);font-size:1.3rem}
 .year-controls a{margin-left:auto;color:var(--accent,#087d70);font-size:.85rem;font-weight:700;text-decoration:underline}

@@ -1,6 +1,6 @@
 const entry = document.querySelector("#enter-paper");
 const requestedYear = new URLSearchParams(location.search).get("year");
-const year = ["2021", "2022", "2023", "2024", "2025", "2026"].includes(requestedYear) ? requestedYear : "2026";
+const year = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"].includes(requestedYear) ? requestedYear : "2026";
 entry.href = `./paper1/?year=${year}#papers`;
 entry.setAttribute("aria-label", `進入 ${year} 年數學卷一`);
 
