@@ -139,6 +139,7 @@ async function checkMarks(page) {
         assert.equal(await page.evaluate(key=>localStorage.getItem(key),key),before);
         assert.match(await page.locator(".other-paper").getAttribute("href"),/year=2019/);
         await page.locator(".other-paper").click();
+        await page.waitForLoadState("load");
         assert.equal(await page.evaluate(()=>window.PILOT.year),2019);
         assert.equal(await page.evaluate(()=>window.PILOT.paper),paper===1?2:1);
         assert.equal(await page.locator(".feedback").count(),0);
