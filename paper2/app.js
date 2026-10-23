@@ -5,11 +5,11 @@
   const curriculumNotice = window.pilotCurriculumNotice;
   const key = `dse-original-pilot-paper${data.paper}-${year}-v2`;
   const schema = 2;
-  const questionRevision = year===2020 || year===2021 || year===2023 || year===2024 ? 1 : year===2022 || year===2025 ? 2 : 5;
+  const questionRevision = year===2019 || year===2020 || year===2021 || year===2023 || year===2024 ? 1 : year===2022 || year===2025 ? 2 : 5;
   const questionRevisions = year===2022 ? [
     {revision:1, questions:data.questions.map(q=>q.n)},
     {revision:2, questions:[20,23,24,27,28,31,37]}
-  ] : year===2020 || year===2021 || year===2023 || year===2024 ? [
+  ] : year===2019 || year===2020 || year===2021 || year===2023 || year===2024 ? [
     {revision:1, questions:data.questions.map(q=>q.n)}
   ] : year===2025 ? [
     {revision:2, questions:data.questions.map(q=>q.n)}
@@ -84,6 +84,7 @@
   function diagram(spec) {
     if (!spec) return "";
     const kind = typeof spec === "string" ? spec : spec.type;
+    if (kind.endsWith("2019")) return window.pilotDiagram2019(kind);
     if (kind.endsWith("2020")) return window.pilotDiagram2020(kind);
     if (kind.endsWith("2021")) return window.pilotDiagram2021(kind);
     if (kind.endsWith("2022")) return window.pilotDiagram2022(kind);
@@ -134,7 +135,7 @@
             <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
             <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
             <div class="header-tools">
-              <label class="mock-year">年份 <select id="mock-year">${[2020,2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
+              <label class="mock-year">年份 <select id="mock-year">${[2019,2020,2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
           </div>

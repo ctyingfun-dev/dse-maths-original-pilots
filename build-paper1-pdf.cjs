@@ -9,7 +9,7 @@ const {launchBrowser} = require("./scripts/browser-runtime.cjs");
 async function main() {
   const year=Number(process.argv[2] || 2026);
   const paper=Number(process.argv[3] || 1);
-  assert.ok([2020,2021,2022,2023,2024,2025,2026].includes(year) && [1,2].includes(paper));
+  assert.ok([2019,2020,2021,2022,2023,2024,2025,2026].includes(year) && [1,2].includes(paper));
   assert.ok(paper===1 || year!==2026, "This MC paper has no writing-space print layout");
   const output = path.join(__dirname, `output/pdf/dse-original-${year!==2026?`${year}-`:""}paper${paper}-practice.pdf`);
   const browser = await launchBrowser();

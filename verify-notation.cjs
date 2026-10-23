@@ -60,7 +60,7 @@ for (const paper of [1,2]) {
   assert.match(render("a≡b"), /<span class="math-op">≡<\/span>/);
   assert.match(render("a≡-2"), /<span class="math-unary">−<\/span>2/);
   assert.match(render("x 坐標及 y 坐標"), /<var>x<\/var> 坐標及 <var>y<\/var> 坐標/);
-  for (const year of [2020,2021,2022,2023,2024,2025,2026]) {
+  for (const year of [2019,2020,2021,2022,2023,2024,2025,2026]) {
     const data = Object.values(load(`paper${paper}/data-${year}.js`))[0];
     assert.equal(data.questions.length, paper === 1 ? 19 : 45);
     assert.doesNotMatch(JSON.stringify(data), /[橫縱横纵]|恆等於|恒等于/);
@@ -75,7 +75,7 @@ for (const paper of [1,2]) {
     }
     questions += data.questions.length;
     if (paper === 2) {
-      const identity = year === 2020 || year === 2021 ? data.questions.find(q=>q.prompt.includes("≡")) : data.questions[year === 2024 ? 5 : year === 2022 || year === 2025 ? 2 : 4];
+      const identity = year === 2019 || year === 2020 || year === 2021 ? data.questions.find(q=>q.prompt.includes("≡")) : data.questions[year === 2024 ? 5 : year === 2022 || year === 2025 ? 2 : 4];
       assert.ok(identity, `${year} P2: identity notation required`);
       assert.ok(identity.prompt.includes("≡"));
       if (year === 2026) {

@@ -8,6 +8,7 @@
       ? '<span class="curriculum-status">已取消</span>' : "";
   };
   const year = new URLSearchParams(location.search).get("year");
+  if (year === "2019" && window.PILOT_2019) window.PILOT = window.PILOT_2019;
   if (year === "2020" && window.PILOT_2020) window.PILOT = window.PILOT_2020;
   if (year === "2021" && window.PILOT_2021) window.PILOT = window.PILOT_2021;
   if (year === "2022" && window.PILOT_2022) window.PILOT = window.PILOT_2022;
