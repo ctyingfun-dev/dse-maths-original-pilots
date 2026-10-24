@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node server.cjs",
     "check:handoff": "node scripts/check-handoff.cjs",
-    "check:maths": "node verify-2019.cjs && node verify-2020.cjs && node verify-2021.cjs && node verify-2022.cjs && node verify-2023.cjs && node verify-2024.cjs && node verify-2025.cjs && node verify-2026.cjs && node verify-notation.cjs && node verify-solution-layout.cjs && node verify-similarity.cjs",
+    "check:maths": "node verify-2018.cjs && node verify-2019.cjs && node verify-2020.cjs && node verify-2021.cjs && node verify-2022.cjs && node verify-2023.cjs && node verify-2024.cjs && node verify-2025.cjs && node verify-2026.cjs && node verify-notation.cjs && node verify-solution-layout.cjs && node verify-similarity.cjs",
+    "check:2018": "node qa-2018.cjs",
     "check:2019": "node qa-2019.cjs",
     "check:2020": "node qa-2020.cjs",
     "check:layout": "node qa-workspace.cjs",

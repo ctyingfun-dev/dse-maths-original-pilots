@@ -63,6 +63,12 @@ const files = [
   "paper2/diagrams-2019.js",
   "output/pdf/dse-original-2019-paper1-practice.pdf",
   "output/pdf/dse-original-2019-paper2-practice.pdf",
+  "paper1/data-2018.js",
+  "paper1/diagrams-2018.js",
+  "paper2/data-2018.js",
+  "paper2/diagrams-2018.js",
+  "output/pdf/dse-original-2018-paper1-practice.pdf",
+  "output/pdf/dse-original-2018-paper2-practice.pdf",
 ];
 const hash = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 

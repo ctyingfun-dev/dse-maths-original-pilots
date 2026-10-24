@@ -162,3 +162,17 @@
 !/output/pdf/dse-original-2020-paper2-practice.pdf
 !/output/pdf/dse-original-2019-paper1-practice.pdf
 !/output/pdf/dse-original-2019-paper2-practice.pdf
+
+!/SOURCE_ALIGNMENT_2018.md
+!/verify-2018.cjs
+!/verify-2018-paper1.cjs
+!/verify-2018-paper2.cjs
+!/qa-2018.cjs
+!/qa-2018-diagrams.cjs
+!/qa-pdfs-2018.py
+!/paper1/data-2018.js
+!/paper1/diagrams-2018.js
+!/paper2/data-2018.js
+!/paper2/diagrams-2018.js
+!/output/pdf/dse-original-2018-paper1-practice.pdf
+!/output/pdf/dse-original-2018-paper2-practice.pdf

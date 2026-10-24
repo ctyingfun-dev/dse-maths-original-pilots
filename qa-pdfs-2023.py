@@ -10,7 +10,7 @@ root = Path(__file__).resolve().parent
 qa = root / "tmp" / "qa-pdfs-times"
 qa.mkdir(parents=True, exist_ok=True)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
-years = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] if "--all" in sys.argv else [2019] if "--2019" in sys.argv else [2020] if "--2020" in sys.argv else [2021] if "--2021" in sys.argv else [2022] if "--2022" in sys.argv else [2023]
+years = [2018,2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] if "--all" in sys.argv else [2019] if "--2019" in sys.argv else [2020] if "--2020" in sys.argv else [2021] if "--2021" in sys.argv else [2022] if "--2022" in sys.argv else [2023]
 for year in years:
     for paper, expected in [(1, 19), (2, 45)]:
         if year == 2026 and paper == 2:
