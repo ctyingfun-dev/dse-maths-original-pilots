@@ -1,5 +1,7 @@
 請接手我的 DSE 數學原創模擬卷網站，並協助我在兩部電腦之間輪流修改。
 
+最新工作版新增 2016–2026 兩卷共 22 份獨立參考解答 PDF 及下載按鈕，公開清單共 248 檔、43 份 PDF；尚未部署 Cloudflare。採非官方公開試評卷參考樣式，保留全部詳細步驟及既定配分。新增年份或修改解答時，也須重建及目視檢查相應解答 PDF；工具及驗證紀錄見 HANDOFF.md、SOLUTION_STYLE.md。不要把下文已上架的 226 檔版本與新功能混淆。
+
 GitHub：https://github.com/ctyingfun-dev/dse-maths-original-pilots
 正式網站：https://dse-maths-original-pilots.pages.dev/
 

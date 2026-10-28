@@ -1,0 +1,50 @@
+@page { size: A4; margin: 16mm 14mm 17mm; }
+html,body { margin:0; padding:0; background:#fff; color:#111; font:11.5pt/1.65 "Times New Roman","PMingLiU","新細明體",serif; letter-spacing:0; }
+* { box-sizing:border-box; }
+.sheet { width:182mm; height:262mm; break-after:page; overflow:visible; }
+.sheet:last-child { break-after:auto; }
+.page-heading { border-bottom:1px solid #111; padding:0 0 3mm; margin-bottom:3mm; display:flex; justify-content:space-between; align-items:baseline; font-size:10pt; }
+.page-heading strong { font-size:12pt; font-weight:normal; }
+h1 { font-size:18pt; text-align:center; margin:3mm 0; font-weight:normal; }
+.subtitle { font-size:11pt; text-align:center; margin:0 0 5mm; }
+.instructions { margin:0 0 5mm; font-size:10.5pt; line-height:1.6; }
+.instructions p { margin:1mm 0; }
+.scheme { width:100%; border-collapse:collapse; table-layout:fixed; font-size:inherit; }
+.scheme col.number { width:19mm; }
+.scheme col.score { width:16mm; }
+.scheme thead th { border-top:1px solid #111; border-bottom:1px solid #111; text-align:left; padding:2mm; font-weight:normal; }
+.scheme thead th:last-child { text-align:center; }
+.scheme td { padding:1.6mm 2mm; vertical-align:top; }
+.scheme td.label { font-size:10.5pt; }
+.scheme td.answer { border-right:.6px solid #555; }
+.scheme td.marks { text-align:center; vertical-align:bottom; white-space:nowrap; }
+.scheme tr.question-start td { padding-top:5mm; border-top:.5px solid #bbb; }
+.scheme tr.question-start:first-child td { border-top:0; }
+.scheme p { margin:0; }
+.scheme p+p,.solution-calculation+.solution-text,.solution-text+.solution-calculation { margin-top:1mm; }
+.solution-calculation { margin:1mm 0; }
+.solution-equation,.solution-text { text-align:left; overflow-wrap:normal; }
+.math-expression { display:inline-block; white-space:nowrap; }
+.math-frac { display:inline-grid; grid-template-rows:auto auto; vertical-align:middle; text-align:center; line-height:1.28; margin:0 .16em; white-space:nowrap; font-family:"Times New Roman",serif; }
+.math-frac>span:first-child { border-bottom:1px solid currentColor; padding:0 .16em .08em; }
+.math-frac>span:last-child { padding:.08em .16em 0; }
+.math-root,.math-root mtext,.math-radicand { font-family:"Times New Roman",serif; white-space:nowrap; }
+.math-root { math-style:normal; }
+.math-radicand { display:inline-block; line-height:1.3; }
+/* fitPdfRoots uses a measured Times New Roman glyph for tall HTML radicands. */
+.math-root.pdf-root { display:inline-flex; position:relative; align-items:stretch; vertical-align:middle; line-height:1; }
+.pdf-root>.pdf-root-sign { display:block; flex:none; position:relative; width:var(--pdf-root-sign-width); }
+.pdf-root-sign>.pdf-root-glyph { position:absolute; left:0; top:var(--pdf-root-glyph-top); font-family:"Times New Roman",serif; font-style:normal; font-weight:normal; line-height:normal; transform:scaleY(var(--pdf-root-glyph-scale)); transform-origin:top left; white-space:nowrap; }
+.pdf-root>.math-radicand { border-top:1px solid currentColor; padding:.1em .08em .02em 0; margin-left:-.04em; }
+.pdf-root-baseline { display:inline-block; width:0; height:0; padding:0; vertical-align:baseline; }
+.math-op,.math-unary { font-family:"Times New Roman",serif; font-style:normal; white-space:nowrap; }
+.math-op { display:inline-block; margin:0 .12em; }
+.math-relation,.math-parallel { display:inline-block; white-space:nowrap; }
+.math-parallel { margin:0 .16em; font-style:italic; }
+var { font-family:"Times New Roman",serif; }
+.cancelled { display:block; font-size:9pt; white-space:nowrap; }
+.answer-key { width:100%; border-collapse:collapse; margin:3mm 0; font-size:11pt; line-height:1.35; }
+.answer-key th,.answer-key td { border:.6px solid #555; padding:1.4mm; text-align:center; }
+.answer-key th { font-weight:normal; }
+.answer-key .key-answer { font-weight:bold; }
+.key-section { font-size:12pt; font-weight:normal; margin:5mm 0 2mm; }

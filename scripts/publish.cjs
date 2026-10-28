@@ -69,6 +69,7 @@ const files = [
   "paper2/diagrams-2018.js",
   "output/pdf/dse-original-2018-paper1-practice.pdf",
   "output/pdf/dse-original-2018-paper2-practice.pdf",
+  ...Array.from({length:11},(_,i)=>2016+i).flatMap(year=>[1,2].map(paper=>`output/pdf/dse-original-${year}-paper${paper}-solutions.pdf`)),
   ...[2016,2017].flatMap(year => [
     `paper1/data-${year}.js`, `paper1/diagrams-${year}.js`,
     `paper2/data-${year}.js`, `paper2/diagrams-${year}.js`,

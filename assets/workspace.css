@@ -189,6 +189,8 @@ h1, h2, h3 { font-family: var(--font-ui); }
 .study-tools { font: 400 14px/1.6 var(--font-ui); }
 .study-tools button { min-height: 40px; }
 .export-pdf { font: 500 14px/1.6 var(--font-ui); border-radius: 4px; }
+.solution-pdf { min-height:40px; padding:7px 12px; border:1px solid var(--border); white-space:nowrap; justify-content:center; }
+.practice-header { flex-wrap:wrap; }
 .hints { border-left: 0; }
 .worked-answer { margin-top: 18px; padding-top: 14px; }
 .worked-answer summary { font: 500 14px/1.6 var(--font-ui); color: var(--accent-strong); }

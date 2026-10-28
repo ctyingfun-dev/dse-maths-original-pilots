@@ -24,6 +24,13 @@
 !/year.js
 !/server.cjs
 !/build-paper1-pdf.cjs
+!/build-solutions-pdf.cjs
+!/qa-solutions-pdf.py
+!/qa-solutions-download.cjs
+!/scripts/solution-pdf.css
+!/scripts/solution-pdf-math.js
+!/scripts/solution-pdf-roots.js
+!/scripts/test-solution-pdf-math.cjs
 !/smoke-test.cjs
 !/verify-2026.cjs
 !/verify-paper2.cjs
@@ -147,6 +154,7 @@
 /output/*
 !/output/pdf/
 /output/pdf/*
+!/output/pdf/dse-original-*-solutions.pdf
 !/output/pdf/dse-original-paper1-practice.pdf
 !/output/pdf/dse-original-2025-paper1-practice.pdf
 !/output/pdf/dse-original-2025-paper2-practice.pdf

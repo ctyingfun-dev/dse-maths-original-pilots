@@ -150,6 +150,14 @@
         <main id="main-content" tabindex="-1">${content}</main>
         <footer><span>原創模擬卷 · 非香港考評局試卷</span><span id="save-state" role="status" data-error="${saveFailed}">${saveFailed?"未能儲存；請先到收藏頁下載進度備份。":"本機進度"}</span></footer>
       </div>`;
+    const downloadHost=document.querySelector('.practice-header, .paper-intro .start');
+    if(downloadHost) {
+      const filename=`dse-original-${year}-paper2-solutions.pdf`;
+      const link=document.createElement('a');
+      link.className='export-pdf solution-pdf';link.href=`../output/pdf/${filename}`;link.download=filename;
+      link.title='下載全卷答案表及詳細解答（非官方）';link.textContent='參考解答 PDF';
+      downloadHost.append(link);
+    }
     document.querySelectorAll(".lessons p, .lessons li").forEach(el=>el.innerHTML=math(el.textContent));
     bind();
   }

@@ -4,6 +4,8 @@
 
 ## 現況
 
+- 工作版新增 2016–2026 兩卷共 22 份獨立參考解答 PDF 及下載入口，公開 allowlist 現為 248 檔、43 份 PDF。這項新增功能未部署 Cloudflare；正式版本仍為下列 226 檔版本。待使用者再次說「上架」才部署。
+
 - 儲存庫：https://github.com/ctyingfun-dev/dse-maths-original-pilots，主要分支 `main`。
 - 正式網站：https://dse-maths-original-pilots.pages.dev/，Cloudflare Pages 專案 `dse-maths-original-pilots`，Direct Upload。
 - 最新正式發佈：`20261028-2016-2017-papers`，於 2026-10-28 上架，網站來源提交 `aecbecbcafabfbe1aad6886e1af0703d1dd4e0d5`，Cloudflare deployment ID `a6ac46a3-56f5-4eeb-9a4a-d130a6a556cf`。226 個公開檔案已部署至既有 Production 網站，包含 2016–2026 題庫、詳細解答及 21 份練習 PDF。保留現有介面及首頁互動。
@@ -12,6 +14,19 @@
 - 正式版本為 2016–2026 十一年份、705 題，公開 allowlist 226 檔、21 份練習 PDF。2016 卷一有 20 題（乙部六題）；其餘卷一各 19 題，卷二各 45 題。資料及進度按年份／試卷隔離，預設仍為 2026。最新生成規則見 `SOLUTION_STYLE.md`。
 - 網站為 HTML/CSS/JavaScript 靜態檔案，無資料庫、無建置步驟；僅本機預覽需要 Node.js。字體及 Three.js 均已放在專案內。
 - 網站原始碼、修改規則和工具可以同步；登入、聊天記錄、個人 skill、瀏覽器收藏／作答進度不會隨 Git 自動同步。網站本身的備份功能可匯出／匯入進度，該 JSON 不應上傳 GitHub。
+
+## 2026-10-28 獨立參考解答 PDF（未上架）
+
+- 新增 2016–2026 每年兩卷，共 22 份、391 頁解答 PDF，涵蓋既有 705 題。來源同步起點 `2f7f982`；沒有更改題目資料、答案、配分、網站數學渲染器或原有 21 份題目 PDF。
+- 依 `dse-maths-exam-author` 及 PDF skills 製作公開試評卷參考樣式，使用白底黑字、題號／步驟／分數三欄、重複頁首及頁碼。標明非官方；卷一保留 105 分及原有 M/A／數字配分，卷二先列 45 題答案表，再附詳細解答，不添加方法分。
+- `build-solutions-pdf.cjs` 直接讀取各年份資料；`scripts/solution-pdf.css`、`solution-pdf-math.js`、`solution-pdf-roots.js` 只供解答 PDF 使用。修正指數分式、階乘分母、三角函數分母和高根式的呈現，短計算不拆行。跨頁重複題號及卷一分題，卷二引導句與算式／末步與結論盡量保持一起。
+- 每年兩卷的模擬試卷及練習頁新增「參考解答 PDF」下載，檔名 `output/pdf/dse-original-{year}-paper{paper}-solutions.pdf`。學生列印不顯示下載按鈕；原有匯出題目 PDF、空白作答區、上下兩個卷二「對答案」按鈕與進度保持不變。
+- `qa-solutions-pdf.py` 全部 22 份／391 頁通過：版本 hash、實際 A4 頁數、頁首／頁尾、逐步文字所在區域、分數、卷二答案表題號及答案、每題答案欄、Times New Roman 字形及邊界。所有頁面已渲染；檢查中間資料及圖片留在 `tmp/solutions-pdf/`，不提交／部署。
+- `scripts/test-solution-pdf-math.cjs` 指定公式結構、短結果窄欄及 705 題／1650 組解答的順序文字保留通過。生成器另從原始資料獨立核對逐題文字／數字保留；不是只與渲染後自產 evidence 比較。
+- `qa-solutions-download.cjs` 全部 22 份實際下載 SHA-256、兩個頁面入口、1440／936／390／320 寬度及列印隔離通過；卷二上下批改按鈕仍在。`scripts/check-handoff.cjs` 705 題及 248 檔完整性通過；`verify-publish.cjs` 公開清單、防重複 staging 及既有檔保護通過。
+- 三位協作代理按年份目視全部 391 頁的聯絡表，另放大核對公式密集、跨頁及答案表等選定頁；不是逐頁全尺寸審閱。修正最後單行結論及句號孤行後，依渲染圖片 SHA-256 差異再覆核 178 個變動頁所在聯絡表，沒有新增重疊、裁切或內容顯示問題。三份完整覆核報告在 `tmp/solutions-pdf/visual-*.md`，只留本機。
+- 最終網站指紋（文字換行正規化）`dd42a1812266558309250b4a0bbb00b9b67cdd288b2f290a70a99a54d6ffe734`。完成前再次 fetch，遠端沒有其他修改；原有題庫及練習 PDF 在 Git 差異中保持不變。
+- GitHub 同步不代表 Cloudflare 上架。這批 PDF 及按鈕等待新的「上架」指令；正式網站仍是下列 226 檔版本。
 
 ## 2026-10-28 十一年份正式發佈（已上架）
 

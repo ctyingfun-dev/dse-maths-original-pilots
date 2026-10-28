@@ -1,10 +1,14 @@
 # 2016–2026 對應原創模擬卷
 
+本機新增 22 份獨立參考解答 PDF（2016–2026 兩卷），可在各年份「模擬試卷」及練習頁下載。卷一採題號／詳細步驟／既有配分三欄；卷二有答案表及逐題推導，不另加方法分。詳細代入、極坐標「已取消」標示及原有題目 PDF 均保留。新增功能尚未部署 Cloudflare，待使用者再次說「上架」；目前工作版公開清單為 248 檔、43 份 PDF，正式網站版本仍如下文所列。
+
+重建：`node build-solutions-pdf.cjs`；可加年份、卷別。檢查：`python -X utf8 qa-solutions-pdf.py`、`node qa-solutions-download.cjs`，並目視渲染結果。未來年份沿用 [SOLUTION_STYLE.md](SOLUTION_STYLE.md)。
+
 網站：[卷一](https://dse-maths-original-pilots.pages.dev/paper1/) · [卷二](https://dse-maths-original-pilots.pages.dev/paper2/)
 
 跨裝置接手請先閱讀 [HANDOFF.md](HANDOFF.md) 及 [AGENTS.md](AGENTS.md)。[CODEX_PROMPT.txt](CODEX_PROMPT.txt) 可直接交給另一部電腦的 Codex，回到原來電腦時也適用。使用 `node scripts/check-handoff.cjs` 檢查完整性與數學資料；日常預覽使用 `node server.cjs`。發佈工具已移至可隨 Git 同步的 `scripts/publish.cjs`，舊 `tmp/` 版本僅為本機歷史檔案。
 
-目前正式版本為 `20261028-2016-2017-papers`，於 2026-10-28 上架（226 個公開檔案、21 份練習 PDF），網站來源提交 `aecbecb`，Cloudflare deployment ID `a6ac46a3-56f5-4eeb-9a4a-d130a6a556cf`。2016–2026 十一年份共 705 題及詳細解答已上架；全部公開檔案的線上 SHA-256 與本機相同。完整編寫驗證與發佈證據見 HANDOFF。下文按日期保留較早發佈及設計紀錄，不代表仍應使用舊版樣式或檔案清單。
+目前正式版本為 `20261028-2016-2017-papers`，於 2026-10-28 上架（226 個公開檔案、21 份練習 PDF），網站來源提交 `aecbecb`，Cloudflare deployment ID `a6ac46a3-56f5-4eeb-9a4a-d130a6a556cf`。2016–2026 十一年份共 705 題及詳細解答已上架；當次發佈的全部公開檔案已核對線上 SHA-256 與發佈包相同。完整編寫驗證與發佈證據見 HANDOFF。下文按日期保留較早發佈及設計紀錄，不代表仍應使用舊版樣式或檔案清單。
 
 2026-10-21 後續原始碼修訂（已納入 2026-10-22 發佈）：依使用者提供的評卷參考，解答按完整步驟左對齊，不再強制對齊等號；修正斷開的計算及根號頂線，保持分式和根號內部完整。全等判定統一用正體 `SAS`、`SSS`、`ASA`、`AAS`、`RHS`；相似判定用 `AA`、`兩邊成比例且夾角相等` 或 `三邊成比例`，列出支持條件。螢幕及 PDF 已有分題配分時，不再於題末重複整題總分，沒有分題的題目保留唯一總分及原有 PDF 作答空間。所有既有及未來年份須遵守 [SOLUTION_STYLE.md](SOLUTION_STYLE.md)。
 
