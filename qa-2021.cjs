@@ -146,7 +146,7 @@ async function labelChecks(page) {
         await page.locator('[data-result="1"] [data-check]').click();
         assert.equal(await page.locator('[data-result="1"] .feedback.error').count(),1);
       }
-      for(const query of ["","?year=2017"]) {
+      for(const query of ["","?year=1900"]) {
         await page.goto(`${base}/paper${paper}/${query}#papers`);
         assert.equal(await page.evaluate(()=>window.PILOT.year),2026);
       }

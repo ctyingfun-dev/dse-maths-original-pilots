@@ -9,7 +9,7 @@ const output=path.join(__dirname,"tmp/qa-typography");
   const browser=await launchBrowser();
   try {
     const page=await browser.newPage();
-    for(const paper of [1,2]) for(const year of [2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
+    for(const paper of [1,2]) for(const year of [2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
       for(const route of ["practice","find","papers","years","topics","guide","saved"]) {
         await page.goto(`${base}/paper${paper}/?year=${year}#${route}`);
         if(route==="practice") await page.locator(".worked-answer").evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
@@ -48,9 +48,10 @@ const output=path.join(__dirname,"tmp/qa-typography");
     // Inspect actual glyphs in addition to CSS declarations.
     await page.evaluate(()=>{
       const probe=document.createElement("p");
-      probe.id="font-probe";probe.style.fontFamily='"Times New Roman", serif';probe.textContent="0123456789 ABCDE xyz";
+      probe.id="font-probe";probe.style.cssText='position:fixed;top:0;left:0;z-index:99999;font:20px "Times New Roman",serif';probe.textContent="0123456789 ABCDE xyz";
       document.body.append(probe);
     });
+    await page.locator('#font-probe').screenshot();
     const cdp=await page.context().newCDPSession(page);
     await cdp.send("DOM.enable");await cdp.send("CSS.enable");
     const {root}=await cdp.send("DOM.getDocument");

@@ -69,6 +69,12 @@ const files = [
   "paper2/diagrams-2018.js",
   "output/pdf/dse-original-2018-paper1-practice.pdf",
   "output/pdf/dse-original-2018-paper2-practice.pdf",
+  ...[2016,2017].flatMap(year => [
+    `paper1/data-${year}.js`, `paper1/diagrams-${year}.js`,
+    `paper2/data-${year}.js`, `paper2/diagrams-${year}.js`,
+    `output/pdf/dse-original-${year}-paper1-practice.pdf`,
+    `output/pdf/dse-original-${year}-paper2-practice.pdf`,
+  ]),
 ];
 const hash = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 

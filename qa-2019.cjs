@@ -4,7 +4,7 @@ const path=require("node:path");
 const {launchBrowser}=require("./scripts/browser-runtime.cjs");
 const base=(process.env.PREVIEW_URL||"http://127.0.0.1:4284").replace(/\/$/,"");
 const output=path.join(__dirname,"tmp/integration-2019");
-const years=[2018,2019,2020,2021,2022,2023,2024,2025,2026];
+const years=[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
 const widths=[1440,1056,768,390,320];
 const paperFlag=process.argv.indexOf("--paper");
 const papers=paperFlag<0?[1,2]:[Number(process.argv[paperFlag+1])];
@@ -77,7 +77,7 @@ async function checkMarks(page) {
           for(const year of years) for(const otherPaper of [1,2]) {
             if(year===2019&&otherPaper===paper)continue;
             const key=`dse-original-pilot-paper${otherPaper}-${year}-v2`;
-            const questionRevision=otherPaper===1?([2018,2019,2020,2021,2022,2023].includes(year)?1:2):([2018,2019,2020,2021,2023,2024].includes(year)?1:[2022,2025].includes(year)?2:5);
+            const questionRevision=otherPaper===1?([2016,2017,2018,2019,2020,2021,2022,2023].includes(year)?1:2):([2016,2017,2018,2019,2020,2021,2023,2024].includes(year)?1:[2022,2025].includes(year)?2:5);
             const value=JSON.stringify({schema:2,paper:otherPaper,year,progress:{answers:{},checked:{},hints:{1:1},saved:[2],questionRevision,startedAt:null,deadline:null,mode:"untimed",finished:false}});
             localStorage.setItem(key,value);
             result[key]=value;
@@ -207,7 +207,7 @@ async function checkMarks(page) {
         await page.keyboard.press("Enter");
         await page.waitForURL("**/paper1/?year=2019#papers");
         assert.equal(await page.evaluate(()=>window.PILOT.year),2019);
-        for(const query of ["","?year=2017","?year=invalid"]) {
+        for(const query of ["","?year=1900","?year=invalid"]) {
           await page.goto(`${base}/paper${paper}/${query}#papers`);
           assert.equal(await page.evaluate(()=>window.PILOT.year),2026);
         }

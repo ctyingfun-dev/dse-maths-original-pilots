@@ -3,8 +3,12 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const {launchBrowser} = require("./scripts/browser-runtime.cjs");
 const base = (process.env.PREVIEW_URL || "http://127.0.0.1:4284").replace(/\/$/, "");
-const output = path.join(__dirname, "tmp/qa-2018-diagrams");
-const {sourceExpectation, waitReady} = require("./qa-2018.cjs");
+const yearFlag = process.argv.indexOf('--year');
+const year = yearFlag < 0 ? 2018 : Number(process.argv[yearFlag + 1]);
+assert.ok([2016,2017,2018].includes(year));
+const output = path.join(__dirname, `tmp/qa-${year}-diagrams`);
+const {waitReady} = require("./qa-2018.cjs");
+const sourceExpectation = year === 2018 ? require('./qa-2018.cjs').sourceExpectation : require('./scripts/source-expectations-2016-2017.cjs')[year];
 const expected = Object.fromEntries([1,2].map(paper=>[paper,sourceExpectation[paper].figures]));
 const flag = process.argv.indexOf("--paper");
 const selected = process.argv.find(arg => arg.startsWith("--paper="))?.split("=")[1] ??
@@ -84,9 +88,9 @@ async function actualFonts(page) {
       assert.ok(expected[paper]?.length, "Missing independent source-figure audit");
       const context = await browser.newContext(), page = await context.newPage(), errors = [];
       page.on("pageerror", error => errors.push(error.message));
-      await page.goto(`${base}/paper${paper}/?year=2018#practice`);
-      await waitReady(page,2018,paper);
-      assert.equal(await page.evaluate(() => window.PILOT.year), 2018);
+      await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
+      await waitReady(page,year,paper);
+      assert.equal(await page.evaluate(() => window.PILOT.year), year);
       const numbers = await page.locator(".exam-question:has(.diagram svg, .diagram table, .stemleaf)").evaluateAll(nodes => nodes.map(n => +n.id.replace("question-", "")));
       assert.deepEqual(numbers, expected[paper], "Source-audited diagram question numbers");
       for (const n of numbers) {
@@ -132,6 +136,6 @@ async function actualFonts(page) {
     }
     await fs.writeFile(path.join(output, selected ? `results-p${selected}.json` : "results.json"), JSON.stringify(results, null, 2));
     assert.ok(results.every(r => !r.issues.length && !r.overflow.length), "Diagram label/overflow issues; see results and screenshots.");
-    console.log(`2018 diagrams: P${papers.join("/P")} source-figure coverage, actual Times New Roman glyphs, three widths and print bounds passed. Geometry still requires the per-paper mathematical verifier and visual review.`);
+    console.log(`${year} diagrams: P${papers.join("/P")} source-figure coverage, actual Times New Roman glyphs, three widths and print bounds passed. Geometry still requires the per-paper mathematical verifier and visual review.`);
   } finally {await browser.close();}
 })().catch(error => {console.error(error); process.exitCode = 1;});

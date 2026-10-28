@@ -1,4 +1,4 @@
-"""Validate the 2018 practice PDFs and render every page for visual review."""
+"""Validate 2016-2018 practice PDFs and render every page for visual review."""
 
 from collections import Counter
 import argparse
@@ -16,7 +16,8 @@ from PIL import Image, ImageDraw, ImageOps
 
 
 ROOT = Path(__file__).resolve().parent
-QA = ROOT / "tmp" / "qa-pdfs-2018"
+YEAR = 2018
+QA = ROOT / "tmp" / f"qa-pdfs-{YEAR}"
 QA.mkdir(parents=True, exist_ok=True)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 MM = 72 / 25.4
@@ -31,8 +32,8 @@ def source_questions(paper):
         [
             "node", "-e",
             "global.window={};require(process.argv[1]);"
-            "process.stdout.write(JSON.stringify(window.PILOT_2018.questions));",
-            str(ROOT / f"paper{paper}" / "data-2018.js"),
+            f"process.stdout.write(JSON.stringify(window.PILOT_{YEAR}.questions));",
+            str(ROOT / f"paper{paper}" / f"data-{YEAR}.js"),
         ],
         check=True, capture_output=True, text=True, encoding="utf-8",
     )
@@ -42,7 +43,9 @@ def source_questions(paper):
 def source_expectation(paper):
     result = subprocess.run(
         ["node", "-e",
-         "process.stdout.write(JSON.stringify(require('./qa-2018.cjs').sourceExpectation));"],
+         "process.stdout.write(JSON.stringify(" +
+         ("require('./qa-2018.cjs').sourceExpectation" if YEAR == 2018 else
+          f"require('./scripts/source-expectations-2016-2017.cjs')[{YEAR}]") + "));"],
         cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8",
     )
     return json.loads(result.stdout)[str(paper)]
@@ -61,7 +64,7 @@ def intact_prompt_groups(questions, printed):
         groups += re.findall(r"\b[a-z]\s*=\s*[a-z]{1,3}\^[A-Za-z0-9]+\b", prompt)
         groups += re.findall(r"\b[a-z]{2}[+-][a-z][+-]\d+\b", prompt)
         groups += re.findall(r"log\d+\[[^\]\n]+\][<>\u2264\u2265=]\d+(?:\.\d+)?", prompt)
-        groups += re.findall(r"\d+(?:\.\d+)?\s*(?:cm|mm|kg|名|枚)", prompt)
+        groups += re.findall(r"(?<![\d./])\d+(?:\.\d+)?\s*(?:cm|mm|kg|名|枚)", prompt)
         groups += re.findall(r"[-\u2212]\d+\.\d+", prompt)
         # MathML places the source log_(r) base as a subscript in extracted text.
         groups += [formula.replace("_(", "").replace(")", "") for formula in
@@ -81,7 +84,7 @@ def render_pages(source, paper):
     document = pypdfium2.PdfDocument(source)
     for index in range(len(document)):
         image = document[index].render(scale=1.75).to_pil().convert("RGB")
-        target = QA / f"2018-p{paper}-{index + 1:02d}.png"
+        target = QA / f"{YEAR}-p{paper}-{index + 1:02d}.png"
         image.save(target)
         paths.append(target)
     document.close()
@@ -106,13 +109,13 @@ def render_pages(source, paper):
 
 
 def validate(paper, *, allow_stale=False):
-    source = ROOT / "output" / "pdf" / f"dse-original-2018-paper{paper}-practice.pdf"
+    source = ROOT / "output" / "pdf" / f"dse-original-{YEAR}-paper{paper}-practice.pdf"
     # Always retain every page for visual review, including failed or stale builds.
     images = render_pages(source, paper)
     inputs = [ROOT / name for name in (
         "build-paper1-pdf.cjs", "year.js", "assets/workspace.css", "assets/workspace.js",
         f"paper{paper}/index.html", f"paper{paper}/app.js", f"paper{paper}/style.css",
-        f"paper{paper}/math.js", f"paper{paper}/data-2018.js", f"paper{paper}/diagrams-2018.js",
+        f"paper{paper}/math.js", f"paper{paper}/data-{YEAR}.js", f"paper{paper}/diagrams-{YEAR}.js",
     )]
     changed_after_build = [str(path.relative_to(ROOT)) for path in inputs
                            if path.stat().st_mtime_ns > source.stat().st_mtime_ns]
@@ -189,14 +192,14 @@ def validate(paper, *, allow_stale=False):
         count = len(document.pages)
     assert list(question_pages) == list(range(1, expected + 1)), question_pages
     combined = "\n".join(body_text)
-    assert "2018" in combined
+    assert str(YEAR) in combined
     chunks = re.split(r"(?m)^(\d+)\.(?=\s|$)", combined)
     printed = {int(chunks[index]): chunks[index + 1] for index in range(1, len(chunks), 2)}
     mark_report = {}
     if paper == 1:
         assert [question["marks"] for question in questions] == evidence["marks"]
         for number, labels in evidence["romanSubparts"].items():
-            assert re.findall(r"(?m)^\s*\((i{1,3})\)", printed[int(number)]) == labels, (
+            assert re.findall(r"(?m)^\s*\((i|ii|iii|iv)\)", printed[int(number)]) == labels, (
                 f"Q{number}: source subparts without duplicate inline references"
             )
         for question in questions:
@@ -219,7 +222,7 @@ def validate(paper, *, allow_stale=False):
             assert choices == list("ABCD"), (number, choices)
     polar_questions = [question["n"] for question in questions
                        if re.search("極[坐座]標|極角|極徑", question["topic"] + question["prompt"])]
-    assert polar_questions == evidence["polar"], "Match the actual 2018 source papers"
+    assert polar_questions == evidence["polar"], f"Match the actual {YEAR} source papers"
     assert combined.count("已取消") == len(polar_questions)
     for number in polar_questions:
         assert "已取消" in printed[number]
@@ -249,11 +252,15 @@ def validate(paper, *, allow_stale=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--year', type=int, choices=(2016,2017,2018), default=2018)
     parser.add_argument("--paper", type=int, choices=(1, 2),
                         help="Check only this paper and preserve the other paper's QA artifacts")
     parser.add_argument("--allow-stale", action="store_true",
                         help="Allow outdated PDFs for preliminary inspection only")
     args = parser.parse_args()
+    YEAR = args.year
+    QA = ROOT / 'tmp' / f'qa-pdfs-{YEAR}'
+    QA.mkdir(parents=True, exist_ok=True)
     papers = (args.paper,) if args.paper else (1, 2)
     report = []
     for paper in papers:
@@ -268,9 +275,9 @@ if __name__ == "__main__":
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     for item in report:
         if "error" in item:
-            print(f"FAILED 2018 P{item['paper']}: {item['error']}")
+            print(f"FAILED {YEAR} P{item['paper']}: {item['error']}")
             continue
-        print(f"2018 P{item['paper']}: {item['pages']} pages, {item['questions']} questions; "
+        print(f"{YEAR} P{item['paper']}: {item['pages']} pages, {item['questions']} questions; "
               "marks, Times New Roman, page numbers, glyph bounds and no solutions verified.")
         print(f"SHA-256: {item['sha256']}")
         if item["inputs_newer_than_pdf"]:

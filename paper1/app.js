@@ -7,7 +7,7 @@
   const schema = 2;
   const marks = year!==2026 ? [0,...data.questions.map(q=>q.marks)] : [0,3,3,3,4,4,4,4,5,5,6,6,7,8,8,4,6,6,7,12];
   const letters = "ABCD";
-  const questionRevision = year===2018 || year===2019 || year===2020 || year===2021 || year===2022 || year===2023 ? 1 : 2;
+  const questionRevision = year===2016 || year===2017 || year===2018 || year===2019 || year===2020 || year===2021 || year===2022 || year===2023 ? 1 : 2;
   const revisedQuestions = data.questions.map(q=>q.n);
   const blank = () => ({answers:{}, checked:{}, hints:{}, saved:[], questionRevision, startedAt:null, deadline:null, mode:"untimed", finished:false});
   let state = load();
@@ -76,6 +76,8 @@
   function diagram(spec) {
     if (!spec) return "";
     const kind = typeof spec === "string" ? spec : spec.type;
+    if (kind.endsWith("2016")) return window.pilotDiagram2016(kind);
+    if (kind.endsWith("2017")) return window.pilotDiagram2017(kind);
     if (kind.endsWith("2018")) return window.pilotDiagram2018(kind);
     if (kind.endsWith("2019")) return window.pilotDiagram2019(kind);
     if (kind.endsWith("2020")) return window.pilotDiagram2020(kind);
@@ -126,7 +128,7 @@
             <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
             <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
             <div class="header-tools">
-              <label class="mock-year">年份 <select id="mock-year">${[2018,2019,2020,2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
+              <label class="mock-year">年份 <select id="mock-year">${[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
           </div>
@@ -176,7 +178,7 @@
     const pp=matches.filter(q=>q.year==="PP");
     const records=list=>list.map(q=>`<div class="dse-example"><strong>${esc(q.year==="PP"?"PP 練習卷":q.year)} · 第 ${esc(q.parent)} 題</strong><span>${curriculumNotice(q)}${esc(q.summary)}</span></div>`).join("");
     const formalCount=source.groups.filter(q=>q.year!=="PP").length;
-    return `<div class="page-head"><p class="eyebrow">DSE 歷屆卷一 · 2012–2026</p><h1>課題分佈</h1><p class="subtle">原有 DSE 網站的歷年分類統計；與本原創模擬卷的 19 題分開計算。</p></div>
+    return `<div class="page-head"><p class="eyebrow">DSE 歷屆卷一 · 2012–2026</p><h1>課題分佈</h1><p class="subtle">原有 DSE 網站的歷年分類統計；與本原創模擬卷的 ${data.questions.length} 題分開計算。</p></div>
       <div class="dse-summary"><div><strong>15</strong><span>年正式試卷</span></div><div><strong>${formalCount}</strong><span>道卷一大題</span></div><div><strong>${source.stats.length}</strong><span>項課題分類</span></div></div>
       <div class="dse-heading"><h2>課題出現次數</h2><label>搜尋課題<input id="dse-topic-search" type="search" value="${esc(dseSearch)}" placeholder="輸入課題名稱"></label></div>
       <div class="dse-tabs" role="group" aria-label="試卷部分">${sections.map(([id,name])=>`<button type="button" data-dse-section="${id}" aria-pressed="${dseSection===id}">${name}</button>`).join("")}</div>
@@ -276,7 +278,7 @@
   function examPrompt(q, screenOnly=false, parsed=parseExamPrompt(q)) {
     const {stem,parts,partMarks}=parsed;
     const partHtml=part=>{
-      const bits=part.text.split(/(\((?:i|ii|iii)\))/);
+      const bits=part.text.split(/(\((?:i|ii|iii|iv)\))/);
       if(bits.length===1) return `<p>${math(part.text).replace(/\n/g,"<br>")}</p>${diagram(q.partDiagrams?.[part.label])}`;
       const lead=bits.shift().trim();
       let html=(lead?`<p>${math(lead).replace(/\n/g,"<br>")}</p>`:"")+diagram(q.partDiagrams?.[part.label]);

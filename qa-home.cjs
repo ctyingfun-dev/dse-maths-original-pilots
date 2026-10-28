@@ -102,11 +102,11 @@ async function layout(page, width, height) {
         assert.ok(page.url().includes("/paper1/?year=2024"));
       }
     }
-    for (const year of [2018,2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]) for (const paper of [1, 2]) {
+    for (const year of [2016,2017,2018,2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]) for (const paper of [1, 2]) {
       await page.goto(`${base}/paper${paper}/?year=${year}#find`);
       const key = `dse-original-pilot-paper${paper}-${year}-v2`;
       const progress = await page.evaluate(({ key, paper, year }) => {
-        const questionRevision = paper === 1 ? ([2018,2019,2020,2021,2022,2023].includes(year) ? 1 : 2) : ([2018,2019,2020,2021,2023,2024].includes(year) ? 1 : [2022,2025].includes(year) ? 2 : 5);
+        const questionRevision = paper === 1 ? ([2016,2017,2018,2019,2020,2021,2022,2023].includes(year) ? 1 : 2) : ([2016,2017,2018,2019,2020,2021,2023,2024].includes(year) ? 1 : [2022,2025].includes(year) ? 2 : 5);
         const progress = { schema: 2, paper, year, progress: { answers: { "1": "A" }, checked: { "1": true }, hints: { "1": 1 }, saved: [2], startedAt: null, deadline: null, mode: "untimed", finished: false, questionRevision } };
         localStorage.setItem(key, JSON.stringify(progress));
         return localStorage.getItem(key);
@@ -122,7 +122,7 @@ async function layout(page, width, height) {
       assert.ok(page.url().includes(`/paper1/?year=${year}`));
       assert.equal(await page.evaluate(key => localStorage.getItem(key), key), progress, "Homepage changed existing progress");
     }
-    await page.goto(`${base}/?year=2017`);
+    await page.goto(`${base}/?year=1900`);
     await ready(page);
     assert.equal(await page.locator("#enter-paper").getAttribute("href"), "./paper1/?year=2026#papers", "Unsupported year must use the 2026 default");
     await context.close();

@@ -10,7 +10,7 @@ const output=path.join(__dirname,"tmp/qa-solutions");
   try {
     const page=await browser.newPage(),errors=[];
     page.on("pageerror",error=>errors.push(error.message));
-    for(const paper of [1,2]) for(const year of [2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
+    for(const paper of [1,2]) for(const year of [2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
       await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
       if(paper===1) await page.locator(".worked-answer").evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
       else await page.evaluate(()=>{
