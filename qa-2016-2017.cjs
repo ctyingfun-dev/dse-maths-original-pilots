@@ -2,16 +2,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const {launchBrowser} = require('./scripts/browser-runtime.cjs');
-const sourceExpectation = require('./scripts/source-expectations-2016-2017.cjs');
+const sourceExpectation = {2015:require('./scripts/source-expectations-2015.cjs'),...require('./scripts/source-expectations-2016-2017.cjs')};
 const base = (process.env.PREVIEW_URL || 'http://127.0.0.1:4284').replace(/\/$/, '');
-const years = Array.from({length:11}, (_, i) => 2016+i);
+const years = Array.from({length:12}, (_, i) => 2015+i);
 const widths = [1440,1056,768,390,320];
 const yearArg = process.argv.indexOf('--year');
 const selectedYears = yearArg<0 ? [2016,2017] : [+process.argv[yearArg+1]];
 const paperArg = process.argv.indexOf('--paper');
 const papers = paperArg<0 ? [1,2] : [+process.argv[paperArg+1]];
 const layoutOnly = process.argv.includes('--layout-only');
-assert(selectedYears.every(y=>[2016,2017].includes(y)) && papers.every(p=>[1,2].includes(p)));
+assert(selectedYears.every(y=>[2015,2016,2017].includes(y)) && papers.every(p=>[1,2].includes(p)));
 async function waitReady(page,year,paper) {
   await page.waitForLoadState('load');
   await page.waitForFunction(({year,paper})=>window.PILOT?.year===year && window.PILOT.paper===paper && document.querySelector('#mock-year')?.value===String(year),{year,paper});
@@ -19,12 +19,14 @@ async function waitReady(page,year,paper) {
 }
 module.exports={sourceExpectation,waitReady};
 async function main() {
-  const output=path.join(__dirname,'tmp/integration-2016-2017');
+  const output=path.join(__dirname,selectedYears.length===1?`tmp/integration-${selectedYears[0]}`:'tmp/integration-2016-2017');
   await fs.mkdir(output,{recursive:true});
   const browser=await launchBrowser();
   try {
     for(const year of selectedYears) for(const paper of papers) {
-      const expected=sourceExpectation[year][paper],context=await browser.newContext(),page=await context.newPage(),errors=[];
+      const expected=sourceExpectation[year][paper];
+      assert(expected, `${year} P${paper}: independent source audit is required before integration QA`);
+      const context=await browser.newContext(),page=await context.newPage(),errors=[];
       const key=`dse-original-pilot-paper${paper}-${year}-v2`;
       page.on('pageerror',e=>errors.push(e.message));
       page.on('response',r=>{if(r.url().startsWith(base)&&r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
@@ -40,22 +42,30 @@ async function main() {
         assert.deepEqual(await page.locator('#mock-year option').evaluateAll(ns=>ns.map(n=>+n.value)),years);
         const actual=await page.evaluate(()=>({count:window.PILOT.questions.length,sections:window.PILOT.questions.reduce((a,q)=>(a[q.section]=(a[q.section]||0)+1,a),{}),polar:window.PILOT.questions.filter(q=>window.pilotCurriculumNotice(q)).map(q=>q.n),numbers:window.PILOT.questions.map(q=>q.n)}));
         assert.equal(actual.count,expected.count);assert.deepEqual(actual.sections,expected.sections);assert.deepEqual(actual.polar,expected.polar);
+        if(expected.durationMinutes) assert.equal(await page.evaluate(()=>window.PILOT.minutes),expected.durationMinutes,'Source examination duration');
         assert.deepEqual(actual.numbers,Array.from({length:expected.count},(_,i)=>i+1));
         assert.equal(await page.locator('.exam-question').count(),expected.count);
         assert.equal(await page.locator('.key,textarea,.print-answer-space:visible').count(),0);
         assert.deepEqual(await page.locator('.exam-question .curriculum-status').evaluateAll(ns=>ns.map(n=>+n.closest('article').id.replace('question-',''))),expected.polar);
-        const figures=await page.locator('.exam-question').evaluateAll(ns=>Object.fromEntries(ns.map(n=>[+n.id.replace('question-',''),n.querySelectorAll('.diagram svg').length]).filter(([,count])=>count)));
+        const figures=await page.locator('.exam-question').evaluateAll(ns=>Object.fromEntries(ns.map(n=>[+n.id.replace('question-',''),n.querySelectorAll('.diagram svg,.diagram table,.stemleaf').length]).filter(([,count])=>count)));
         assert.deepEqual(figures,expected.figureCounts,'Original figure coverage including table figures');
+        for(const [n,labels] of Object.entries(expected.panelLabels||{})) {
+          const actualLabels=await page.locator(`#question-${n} .diagram svg text`).allTextContents();
+          for(const label of labels) assert.equal(actualLabels.filter(text=>text.trim()===label).length,1,`P${paper} Q${n}: source panel ${label} must remain visible exactly once`);
+        }
+        if(expected.identities) assert.deepEqual(await page.evaluate(()=>window.PILOT.questions.filter(q=>q.prompt.includes('≡')).map(q=>q.n)),expected.identities,'Source identity notation');
         if(paper===1) {
           assert.deepEqual(await page.evaluate(()=>window.PILOT.questions.map(q=>q.marks)),expected.marks);
+          if(expected.markGroups) assert.deepEqual(await page.evaluate(()=>Object.fromEntries(window.PILOT.questions.filter(q=>q.markGroups).map(q=>[q.n,q.markGroups]))),expected.markGroups,'Source grouped subpart marks');
           assert.equal(await page.locator('[data-check],input[type=radio]').count(),0);
           for(const media of ['screen','print']) {
             await page.emulateMedia({media});
             const marks=await page.locator('.exam-question').evaluateAll(ns=>ns.map(n=>{
               const q=window.PILOT.questions.find(q=>n.id===`question-${q.n}`),items=[...n.querySelectorAll('.exam-content .exam-part-marks,.exam-content .exam-marks')].filter(i=>i.getClientRects().length);
-              return {n:q.n,expected:q.marks,total:items.reduce((s,i)=>s+Number(i.textContent.match(/\d+/)[0]),0),duplicate:items.some(i=>i.classList.contains('exam-part-marks'))&&items.some(i=>i.classList.contains('exam-marks'))};
+              return {n:q.n,expected:q.marks,groups:items.map(i=>Number(i.textContent.match(/\d+/)[0])),total:items.reduce((s,i)=>s+Number(i.textContent.match(/\d+/)[0]),0),duplicate:items.some(i=>i.classList.contains('exam-part-marks'))&&items.some(i=>i.classList.contains('exam-marks'))};
             }));
             assert.deepEqual(marks.filter(q=>q.expected!==q.total||q.duplicate),[],`${year} ${media}: marks exactly once`);
+            if(expected.markGroups) for(const q of marks) assert.deepEqual(q.groups,expected.markGroups[q.n]?Object.values(expected.markGroups[q.n]):[expected.marks[q.n-1]],`${year} ${media} Q${q.n}: source grouped marks`);
             for(const [n,labels] of Object.entries(expected.romanSubparts)) assert.deepEqual(await page.locator(`#question-${n} .exam-subpart > span`).allTextContents(),labels.map(s=>`(${s})`));
           }
           await page.emulateMedia({media:'screen'});
@@ -100,9 +110,13 @@ async function main() {
         assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),saved);
         await page.locator('.other-paper').click();await waitReady(page,year,3-paper);
         await go('practice');await assertProtected();
-        const filename=`dse-original-${year}-paper${paper}-practice.pdf`;
-        assert.equal(await page.locator('.export-pdf').getAttribute('download'),filename);
-        if(!layoutOnly){const pending=page.waitForEvent('download');await page.locator('.export-pdf').click();const download=await pending;assert.equal(download.suggestedFilename(),filename);assert.deepEqual(await fs.readFile(await download.path()),await fs.readFile(path.join(__dirname,'output/pdf',filename)));}
+        for(const [kind,selector] of [['practice','.export-pdf:not(.solution-pdf)'],['solutions','.solution-pdf']]) {
+          const filename=`dse-original-${year}-paper${paper}-${kind}.pdf`,link=page.locator(selector);
+          assert.equal(await link.count(),1);
+          assert.equal(await link.getAttribute('download'),filename);
+          assert.equal(await link.getAttribute('href'),`../output/pdf/${filename}`);
+          if(!layoutOnly){const pending=page.waitForEvent('download');await link.click();const download=await pending;assert.equal(download.suggestedFilename(),filename);assert.deepEqual(await fs.readFile(await download.path()),await fs.readFile(path.join(__dirname,'output/pdf',filename)));}
+        }
         await go('saved');
         assert.equal(await page.locator('[data-solo="1"]').count(),1);
         const pending=page.waitForEvent('download');await page.locator('[data-export]').click();const backupDownload=await pending;

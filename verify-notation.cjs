@@ -60,9 +60,11 @@ for (const paper of [1,2]) {
   assert.match(render("a≡b"), /<span class="math-op">≡<\/span>/);
   assert.match(render("a≡-2"), /<span class="math-unary">−<\/span>2/);
   assert.match(render("x 坐標及 y 坐標"), /<var>x<\/var> 坐標及 <var>y<\/var> 坐標/);
-  for (const year of [2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
+  for (const year of [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
     const data = Object.values(load(`paper${paper}/data-${year}.js`))[0];
-    assert.equal(data.questions.length, paper === 1 ? (year === 2016 ? 20 : 19) : 45);
+    const expected = year===2015 ? require('./scripts/source-expectations-2015.cjs')[paper] : null;
+    if(year===2015) assert.ok(expected, `2015 P${paper}: independent source audit required`);
+    assert.equal(data.questions.length, expected ? expected.count : paper === 1 ? (year === 2016 ? 20 : 19) : 45);
     assert.doesNotMatch(JSON.stringify(data), /[橫縱横纵]|恆等於|恒等于/);
     assert.doesNotMatch(JSON.stringify(data), /角邊角|角角邊|邊角邊|邊邊邊|斜邊直角邊/);
     for(const q of data.questions) {
@@ -76,7 +78,9 @@ for (const paper of [1,2]) {
     questions += data.questions.length;
     if (paper === 2) {
       // The 2016 and 2018 sources have no polynomial-identity question.
-      if (![2016,2018].includes(year)) {
+      if (year===2015) {
+        assert.deepEqual(Array.from(data.questions.filter(q=>q.prompt.includes('≡')),q=>q.n), expected.identities, '2015 P2: source identity notation');
+      } else if (![2016,2018].includes(year)) {
         const identity = year === 2017 || year === 2019 || year === 2020 || year === 2021 ? data.questions.find(q=>q.prompt.includes("≡")) : data.questions[year === 2024 ? 5 : year === 2022 || year === 2025 ? 2 : 4];
         assert.ok(identity, `${year} P2: identity notation required`);
         assert.ok(identity.prompt.includes("≡"));

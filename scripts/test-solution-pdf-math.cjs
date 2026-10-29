@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '..');
 
 async function main() {
   const corpus = [];
-  for (let year = 2016; year <= 2026; year++) for (const paper of [1, 2]) {
+  for (let year = 2015; year <= 2026; year++) for (const paper of [1, 2]) {
     const context = {window: {}};
     vm.runInNewContext(fs.readFileSync(path.join(root, `paper${paper}/data-${year}.js`), 'utf8'), context);
     const data = context.window[`PILOT_${year}`] || context.window.PILOT;

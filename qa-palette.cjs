@@ -48,7 +48,8 @@ async function printSnapshot(page) {
   await fs.mkdir(output, {recursive: true});
   const browser = await launchBrowser();
   try {
-    for (const paper of [1, 2]) for (const year of [2024, 2025, 2026]) {
+    for (const paper of [1, 2]) for (const year of [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
+      const expectedCount = year===2015 ? require('./scripts/source-expectations-2015.cjs')[paper].count : paper===1?(year===2016?20:19):45;
       const context = await browser.newContext();
       const page = await context.newPage();
       const errors = [];
@@ -101,7 +102,7 @@ async function printSnapshot(page) {
           assert.match(await page.locator('link[rel="icon"]').getAttribute("href"), /assets\/dse-maths-logo\.png/);
           await readable(page);
           if (route === "find") {
-            assert.equal(await page.locator(".result").count(), paper === 1 ? 19 : 45);
+            assert.equal(await page.locator(".result").count(), expectedCount);
             const listAnatomy=await page.locator(".result-prompt").evaluateAll(prompts=>prompts.map(prompt=>[
               prompt.querySelectorAll(".exam-stem").length,
               prompt.querySelectorAll(".exam-part").length,
@@ -180,7 +181,7 @@ async function printSnapshot(page) {
             assert.equal(new URL(page.url()).hash, "#find", "Skip link must not change route");
           }
           if (route === "practice") {
-            assert.equal(await page.locator(".exam-question").count(), paper === 1 ? 19 : 45);
+            assert.equal(await page.locator(".exam-question").count(), expectedCount);
             promptAnatomy=await page.locator(".exam-question .exam-content").evaluateAll(prompts=>prompts.map(prompt=>[
               prompt.querySelectorAll(".exam-stem").length,
               prompt.querySelectorAll(".exam-part").length,

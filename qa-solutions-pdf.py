@@ -18,6 +18,50 @@ logging.getLogger('pdfminer').setLevel(logging.ERROR)
 def norm(s):
     return re.sub(r'\s+', '', unicodedata.normalize('NFKC', s)).replace('\u200b', '')
 
+def check_answer_rows(primary_doc, rows, path):
+    issues, secondary_rows = [], []
+    secondary_doc = None
+    try:
+        for index, row in enumerate(rows, 1):
+            expected = norm(row['text'])
+            page = primary_doc.pages[row['page'] - 1]
+            actual = norm(page.crop(tuple(row['bounds'])).extract_text(x_tolerance=1, y_tolerance=3) or '')
+            if expected in actual:
+                continue
+            # Fractions/MathML can reorder the PDF reading stream.
+            missing = Counter(expected) - Counter(actual)
+            if not missing:
+                continue
+            if secondary_doc is None:
+                secondary_doc = pdfium.PdfDocument(path)
+            secondary_page = secondary_doc[row['page'] - 1]
+            try:
+                textpage = secondary_page.get_textpage()
+                try:
+                    x0, y0, x1, y1 = row['bounds']
+                    secondary = norm(textpage.get_text_bounded(
+                        left=x0, bottom=page.height-y1, right=x1, top=page.height-y0,
+                    ))
+                finally:
+                    textpage.close()
+            finally:
+                secondary_page.close()
+            # A second engine must recover the entire row, not just missing glyphs.
+            secondary_missing = Counter(expected) - Counter(secondary)
+            secondary_rows.append({
+                'row':index, 'page':row['page'], 'question':row['question'],
+                'bounds':row['bounds'], 'primaryMissing':dict(missing),
+                'secondaryMissing':dict(secondary_missing), 'accepted':not secondary_missing,
+            })
+            if secondary_missing:
+                issues.append({'page':row['page'], 'question':row['question'],
+                               'type':'missing-text', 'missing':dict(missing),
+                               'secondaryMissing':dict(secondary_missing), 'text':expected})
+    finally:
+        if secondary_doc is not None:
+            secondary_doc.close()
+    return issues, secondary_rows
+
 def check(year, paper):
     src = json.loads((QA / f'{year}-p{paper}.json').read_text(encoding='utf-8'))
     for name, digest in src['inputs'].items():
@@ -40,13 +84,8 @@ def check(year, paper):
             if any('TimesNewRoman' not in c['fontname'].replace('-', '') for c in latin):
                 issues.append({'page':i+1,'type':'font','fonts':sorted(set(c['fontname'] for c in latin))})
         # Verify each answer row on its assigned page, separately from labels and awards.
-        for row in src['rowEvidence']:
-            expected=norm(row['text'])
-            actual=norm(doc.pages[row['page']-1].crop(tuple(row['bounds'])).extract_text(x_tolerance=1,y_tolerance=3) or '')
-            if expected not in actual:
-                # Fractions/MathML can reorder the PDF reading stream; retain a character audit.
-                missing=Counter(expected)-Counter(actual)
-                if missing: issues.append({'page':row['page'],'question':row['question'],'type':'missing-text','missing':dict(missing),'text':expected})
+        row_issues, secondary_rows = check_answer_rows(doc, src['rowEvidence'], path)
+        issues.extend(row_issues)
         for number in src['questions']:
             assert any(row['question']==number for row in src['rowEvidence'])
         if paper==2:
@@ -83,7 +122,7 @@ def check(year, paper):
         sheet=Image.new('RGB',(1240,1760),'#ddd')
         for offset,thumb in enumerate(thumbs[start:start+4]): sheet.paste(thumb,((offset%2)*620,(offset//2)*880))
         sheet.save(images / f'contact-{start//4+1:02d}.jpg',quality=90)
-    report={'year':year,'paper':paper,'pages':len(doc),'questions':len(src['questions']),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'issues':issues,'changed_pages':changed_pages}
+    report={'year':year,'paper':paper,'pages':len(doc),'questions':len(src['questions']),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'issues':issues,'changed_pages':changed_pages,'secondaryExtractedRows':secondary_rows}
     (QA / f'{year}-p{paper}-check.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print(f'{year} P{paper}: {len(doc)} pages; {len(issues)} issues',flush=True)
     return report
@@ -91,5 +130,5 @@ def check(year, paper):
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--year',type=int);parser.add_argument('--paper',type=int)
     args=parser.parse_args()
-    reports=[check(y,p) for y in ([args.year] if args.year else range(2016,2027)) for p in ([args.paper] if args.paper else (1,2))]
+    reports=[check(y,p) for y in ([args.year] if args.year else range(2015,2027)) for p in ([args.paper] if args.paper else (1,2))]
     if any(r['issues'] for r in reports): raise SystemExit(1)

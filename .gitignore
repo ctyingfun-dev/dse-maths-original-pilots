@@ -207,3 +207,16 @@
 !/output/pdf/dse-original-2016-paper2-practice.pdf
 !/output/pdf/dse-original-2017-paper1-practice.pdf
 !/output/pdf/dse-original-2017-paper2-practice.pdf
+
+!/SOURCE_ALIGNMENT_2015.md
+!/verify-2015.cjs
+!/verify-2015-paper1.cjs
+!/verify-2015-paper2.cjs
+!/qa-2015.cjs
+!/scripts/source-expectations-2015.cjs
+!/paper1/data-2015.js
+!/paper1/diagrams-2015.js
+!/paper2/data-2015.js
+!/paper2/diagrams-2015.js
+!/output/pdf/dse-original-2015-paper1-practice.pdf
+!/output/pdf/dse-original-2015-paper2-practice.pdf

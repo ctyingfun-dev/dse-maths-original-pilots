@@ -3,7 +3,7 @@ const fs=require("node:fs/promises");
 const path=require("node:path");
 const base=(process.env.PREVIEW_URL||"http://127.0.0.1:4284").replace(/\/$/,"");
 const output=path.join(__dirname,"tmp/integration-2018");
-const years=[2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
+const years=[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
 const widths=[1440,1056,768,390,320];
 const paperFlag=process.argv.indexOf("--paper");
 const papers=paperFlag<0?[1,2]:[Number(process.argv[paperFlag+1])];
@@ -113,7 +113,7 @@ if (require.main === module) (async()=>{
           for(const year of years) for(const otherPaper of [1,2]) {
             if(year===2018&&otherPaper===paper)continue;
             const key=`dse-original-pilot-paper${otherPaper}-${year}-v2`;
-            const questionRevision=otherPaper===1?([2016,2017,2018,2019,2020,2021,2022,2023].includes(year)?1:2):([2016,2017,2018,2019,2020,2021,2023,2024].includes(year)?1:[2022,2025].includes(year)?2:5);
+            const questionRevision=otherPaper===1?([2015,2016,2017,2018,2019,2020,2021,2022,2023].includes(year)?1:2):([2015,2016,2017,2018,2019,2020,2021,2023,2024].includes(year)?1:[2022,2025].includes(year)?2:5);
             const value=JSON.stringify({schema:2,paper:otherPaper,year,progress:{answers:{},checked:{},hints:{1:1},saved:[2],questionRevision,startedAt:null,deadline:null,mode:"untimed",finished:false}});
             localStorage.setItem(key,value);
             result[key]=value;
@@ -188,11 +188,11 @@ if (require.main === module) (async()=>{
         assert.equal(await page.evaluate(key=>localStorage.getItem(key),key),before);
 
         const filename=`dse-original-2018-paper${paper}-practice.pdf`;
-        assert.equal(await page.locator(".export-pdf").getAttribute("download"),filename);
-        assert.equal(await page.locator(".export-pdf").getAttribute("href"),`../output/pdf/${filename}`);
+        assert.equal(await page.locator(".export-pdf:not(.solution-pdf)").getAttribute("download"),filename);
+        assert.equal(await page.locator(".export-pdf:not(.solution-pdf)").getAttribute("href"),`../output/pdf/${filename}`);
         if(!layoutOnly) {
           const downloadEvent=page.waitForEvent("download");
-          await page.locator(".export-pdf").click();
+          await page.locator(".export-pdf:not(.solution-pdf)").click();
           const pdf=await downloadEvent;
           assert.equal(pdf.suggestedFilename(),filename);
           assert.equal((await fs.readFile(await pdf.path())).subarray(0,5).toString(),"%PDF-");

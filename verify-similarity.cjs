@@ -9,7 +9,7 @@ const load=file=>{
   return context.window;
 };
 const solutions=new Map();
-for(const paper of [1,2]) for(const year of [2016,2017,2018,2019,2020,2023,2024,2025,2026]) {
+for(const paper of [1,2]) for(const year of [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
   const data=Object.values(load(`paper${paper}/data-${year}.js`))[0];
   for(const q of data.questions) {
     const text=paper===1?q.solution.flatMap(part=>part.steps.flatMap(step=>step.text)).join("\n"):q.solution;
@@ -20,7 +20,9 @@ for(const paper of [1,2]) for(const year of [2016,2017,2018,2019,2020,2023,2024,
   assert.match(html,/（AA）/);
   assert.doesNotMatch(html,/<var>AA<\/var>/,"AA must remain upright");
 }
-assert.equal(solutions.size,577);
+const expected2015 = require('./scripts/source-expectations-2015.cjs');
+assert.ok(expected2015[1] && expected2015[2], '2015 independent source counts required');
+assert.equal(solutions.size,705+expected2015[1].count+expected2015[2].count);
 
 const aaCases=[
   ["2023/1/8","JLN","KMN",[["JNL","KNM"],["JLN","KMN"]]],
@@ -86,7 +88,7 @@ for(const [id,relation] of [
 const found=new Set();
 for(const [id,text] of solutions) {
   // The yearly independent verifiers cover these geometric models.
-  if(id.startsWith("2016/") || id.startsWith("2017/") || id.startsWith("2018/") || id.startsWith("2019/") || id.startsWith("2020/")) continue;
+  if(Number(id.split('/')[0])<=2022) continue;
   for(const [relation] of text.matchAll(/△[A-Z]{3}∼△[A-Z]{3}/g)) {
     found.add(`${id}:${relation}`);
   }
@@ -132,4 +134,4 @@ for(const [left,right] of [["JK","KM"],["KQ","ML"],["JQ","KL"]]) {
   close(distance(hexagon[left[0]],hexagon[left[1]])/distance(hexagon[right[0]],hexagon[right[1]]),1/Math.sqrt(3));
 }
 geometryChecks++;
-console.log(`Similarity notation scanned in ${solutions.size} questions; 2023-2026: ${aaCases.length} AA proofs, 1 three-side-ratio proof, 1 congruence inference, ${geometryChecks} independent geometry checks. Run the 2016-2022 yearly verifiers for their geometric models.`);
+console.log(`Similarity notation scanned in ${solutions.size} questions; 2023-2026: ${aaCases.length} AA proofs, 1 three-side-ratio proof, 1 congruence inference, ${geometryChecks} independent geometry checks. Run the 2015-2022 yearly verifiers for their geometric models.`);

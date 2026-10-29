@@ -5,18 +5,24 @@ const path = require("node:path");
 const {launchBrowser} = require("./scripts/browser-runtime.cjs");
 const base = (process.env.PREVIEW_URL || "http://127.0.0.1:4284").replace(/\/$/, "");
 const output = path.join(__dirname, "tmp/curriculum-20261016");
+const expectedPolar = (year,paper) => {
+  if(year===2015) return require('./scripts/source-expectations-2015.cjs')[paper].polar;
+  if(year===2016 || year===2017) return require('./scripts/source-expectations-2016-2017.cjs')[year][paper].polar;
+  if(year===2018) return require('./qa-2018.cjs').sourceExpectation[paper].polar;
+  return paper===1 && [2021,2024].includes(year) ? [7] : paper===2 && [2020,2022,2023,2025].includes(year) ? [24] : [];
+};
 
 (async () => {
   await fs.mkdir(output, {recursive:true});
   const browser = await launchBrowser();
   try {
-    for (const paper of [1,2]) for (const year of [2024,2025,2026]) {
+    for (const paper of [1,2]) for (const year of [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
       const context = await browser.newContext();
       const page = await context.newPage();
       const errors = [];
       page.on("pageerror", error => errors.push(error.message));
       await page.goto(`${base}/paper${paper}/?year=${year}#practice`);
-      const expected = paper===1 && year===2024 ? [7] : paper===2 && year===2025 ? [24] : [];
+      const expected = expectedPolar(year,paper);
       assert.deepEqual(await page.evaluate(() => window.PILOT.questions.filter(q=>window.pilotCurriculumNotice(q)).map(q=>q.n)), expected);
       assert.equal(await page.evaluate(() => ["極坐標", "極座標", "極徑及極角", "Polar coordinates"].every(topic=>window.pilotCurriculumNotice({topic}))), true);
       assert.equal(await page.evaluate(() => window.pilotCurriculumNotice({topic:"直角坐標與多項式"})), "");

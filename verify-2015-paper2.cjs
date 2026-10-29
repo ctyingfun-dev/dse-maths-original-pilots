@@ -1,0 +1,102 @@
+"use strict";
+const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
+const {value,condition}=require("./verify-2020-paper2.cjs");
+const R=Math.PI/180,sum=a=>a.reduce((s,v)=>s+v,0),close=(a,b)=>Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<1e-9*Math.max(1,Math.abs(a),Math.abs(b));
+const near=(a,b)=>assert.ok(close(a,b),`${a} != ${b}`),sub=(a,b)=>a.map((x,i)=>x-b[i]),dot=(a,b)=>sum(a.map((x,i)=>x*b[i])),det=(a,b)=>a[0]*b[1]-a[1]*b[0],dist=(a,b)=>Math.hypot(...sub(a,b));
+const angle=(a,b,c)=>Math.acos(Math.max(-1,Math.min(1,dot(sub(a,b),sub(c,b))/(dist(a,b)*dist(c,b)))))/R;
+const area=(a,b,c)=>Math.abs(det(sub(a,b),sub(c,b)))/2;
+const factorial=n=>{let x=1;for(let i=2;i<=n;i++)x*=i;return x;};
+const choose=(n,k)=>factorial(n)/(factorial(k)*factorial(n-k));
+const median=a=>{a=[...a].sort((x,y)=>x-y);return a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2;};
+const mean=a=>sum(a)/a.length,variance=a=>mean(a.map(x=>(x-mean(a))**2));
+const digits=s=>Number([...s].map(x=>"⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(x)).join(""));
+const plain=x=>JSON.parse(JSON.stringify(x));
+function read(){const c={window:{}};for(const f of["data","diagrams"])vm.runInNewContext(fs.readFileSync(path.join(__dirname,`paper2/${f}-2015.js`),"utf8"),c);return c.window;}
+function match(q,re){const m=q.prompt.match(re);assert.ok(m,`Unrecognized conditions ${re}`);return m.slice(1);}
+const nums=(q,re)=>match(q,re).map(Number);
+const same=(a,b)=>Array.isArray(a)&&Array.isArray(b)?a.length===b.length&&a.every((x,i)=>same(x,b[i])):typeof a==="number"&&typeof b==="number"?close(a,b):a===b;
+function distinct(q,a){assert.equal(a.length,4);for(let i=0;i<4;i++)for(let j=i+1;j<4;j++)assert.ok(!same(a[i],a[j]),`Q${q.n}: equivalent options ${i+1},${j+1}`);}
+function unique(q,truths){assert.equal(truths.filter(Boolean).length,1,"one correct option");const i=truths.indexOf(true);assert.equal(q.answer,"ABCD"[i],"answer key");assert.equal(q.correct,q.options[i],"correct field");}
+function numeric(q,expected,unit=""){const a=q.options.map(s=>{if(unit){assert.ok(s.endsWith(unit),s);s=s.slice(0,-unit.length);}return value(s);});distinct(q,a);unique(q,a.map(v=>close(v,expected)));}
+function currency(q,expected){const a=q.options.map(s=>{assert.match(s,/^\$\d+(?:\.\d+)?$/);return +s.slice(1);});distinct(q,a);unique(q,a.map(v=>close(v,expected)));}
+function formula(q,samples,f,parse=value){const a=q.options.map(s=>samples.map(v=>parse(s,v))),expected=samples.map(f);distinct(q,a);unique(q,a.map(v=>same(v,expected)));}
+function statements(q,truths){const a=q.options.map(s=>{assert.match(s,/^(?:只有 (?:I|II|III)(?:、(?:II|III))?|I、II、III)$/);return(s.match(/III|II|I/g)||[]).sort((x,y)=>x.length-y.length);});distinct(q,a);const target=["I","II","III"].filter((_,i)=>truths[i]);unique(q,a.map(v=>same(v,target)));}
+const relations=q=>match(q,/\nI (.+?)；II (.+?)；III (.+?)。/);
+function collinear(a,b,c){near(det(sub(a,b),sub(c,b)),0);}
+function between(a,b,c){collinear(a,b,c);assert.ok(dot(sub(b,a),sub(b,c))<0,"strictly between endpoints");}
+function eq(s,vars){const p=s.split("=");assert.equal(p.length,2);return value(p[0],vars)-value(p[1],vars);}
+const diagrams={8:"parabola2015",13:"dots2015",15:"pythagoras2015",16:"frustum2015",17:"parallelogram2015",18:"ratios2015",20:"circle2015",25:"lines2015",28:"bars2015",29:"box2015",32:"logline2015",36:"region2015",39:"sine2015",40:"tangents2015"};
+function verify(w=read(),{quiet=false}={}) {
+  const d=w.PILOT_2015,qs=d.questions,g=w.pilotDiagram2015Geometry,done=new Set();
+  assert.equal(d.year,2015);assert.equal(d.paper,2);assert.equal(d.minutes,75);assert.equal(qs.length,45);
+  assert.deepEqual(Array.from(qs.filter(q=>/極坐標/.test(q.topic)),q=>q.n),[23]);
+  assert.deepEqual(Object.keys(g).sort(),Object.values(diagrams).sort());
+  const check=(n,f)=>{const q=qs[n-1];try{
+    assert.equal(q.n,n);assert.equal(q.sourceNo,n);assert.equal(q.section,n<=30?"甲部":"乙部");assert.equal(q.options.length,4);assert.equal(new Set(q.options).size,4);
+    assert.ok(q.hints.length>=1&&q.hints.length<=2);assert.ok(q.solution.split("\n").length>=3);assert.ok(!q.marks&&!q.markingScheme);
+    assert.ok(!/寫出|填充|____/.test(q.prompt));assert.ok(!/橫坐標|縱坐標|橫軸|縱軸|橫截距|縱截距|÷/.test(JSON.stringify(q)));
+    assert.equal(q.diagram,diagrams[n]);if(q.diagram){const svg=w.pilotDiagram2015(q.diagram);assert.ok(svg.includes("<svg")&&!/NaN|undefined|Infinity/.test(svg));}
+    f(q);done.add(n);
+  }catch(e){throw Error(`2015 P2 Q${n}: ${e.message}`,{cause:e});}};
+  const points=q=>g[q.diagram].points;
+  check(1,q=>{const[s]=match(q,/將 (.+) 展開/);formula(q,[-7,-2,-1,0,.4,1,3,8].map(x=>({x})),v=>value(s,v));});
+  check(2,q=>{const[s]=match(q,/化簡 (.+)。/);formula(q,[-3,-1,-.5,.2,1,2,5].map(y=>({y})),v=>value(s,v));});
+  check(3,q=>{const[a,b,c,e,f,h]=nums(q,/滿足 (\d+)x\+(\d+)y=(\d+) 及 (\d+)x\+(\d+)y=(\d+)/),den=a*f-b*e;assert.notEqual(den,0);numeric(q,(c*f-b*h)/den);});
+  check(4,q=>{const[n]=nums(q,/表示 ([.\d]+) 的/),a=q.options.map(s=>{const m=s.match(/^([.\d]+)（準確至([五六])位(小數|有效數字)）$/);assert.ok(m);const places=m[2]==="五"?5:6;return[+m[1],places,m[3]];});distinct(q,a);unique(q,a.map(([v,n2,t])=>Math.abs(v-Number(t==="小數"?n.toFixed(n2):n.toPrecision(n2)))<1e-13));});
+  check(5,q=>{const[a,b]=nums(q,/x²\+mx\+n≡\(x\+(\d+)\)\(x-m\)\+(\d+)/),m=a/2,n=b-a*m;for(const x of[-2,0,1,4])near(x*x+m*x+n,(x+a)*(x-m)+b);numeric(q,n);});
+  check(6,q=>{const[s]=match(q,/滿足 (.+) 的 x/),rels=s.split(" 或 ");assert.equal(rels.length,2);const bounds=rels.map(s=>{const[l,r]=s.split(/[<>]/),f=x=>value(l,{x})-value(r,{x}),c=f(0);return-c/(f(1)-c);}),samples=[-100,100,...bounds.flatMap(b=>[b-1e-5,b,b+1e-5])],v=q.options.map(s=>samples.map(x=>condition(s,{x})));distinct(q,v);unique(q,v.map(a=>a.every((t,i)=>t===rels.some(s=>condition(s,{x:samples[i]})))));});
+  check(7,q=>{const[a,b,c,s]=match(q,/方程 (\d+)x²-(\d+)x-(\d+)=0.*求 (.+)。/),roots=[(+b+Math.sqrt(b*b+4*a*c))/(2*a),(+b-Math.sqrt(b*b+4*a*c))/(2*a)],answers=roots.map(α=>value(s,{α}));near(...answers);numeric(q,answers[0]);});
+  check(8,q=>{match(q,/y=a\(x-b\)²/);const{a,b}=g[q.diagram];assert.ok(a<0&&b>0);unique(q,q.options.map(s=>{const v=s.split(" 及 ");assert.equal(v.length,2);return v.every(t=>condition(t,{a,b}));}));});
+  check(9,q=>{const[a,b]=nums(q,/調高 (\d+)%.*減價 (\d+)%/);numeric(q,((1+a/100)*(1-b/100)-1)*100,"%");});
+  check(10,q=>{const[p,r]=nums(q,/\$(\d+).*年利率 (\d+)%/);match(q,/按月.*兩年後/);let amount=p;for(let n=0;n<24;n++)amount+=amount*r/1200;currency(q,Math.round(amount));});
+  check(11,q=>{const[a,c,b,d]=nums(q,/a:c=(\d+):(\d+) 及 b:c=(\d+):(\d+)/),a2=q.options.map(s=>{assert.match(s,/^\d+:\d+$/);const[x,y]=s.split(":").map(Number);return x/y;});distinct(q,a2);unique(q,a2.map(v=>close(v,(a/c+1)/(b/d+1))));});
+  check(12,q=>{const[x,y,z,X,Y]=nums(q,/x³ 及 y² 正變.*x=(\d+)、y=(\d+) 時，z=(\d+).*x=(\d+)、y=(-?\d+)/);numeric(q,z*(X/x)**3*(Y/y)**2);});
+  check(13,q=>{const[a,step,n]=nums(q,/有 (\d+) 粒.*多 (\d+) 粒.*第 (\d+) 個/);assert.deepEqual(plain(g[q.diagram].counts),[a,a+step,a+2*step]);assert.equal(g[q.diagram].increment,step);assert.equal((w.pilotDiagram2015(q.diagram).match(/<circle /g)||[]).length,3*a+3*step);numeric(q,a+(n-1)*step);});
+  check(14,q=>{const[kg,grams]=nums(q,/為 (\d+) kg.*為 (\d+) g/s),upper=(kg+.5)*1000,lower=(kg-.5)*1000,min=grams-.5,max=grams+.5,n=Math.ceil(upper/min)-1;assert.ok(n*min<upper&&n*max>=lower);assert.ok((n+1)*min>=upper);numeric(q,n);});
+  check(15,q=>{const[LM,MN,JP,PN,KL]=nums(q,/LM=(\d+) cm、MN=(\d+) cm、JP=(\d+) cm、PN=(\d+) cm 及 KL=(\d+) cm/),p=points(q);for(const[a,b,s]of[["L","M",LM],["M","N",MN],["J","P",JP],["P","N",PN],["K","L",KL]])near(dist(p[a],p[b]),s);between(p.J,p.N,p.L);between(p.M,p.P,p.N);near(angle(p.M,p.N,p.J),90);near(angle(p.J,p.K,p.L),90);const JL=Math.sqrt(LM*LM-MN*MN)+Math.sqrt(JP*JP-PN*PN),expected=KL*Math.sqrt(JL*JL-KL*KL)/2;near(area(p.J,p.K,p.L),expected);numeric(q,expected," cm²");});
+  check(16,q=>{const[H,r,h]=nums(q,/高 (\d+) cm、底半徑 (\d+) cm.*平截頭體高 (\d+) cm/),t=g[q.diagram],small=H-h,smallr=r*small/H;assert.ok(0<h&&h<H);near(t.height,H);near(t.radius,r);near(t.remainingHeight,h);near(t.topRadius,smallr);numeric(q,Math.PI*(r*r*H-smallr*smallr*small)/3," cm³");});
+  check(17,q=>{const[a,b,A]=nums(q,/MN:NL=(\d+):(\d+).*△MNP 的面積為 (\d+) cm²/),p=points(q);near(det(sub(p.J,p.M),sub(p.K,p.L)),0);near(det(sub(p.J,p.K),sub(p.M,p.L)),0);near(dist(p.J,p.M),dist(p.K,p.L));between(p.M,p.N,p.L);between(p.K,p.N,p.P);between(p.J,p.N,p.Q);collinear(p.J,p.M,p.P);collinear(p.K,p.L,p.Q);near(dist(p.M,p.N)/dist(p.N,p.L),a/b);near(area(p.M,p.N,p.P),A);near(g[q.diagram].area,A);assert.deepEqual(plain(g[q.diagram].ratio),[a,b]);const expected=A*(b/a)**3;near(area(p.L,p.N,p.Q),expected);numeric(q,expected," cm²");});
+  check(18,q=>{match(q,/∠KJL=∠JML=90°、∠JLM=α 及 ∠JKL=β.*JM\/JK/);const p=points(q);near(angle(p.K,p.J,p.L),90);near(angle(p.J,p.M,p.L),90);const α=angle(p.J,p.L,p.M)*R,β=angle(p.J,p.K,p.L)*R,values=q.options.map(s=>{const m=s.match(/^(sin|cos) α(?:( tan β)|\/\(tan β\))$/);assert.ok(m,s);const v=Math[m[1]](α);return m[2]?v*Math.tan(β):v/Math.tan(β);});distinct(q,values);unique(q,values.map(v=>close(v,dist(p.J,p.M)/dist(p.J,p.K))));});
+  check(19,q=>{const[s]=match(q,/化簡 (.+)。/),angles=[17,38,71,110,146,223,310],source=s.replace(/sin²θ/g,"(sin θ)²").replace(/cos²θ/g,"(cos θ)²");formula(q,angles.map(θ=>({θ})),v=>value(source,v),(s,v)=>value(s.replace(/sin²θ/g,"(sin θ)²").replace(/cos²θ/g,"(cos θ)²"),v));});
+  check(20,q=>{const[a]=nums(q,/∠KJL=(\d+)°/),p=points(q),t=g[q.diagram];for(const n of["J","K","M","L","N"])near(dist(p[n],t.centre),t.radius);near(dist(p.J,p.L),2*t.radius);near(dist(p.K,p.M),dist(p.M,p.L));near(angle(p.K,p.J,p.L),a);near(t.angle,a);near(angle(p.J,p.N,p.M),90-a/2);numeric(q,90-a/2,"°");});
+  check(21,q=>{const[d]=nums(q,/JL=(\d+) cm/);match(q,/於 O 垂直相交/);numeric(q,d*d/8," cm²");});
+  check(22,q=>{const[k,inside,axes,rotation]=nums(q,/外角的 (\d+) 倍.*\nI.*為 ([\d.]+)°；II.* (\d+) 條；III.*為 (\d+)/),ex=180/(k+1),n=360/ex;assert.ok(Number.isInteger(n));statements(q,[close(inside,180-ex),axes===n,rotation===n]);});
+  check(23,q=>{const[x,y]=match(q,/為 \(([^,]+),([^,]+)\)。/),axis=match(q,/對 ([xy]) 軸/)[0],expected=[value(x)*(axis==="y"?-1:1),value(y)*(axis==="x"?-1:1)],a=q.options.map(s=>{const m=s.match(/^\((\d+),(\d+)°\)$/);assert.ok(m);const r=+m[1],t=+m[2];assert.ok(r>0&&t>=0&&t<360);return[r*Math.cos(t*R),r*Math.sin(t*R)];});distinct(q,a);unique(q,a.map(v=>same(v,expected)));});
+  check(24,q=>{match(q,/滿足 PJ=PK。/);const[x1,y1,x2,y2]=nums(q,/分別為 \((-?\d+),(-?\d+)\)、\((-?\d+),(-?\d+)\)/),J=[x1,y1],K=[x2,y2],M=[(x1+x2)/2,(y1+y2)/2],v=sub(K,J),u=[-v[1],v[0]],bis=J.map((t,i)=>t/Math.hypot(...J)+K[i]/Math.hypot(...K)),samples=[-3,-1,0,1,4].map(t=>M.map((x,i)=>x+t*u[i])),a=q.options.map(s=>{if(s==="JK 的垂直平分線")return samples.map(P=>close(dist(P,J),dist(P,K)));if(s==="以 JK 為直徑的圓")return samples.map(P=>close(dist(P,M),dist(J,K)/2));if(s==="通過 J、K 的直線")return samples.map(P=>close(det(sub(P,J),v),0));assert.equal(s,"∠JOK 的角平分線，其中 O 為原點");return samples.map(P=>close(det(P,bis),0));});unique(q,a.map(v=>v.every(Boolean)));});
+  check(25,q=>{const[k,k2]=nums(q,/ax=(\d+)、bx\+cy=(\d+)/);near(k,k2);const t=g[q.diagram];near(t.constant,k);near(k/t.a,t.x1);near(k/t.b,t.x2);near(k/t.c,t.y2);assert.ok(t.x1>t.x2&&t.x2>0&&t.y2>0);const rel=relations(q),samples=[];for(const a of[.2,1,4])for(const d of[.1,2,8])for(const c of[.3,3])samples.push({a,b:a+d,c});statements(q,rel.map(s=>samples.every(v=>condition(s,v))));});
+  check(26,q=>{const[h,k,x,y]=nums(q,/圓心為 \((-?\d+),(-?\d+)\).*通過 \((-?\d+),(-?\d+)\)/),r=Math.hypot(x-h,y-k),samples=[0,38,90,175,260].map(t=>({x:h+r*Math.cos(t*R),y:k+r*Math.sin(t*R)})),signatures=q.options.map(s=>samples.map(v=>eq(s,v)));distinct(q,signatures);unique(q,signatures.map(v=>v.every(x=>close(x,0))));});
+  check(27,q=>{const[n,a,b]=nums(q,/和為 (\d+).*得 \$(\d+).*得 \$(\d+)/);let total=0;for(let i=1;i<=6;i++)for(let j=1;j<=6;j++)total+=i+j===n?a:b;currency(q,total/36);});
+  check(28,q=>{const[n]=nums(q,/恰好借閱 (\d+) 本/),{values,frequencies}=g[q.diagram];assert.equal(values.length,frequencies.length);assert.equal(new Set(values).size,values.length);assert.ok(frequencies.every(n=>Number.isInteger(n)&&n>=0));numeric(q,frequencies[values.indexOf(n)]/sum(frequencies));});
+  check(29,q=>{match(q,/四分位數間距/);const s=g[q.diagram].summary;assert.equal(s.length,5);assert.ok(s.every((v,i)=>!i||v>=s[i-1]));numeric(q,s[3]-s[1]," 分鐘");});
+  check(30,q=>{const[s,lo,hi]=match(q,/整數：(.+?)、m，其中 (\d+)≤m≤(\d+)/),base=s.split("、").map(Number);assert.equal(base.length,14);const samples=[];for(let m=+lo;m<=+hi;m++){const a=[...base,m],counts=new Map();for(const x of a)counts.set(x,(counts.get(x)||0)+1);const most=Math.max(...counts.values()),modes=[...counts].filter(([,n])=>n===most).map(([x])=>x);assert.equal(modes.length,1);samples.push({p:mean(a),q:median(a),r:modes[0]});}statements(q,relations(q).map(s=>samples.every(v=>condition(s,v))));});
+  check(31,q=>{const[s]=match(q,/化簡 (.+)。/);formula(q,[-9,-5,-3.99,-2,0,.25,2.99,3.01,4,8].map(x=>({x})),v=>value(s,v));});
+  check(32,q=>{const[a,b]=nums(q,/依次為 (\d+) 及 (\d+)/);match(q,/log₂x 軸及 log₂y 軸/);assert.equal(g[q.diagram].base,2);assert.deepEqual(plain(g[q.diagram].intercepts),[a,b]);const samples=[-.5,0,1,2,3,4,5].map(t=>({x:2**t,y:2**(b-b*t/a)})),values=q.options.map(s=>samples.map(v=>eq(s,v)));distinct(q,values);unique(q,values.map(v=>v.every(x=>close(x,0))));});
+  check(33,q=>{const[s]=match(q,/把 (.+) 轉換/),expected=value(s),v=q.options.map(s=>{assert.match(s,/^[01]+₂$/);return parseInt(s.slice(0,-1),2);});distinct(q,v);unique(q,v.map(x=>x===expected));});
+  check(34,q=>{const[b,c]=nums(q,/x²\+(\d+)kx-(\d+)=0/);formula(q,[-4,-1,0,.25,1,3].map(k=>({k})),({k})=>{const root=Math.sqrt((b*k)**2+4*c),u=(-b*k+root)/2,v=(-b*k-root)/2;return u*u+v*v;});});
+  check(35,q=>{const[a,p,b,r]=match(q,/w=\(a-(\d+)\)i([⁰¹²³⁴⁵⁶⁷⁸⁹]+)\+\(a\+(\d+)\)i([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/),ip=n=>[[1,0],[0,1],[-1,0],[0,-1]][n%4],u=ip(digits(p)),v=ip(digits(r)),options=q.options.map(s=>value(s));distinct(q,options);unique(q,options.map(x=>close((x-a)*u[1]+(x+Number(b))*v[1],0)));});
+  check(36,q=>{const[x,m,b,c,d,e]=nums(q,/x=(\d+)、y=(\d+)x\+(\d+) 及 (\d*)x\+(\d+)y=(\d+)/),t=g[q.diagram],coef=c||1;near(t.right,x);near(t.slope,m);near(t.intercept,b);assert.deepEqual(plain(t.lower),[coef,d,e]);const expected=[[ (e-d*b)/(coef+d*m),(m*e+coef*b)/(coef+d*m)],[x,m*x+b],[x,(e-coef*x)/d]];Object.values(t.points).forEach((p,i)=>assert.ok(same(p,expected[i])));statements(q,relations(q).map(s=>expected.every(([a,b])=>condition(s,{a,b}))));});
+  check(37,q=>{const[a4,a6,claimed,bound]=match(q,/a₄=(\d+)、a₆=(\d+).*\nI a₁=(.+?)；II a₃\/a₅>1；III.*<([\d.]+)。/),r2=+a6/+a4;assert.ok(0<r2&&r2<1);const r=Math.sqrt(r2),first=[r,-r].map(t=>+a4/t**3),evenFirst=+a4/r2,limit=evenFirst/(1-r2);assert.ok(evenFirst>0);statements(q,[first.every(x=>close(x,value(claimed))),1/r2>1,limit<=+bound]);});
+  check(38,q=>{const[a,c]=nums(q,/方程 (\d+)cos²x-sin x=(\d+)/);match(q,/0°≤x<360°/);const disc=1+4*a*(a-c);assert.ok(disc>=0);const sinValues=[(-1+Math.sqrt(disc))/(2*a),(-1-Math.sqrt(disc))/(2*a)],angles=[];for(const v of new Set(sinValues)){if(Math.abs(v)>1)continue;const t=Math.asin(v)/R;for(const base of[t,180-t])for(let n=-1;n<=1;n++){const x=base+360*n;if(x>=0&&x<360&&!angles.some(v=>close(v,x)))angles.push(x);}}numeric(q,angles.length);});
+  check(39,q=>{const[x1,x2]=nums(q,/截距為 (\d+) 及 (\d+)/),k=180/(x2-x1),phase=((180-k*x1+180)%360+360)%360-180,t=g[q.diagram];assert.ok(k>0);near(t.frequency,k);near(t.phase,phase);assert.deepEqual(plain(t.zeros),[x1,x2]);assert.ok(Math.cos((k*x1+phase)*R)<0&&Math.cos((k*x2+phase)*R)>0);const opts=q.options.map(s=>{const m=s.match(/^k=(.+)，θ=(-?\d+)°$/);assert.ok(m);return[value(m[1]),+m[2]];});distinct(q,opts);unique(q,opts.map(v=>same(v,[k,phase])));});
+  check(40,q=>{const[tan,hyp]=nums(q,/JK=(\d+) cm、JN=(\d+) cm/),t=g[q.diagram],p=t.points,base=Math.sqrt(hyp*hyp-tan*tan),short=hyp-tan,diam=base-short*short/base;near(dist(p.J,p.K),tan);near(dist(p.J,p.N),hyp);near(dist(p.J,p.L),tan);near(dist(p.N,p.L),short);between(p.N,p.M,p.K);between(p.J,p.L,p.N);near(dist(p.M,p.K),2*t.radius);for(const n of["K","L","M"])near(dist(p[n],t.centre),t.radius);near(dot(sub(p.J,p.K),sub(p.K,t.centre)),0);near(dot(sub(p.J,p.L),sub(p.L,t.centre)),0);near(dist(p.M,p.K),diam);numeric(q,diam," cm");});
+  check(41,q=>{const[a,b,u,v]=nums(q,/直線 (\d+)x-y\+(\d+)=0 與圓 x²\+y²-(\d+)x\+(\d+)y\+k=0/),cx=u/2,cy=-v/2,r2=(a*cx-cy+b)**2/(a*a+1),k=cx*cx+cy*cy-r2;assert.ok(r2>0);const A=1+a*a,B=2*a*b-u+v*a,C=b*b+v*b+k;near(B*B-4*A*C,0);numeric(q,k);});
+  check(42,q=>{const[jy,kx,ky]=nums(q,/\(0,(\d+)\)、\((\d+),(\d+)\)/);assert.notEqual(jy,ky);const x=ky*(jy-ky)/kx;near(dot([x,ky],[kx,ky-jy]),0);numeric(q,x);});
+  check(43,q=>{const[a,c]=nums(q,/(\d+) 位成人及 (\d+) 位小童/);assert.ok(c<=a+1);numeric(q,factorial(a)*choose(a+1,c)*factorial(c));});
+  check(44,q=>{const[a,b,c,d]=nums(q,/甲袋有 (\d+) 枚紅.*及 (\d+) 枚藍.*乙袋有 (\d+) 枚紅.*及 (\d+) 枚藍/);match(q,/等可能地選一袋/);numeric(q,(b/(a+b)+d/(c+d))/2);});
+  check(45,q=>{const[n,m]=nums(q,/一組 (\d+) 個.*餘下 (\d+) 個/);assert.equal(n,m+1);assert.equal(m%2,1);assert.deepEqual(relations(q),["μ₁=μ₂","m₁≥m₂","v₁≤v₂"]);const remaining=Array.from({length:m},(_,i)=>i<(m-1)/2?0:2),mu=mean(remaining),original=[...remaining,mu];near(mean(original),mu);near(variance(remaining),n*variance(original)/m);assert.ok(median(original)<median(remaining),"counterexample to universal median claim");const constants=Array(n).fill(7);near(variance(constants),variance(constants.slice(1)));statements(q,[true,false,true]);});
+  assert.equal(done.size,45);assert.equal(qs.filter(q=>q.diagram).length,14);
+  if(!quiet)console.log("2015 Paper 2: 45 independent derivations, all 180 options, 14 diagram contracts passed; polar Q23.");
+  return{questions:45,options:180,diagrams:14,polar:[23]};
+}
+function selfTest(){let rejected=0;for(let n=0;n<45;n++){
+  for(const type of["key","duplicate",0,1,2,3]){const w=read(),q=w.PILOT_2015.questions[n];if(type==="key")q.answer="ABCD"[("ABCD".indexOf(q.answer)+1)%4];else if(type==="duplicate")q.options[0]=q.options[1];else q.options[type]="INVALID_OPTION";assert.throws(()=>verify(w,{quiet:true}),`Q${n+1} ${type}`);rejected++;}
+}
+  const edits={1:["x-2","x-3"],2:["4y³","5y³"],3:["=11","=12"],4:["0.004819736","0.005819736"],5:["+11 對","+12 對"],6:["13+4x","17+4x"],7:["-2=0","-3=0"],8:["x-b","x+b"],9:["40%","50%"],10:["42000","43000"],11:["7:4","8:4"],12:["108","120"],13:["7 粒","8 粒"],14:["6 kg","7 kg"],15:["13 cm","14 cm"],16:["20 cm","21 cm"],17:["3:4","2:4"],18:["∠JLM=α","∠LJM=α"],19:["2cos 360°","3cos 360°"],20:["46°","48°"],21:["30 cm","32 cm"],22:["7 倍","8 倍"],23:["對 x 軸","對 y 軸"],24:["PJ=PK","PJ=2PK"],25:["ax=2","ax=3"],26:["(3,4)","(3,5)"],27:["和為 8","和為 7"],28:["2 本","1 本"],29:["四分位數間距","全距"],30:["4≤m≤6","4≤m≤4"],31:["2/(x²-6x+9)","3/(x²-6x+9)"],32:["4 及 3","5 及 3"],33:["13+","14+"],34:["-5=0","-6=0"],35:["a+2","a+3"],36:["x=5","x=6"],37:["108","120"],38:["=2 有","=1 有"],39:["40 及 100","40 及 110"],40:["8 cm","9 cm"],41:["-4x","-6x"],42:["(70,28)","(72,28)"],43:["5 位成人","6 位成人"],44:["3 枚紅","4 枚紅"],45:["m₁≥m₂","m₁≤m₂"]};
+  for(const[n,[a,b]]of Object.entries(edits)){const w=read(),q=w.PILOT_2015.questions[+n-1];assert.ok(q.prompt.includes(a),`Q${n} mutation anchor`);q.prompt=q.prompt.replace(a,b);assert.throws(()=>verify(w,{quiet:true}),`Q${n} changed condition`);rejected++;}
+  for(const[n,id]of Object.entries(diagrams)){const w=read();w.PILOT_2015.questions[+n-1].diagram=id+"bad";assert.throws(()=>verify(w,{quiet:true}));rejected++;}
+  const corrupt={parabola2015:t=>t.a=1,dots2015:t=>t.counts[0]++,pythagoras2015:t=>t.points.J[0]++,frustum2015:t=>t.topRadius++,parallelogram2015:t=>t.points.N[0]++,ratios2015:t=>t.points.M[0]++,circle2015:t=>t.points.M[0]++,lines2015:t=>t.x1=0,bars2015:t=>t.frequencies[2]++,box2015:t=>t.summary[3]++,logline2015:t=>t.intercepts[0]++,region2015:t=>t.points.J[0]++,sine2015:t=>t.phase++,tangents2015:t=>t.points.L[0]++};
+  for(const[id,change]of Object.entries(corrupt)){const w=read();change(w.pilotDiagram2015Geometry[id]);assert.throws(()=>verify(w,{quiet:true}),`invalid ${id} geometry`);rejected++;}
+  console.log(`2015 Paper 2 mutation self-test: ${rejected} incorrect keys, duplicate/invalid options, changed conditions, broken diagram references and invalid geometry rejected.`);
+}
+if(require.main===module){verify();if(process.argv.includes("--self-test"))selfTest();}
+module.exports={read,verify};

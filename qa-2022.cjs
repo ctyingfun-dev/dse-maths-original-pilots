@@ -83,7 +83,7 @@ async function labelChecks(page) {
       await page.locator("#question-1 [data-bookmark]").click();
       const key=year=>`dse-original-pilot-paper${paper}-${year}-v2`;
       const before=await page.evaluate(key=>localStorage.getItem(key),key(2022));
-      for(const year of [2021,2023,2024,2025,2026]) {
+      for(const year of [2015,2016,2017,2018,2019,2020,2021,2023,2024,2025,2026]) {
         await page.locator("#mock-year").selectOption(String(year));
         await page.waitForURL(new RegExp(`year=${year}`));
         assert.equal(await page.evaluate(()=>window.PILOT.year),year);
@@ -96,7 +96,7 @@ async function labelChecks(page) {
       assert.match(await page.locator(".other-paper").getAttribute("href"),/year=2022/);
       if(!process.argv.includes("--layout-only")) {
         const downloadEvent=page.waitForEvent("download");
-        await page.locator(".export-pdf").click();
+        await page.locator(".export-pdf:not(.solution-pdf)").click();
         const pdf=await downloadEvent;
         assert.equal(pdf.suggestedFilename(),`dse-original-2022-paper${paper}-practice.pdf`);
         assert.equal((await fs.readFile(await pdf.path())).subarray(0,5).toString(),"%PDF-");

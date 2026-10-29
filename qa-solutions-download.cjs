@@ -8,7 +8,7 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 async function main(){
   const browser=await launchBrowser();
   try{
-    for(let year=2016;year<=2026;year++)for(const paper of [1,2]){
+    for(let year=2015;year<=2026;year++)for(const paper of [1,2]){
       const context=await browser.newContext({acceptDownloads:true});
       const page=await context.newPage();
       const errors=[];page.on('pageerror',e=>errors.push(e.message));

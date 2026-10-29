@@ -51,7 +51,7 @@ async function persistenceChecks(page,paper){
   assert.equal(await page.evaluate(key=>localStorage.getItem(key),key(2025)),before);
   assert.ok((await page.locator(".other-paper").getAttribute("href")).includes("year=2025"));
   const pdfEvent=page.waitForEvent("download");
-  await page.locator(".export-pdf").click();
+  await page.locator(".export-pdf:not(.solution-pdf)").click();
   const pdf=await pdfEvent;
   assert.equal((await fs.readFile(await pdf.path())).subarray(0,5).toString(),"%PDF-");
   await page.goto(`${base}/paper${paper}/?year=2025#saved`);

@@ -1,6 +1,8 @@
 from pathlib import Path
+import json
 import logging
 import re
+import subprocess
 import sys
 import pdfplumber
 import pypdfium2
@@ -10,9 +12,18 @@ root = Path(__file__).resolve().parent
 qa = root / "tmp" / "qa-pdfs-times"
 qa.mkdir(parents=True, exist_ok=True)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
-years = [2016,2017,2018,2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] if "--all" in sys.argv else [2019] if "--2019" in sys.argv else [2020] if "--2020" in sys.argv else [2021] if "--2021" in sys.argv else [2022] if "--2022" in sys.argv else [2023]
+years = [2015,2016,2017,2018,2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] if "--all" in sys.argv else [2015] if "--2015" in sys.argv else [2019] if "--2019" in sys.argv else [2020] if "--2020" in sys.argv else [2021] if "--2021" in sys.argv else [2022] if "--2022" in sys.argv else [2023]
+source_2015 = None
+if 2015 in years:
+    audit = subprocess.run(
+        ["node", "-e", "process.stdout.write(JSON.stringify(require('./scripts/source-expectations-2015.cjs')));"],
+        cwd=root, check=True, capture_output=True, text=True, encoding="utf-8",
+    )
+    source_2015 = json.loads(audit.stdout)
+    assert all(str(paper) in source_2015 for paper in (1, 2)), "2015 independent source audits required"
 for year in years:
-    for paper, expected in [(1, 20 if year == 2016 else 19), (2, 45)]:
+    for paper in (1, 2):
+        expected = source_2015[str(paper)]["count"] if year == 2015 else (20 if year == 2016 else 19) if paper == 1 else 45
         if year == 2026 and paper == 2:
             continue
         edition = f"{year}-" if year != 2026 else ""
@@ -36,6 +47,10 @@ for year in years:
                 }
             assert numbers == list(range(1, expected + 1)), (year, paper, numbers)
             assert str(year) in all_text
+            if year == 2015:
+                assert all_text.count("已取消") == len(source_2015[str(paper)]["polar"])
+                if source_2015[str(paper)].get("identities"):
+                    assert "≡" in all_text
             if year == 2020:
                 assert all_text.count("已取消") == (0 if paper == 1 else 1)
             if year in [2022, 2023] and paper == 2:

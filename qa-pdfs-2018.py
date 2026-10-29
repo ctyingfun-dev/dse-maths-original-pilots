@@ -1,4 +1,4 @@
-"""Validate 2016-2018 practice PDFs and render every page for visual review."""
+"""Validate 2015-2018 practice PDFs and render every page for visual review."""
 
 from collections import Counter
 import argparse
@@ -44,7 +44,8 @@ def source_expectation(paper):
     result = subprocess.run(
         ["node", "-e",
          "process.stdout.write(JSON.stringify(" +
-         ("require('./qa-2018.cjs').sourceExpectation" if YEAR == 2018 else
+         ("require('./scripts/source-expectations-2015.cjs')" if YEAR == 2015 else
+          "require('./qa-2018.cjs').sourceExpectation" if YEAR == 2018 else
           f"require('./scripts/source-expectations-2016-2017.cjs')[{YEAR}]") + "));"],
         cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8",
     )
@@ -56,7 +57,7 @@ def intact_prompt_groups(questions, printed):
     for question in questions:
         number = question["n"]
         prompt = normal(question["prompt"])
-        groups = re.findall(r"\u2220[A-Z]{3}=\d+(?:\.\d+)?\u00b0", prompt)
+        groups = re.findall(r"\u2220(?:[A-Z]\u2032?){3}(?:=\u2220(?:[A-Z]\u2032?){3})*=\d+(?:\.\d+)?\u00b0", prompt)
         groups += re.findall(r"[A-Za-z]=\{[^}]+\}", prompt)
         groups += re.findall(
             r"\b[A-Z]{2}\s*=\s*\d+(?:\.\d+)?\s*(?:cm|mm|m|kg|g)\b", prompt
@@ -64,7 +65,7 @@ def intact_prompt_groups(questions, printed):
         groups += re.findall(r"\b[a-z]\s*=\s*[a-z]{1,3}\^[A-Za-z0-9]+\b", prompt)
         groups += re.findall(r"\b[a-z]{2}[+-][a-z][+-]\d+\b", prompt)
         groups += re.findall(r"log\d+\[[^\]\n]+\][<>\u2264\u2265=]\d+(?:\.\d+)?", prompt)
-        groups += re.findall(r"(?<![\d./])\d+(?:\.\d+)?\s*(?:cm|mm|kg|名|枚)", prompt)
+        groups += re.findall(r"(?<![\d./])\d+(?:\.\d+)?\s*(?:cm|mm|kg|g\b|名|枚)", prompt)
         groups += re.findall(r"[-\u2212]\d+\.\d+", prompt)
         # MathML places the source log_(r) base as a subscript in extracted text.
         groups += [formula.replace("_(", "").replace(")", "") for formula in
@@ -198,6 +199,9 @@ def validate(paper, *, allow_stale=False):
     mark_report = {}
     if paper == 1:
         assert [question["marks"] for question in questions] == evidence["marks"]
+        if "markGroups" in evidence:
+            assert {str(question["n"]): question["markGroups"] for question in questions
+                    if "markGroups" in question} == evidence["markGroups"]
         for number, labels in evidence["romanSubparts"].items():
             assert re.findall(r"(?m)^\s*\((i|ii|iii|iv)\)", printed[int(number)]) == labels, (
                 f"Q{number}: source subparts without duplicate inline references"
@@ -207,7 +211,7 @@ def validate(paper, *, allow_stale=False):
             marks = [int(value) for value in re.findall(
                 r"(?m)^\s*\((\d+)\s*分\)\s*$", printed[number]
             )]
-            groups = question.get("markGroups")
+            groups = evidence["markGroups"].get(str(number)) if "markGroups" in evidence else question.get("markGroups")
             expected_marks = list(groups.values()) if groups else [question["marks"]]
             assert marks == expected_marks, (number, marks, expected_marks)
             assert sum(marks) == question["marks"]
@@ -226,6 +230,10 @@ def validate(paper, *, allow_stale=False):
     assert combined.count("已取消") == len(polar_questions)
     for number in polar_questions:
         assert "已取消" in printed[number]
+    for number, labels in evidence.get("panelLabels", {}).items():
+        for label in labels:
+            pattern = r"(?m)^\s*" + re.escape(normal(label)).replace(r"\ ", r"\s*") + r"\s*$"
+            assert len(re.findall(pattern, printed[int(number)])) == 1, (number, label, "source panel label")
     condition_chunks = re.split(r"(?m)^(\d+)\.(?=\s|$)", "\n".join(condition_text))
     condition_printed = {int(condition_chunks[index]): condition_chunks[index + 1]
                          for index in range(1, len(condition_chunks), 2)}
@@ -252,7 +260,7 @@ def validate(paper, *, allow_stale=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--year', type=int, choices=(2016,2017,2018), default=2018)
+    parser.add_argument('--year', type=int, choices=(2015,2016,2017,2018), default=2018)
     parser.add_argument("--paper", type=int, choices=(1, 2),
                         help="Check only this paper and preserve the other paper's QA artifacts")
     parser.add_argument("--allow-stale", action="store_true",
