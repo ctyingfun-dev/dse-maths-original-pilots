@@ -1,4 +1,4 @@
-"""Validate 2015-2018 practice PDFs and render every page for visual review."""
+"""Validate 2014-2018 practice PDFs and render every page for visual review."""
 
 from collections import Counter
 import argparse
@@ -27,6 +27,30 @@ def normal(text):
     return unicodedata.normalize("NFKC", text)
 
 
+def panel_label_counts(text, labels):
+    compact_labels = [re.sub(r"\s+", "", normal(label)) for label in labels]
+    alternatives = "|".join(re.escape(label) for label in
+                            sorted(compact_labels, key=len, reverse=True))
+    counts = Counter()
+    for line in text.splitlines():
+        compact = re.sub(r"\s+", "", normal(line))
+        # A row can hold several figure headings. Exclude prose and A-D choices.
+        if re.fullmatch(r"(?:" + alternatives + r")+", compact):
+            counts.update(re.findall(alternatives, compact))
+    return counts
+
+
+def check_panel_label_counter():
+    labels = ["圖 I", "圖 II", "圖 III", "圖 IV"]
+    expected = Counter({re.sub(r"\s+", "", label): 1 for label in labels})
+    valid = "圖 I 圖 II\n圖 III 圖 IV\nA. 圖 II 。\nD. 圖 I 。"
+    assert panel_label_counts(valid, labels) == expected
+    assert panel_label_counts(valid.replace("圖 I 圖 II", "圖 II"), labels) != expected
+    assert panel_label_counts(valid + "\n圖 I", labels) != expected
+    assert panel_label_counts("題幹提及圖 I、圖 II、圖 III、圖 IV。", labels) != expected
+    assert panel_label_counts("圖 (a)\n圖 (b)", ["圖 (a)", "圖 (b)"]) == Counter({"圖(a)": 1, "圖(b)": 1})
+
+
 def source_questions(paper):
     result = subprocess.run(
         [
@@ -44,7 +68,7 @@ def source_expectation(paper):
     result = subprocess.run(
         ["node", "-e",
          "process.stdout.write(JSON.stringify(" +
-         ("require('./scripts/source-expectations-2015.cjs')" if YEAR == 2015 else
+         (f"require('./scripts/source-expectations-{YEAR}.cjs')" if YEAR in (2014, 2015) else
           "require('./qa-2018.cjs').sourceExpectation" if YEAR == 2018 else
           f"require('./scripts/source-expectations-2016-2017.cjs')[{YEAR}]") + "));"],
         cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8",
@@ -62,6 +86,8 @@ def intact_prompt_groups(questions, printed):
         groups += re.findall(
             r"\b[A-Z]{2}\s*=\s*\d+(?:\.\d+)?\s*(?:cm|mm|m|kg|g)\b", prompt
         )
+        groups += re.findall(r"\b(?:[A-Z]{2}=){2,}[A-Z]{2}\b", prompt)
+        groups += re.findall(r"\b[A-Za-z]\(-?\d+(?:\.\d+)?\)=-?\d+(?:\.\d+)?", prompt)
         groups += re.findall(r"\b[a-z]\s*=\s*[a-z]{1,3}\^[A-Za-z0-9]+\b", prompt)
         groups += re.findall(r"\b[a-z]{2}[+-][a-z][+-]\d+\b", prompt)
         groups += re.findall(r"log\d+\[[^\]\n]+\][<>\u2264\u2265=]\d+(?:\.\d+)?", prompt)
@@ -78,6 +104,12 @@ def intact_prompt_groups(questions, printed):
                 issues.append({"question": number, "group": group,
                                "issue": "Mathematical condition or data set split across printed lines"})
     return issues
+
+
+def check_intact_function_conditions():
+    questions = [{"n": 1, "prompt": "已知 g(3)=23 及 g(8)=-142。"}]
+    assert not intact_prompt_groups(questions, {1: "已知 g(3)=23 及 g(8)=−142。"})
+    assert intact_prompt_groups(questions, {1: "已知 g(3)=23 及 g(8)\n=−142。"})
 
 
 def render_pages(source, paper):
@@ -231,9 +263,10 @@ def validate(paper, *, allow_stale=False):
     for number in polar_questions:
         assert "已取消" in printed[number]
     for number, labels in evidence.get("panelLabels", {}).items():
-        for label in labels:
-            pattern = r"(?m)^\s*" + re.escape(normal(label)).replace(r"\ ", r"\s*") + r"\s*$"
-            assert len(re.findall(pattern, printed[int(number)])) == 1, (number, label, "source panel label")
+        expected_labels = Counter({re.sub(r"\s+", "", normal(label)): 1 for label in labels})
+        assert panel_label_counts(printed[int(number)], labels) == expected_labels, (
+            number, labels, "source panel labels must each appear once in figure-heading rows"
+        )
     condition_chunks = re.split(r"(?m)^(\d+)\.(?=\s|$)", "\n".join(condition_text))
     condition_printed = {int(condition_chunks[index]): condition_chunks[index + 1]
                          for index in range(1, len(condition_chunks), 2)}
@@ -259,8 +292,10 @@ def validate(paper, *, allow_stale=False):
 
 
 if __name__ == "__main__":
+    check_panel_label_counter()
+    check_intact_function_conditions()
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--year', type=int, choices=(2015,2016,2017,2018), default=2018)
+    parser.add_argument('--year', type=int, choices=(2014,2015,2016,2017,2018), default=2018)
     parser.add_argument("--paper", type=int, choices=(1, 2),
                         help="Check only this paper and preserve the other paper's QA artifacts")
     parser.add_argument("--allow-stale", action="store_true",

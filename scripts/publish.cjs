@@ -69,8 +69,8 @@ const files = [
   "paper2/diagrams-2018.js",
   "output/pdf/dse-original-2018-paper1-practice.pdf",
   "output/pdf/dse-original-2018-paper2-practice.pdf",
-  ...Array.from({length:12},(_,i)=>2015+i).flatMap(year=>[1,2].map(paper=>`output/pdf/dse-original-${year}-paper${paper}-solutions.pdf`)),
-  ...[2015,2016,2017].flatMap(year => [
+  ...Array.from({length:13},(_,i)=>2014+i).flatMap(year=>[1,2].map(paper=>`output/pdf/dse-original-${year}-paper${paper}-solutions.pdf`)),
+  ...[2014,2015,2016,2017].flatMap(year => [
     `paper1/data-${year}.js`, `paper1/diagrams-${year}.js`,
     `paper2/data-${year}.js`, `paper2/diagrams-${year}.js`,
     `output/pdf/dse-original-${year}-paper1-practice.pdf`,

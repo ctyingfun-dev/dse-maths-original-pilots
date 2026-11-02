@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const {pathToFileURL} = require('node:url');
 const {launchBrowser} = require('./scripts/browser-runtime.cjs');
 const root = __dirname;
-const years = Array.from({length:12},(_,i)=>2015+i);
+const years = Array.from({length:13},(_,i)=>2014+i);
 
 async function loadData(year,paper) {
   const window={};
@@ -16,7 +16,7 @@ async function loadData(year,paper) {
 
 async function build(browser,year,paper) {
   const data=await loadData(year,paper);
-  const expectedCount = year===2015 ? require('./scripts/source-expectations-2015.cjs')[paper].count : paper===1?(year===2016?20:19):45;
+  const expectedCount = [2014,2015].includes(year) ? require(`./scripts/source-expectations-${year}.cjs`)[paper].count : paper===1?(year===2016?20:19):45;
   assert.equal(data.questions.length,expectedCount);
   const page=await browser.newPage({viewport:{width:820,height:1150}});
   try {

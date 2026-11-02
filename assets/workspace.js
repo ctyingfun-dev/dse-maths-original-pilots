@@ -107,6 +107,67 @@
     line.replaceChildren(fragment);
     line.dataset.mathGrouped = "true";
   }
+  const screenMedia = matchMedia("screen");
+  let rootFrame = 0;
+  let rootContext;
+  function fitScreenRoots(container = document) {
+    if (!screenMedia.matches) return 0;
+    rootContext ||= document.createElement("canvas").getContext("2d");
+    if (!rootContext) return 0;
+    const roots = [...container.querySelectorAll("math.math-root")];
+    if (container.matches?.("math.math-root")) roots.unshift(container);
+    let fitted = 0;
+    // Keep the MathML subtree intact for accessibility and print. Only the
+    // screen stylesheet disables its native radical and draws the fitted sign.
+    for (const root of roots.reverse()) {
+      if (!root.isConnected || !root.getBoundingClientRect().height || root.checkVisibility?.() === false) continue;
+      const radicand = root.querySelector(":scope > msqrt > mtext > .math-radicand");
+      if (!radicand) continue;
+      let wrapper = root.parentElement;
+      if (!wrapper.classList.contains("screen-root")) {
+        wrapper = document.createElement("span");
+        wrapper.className = "screen-root";
+        const sign = document.createElement("span");
+        sign.className = "screen-root-sign";
+        sign.setAttribute("aria-hidden", "true");
+        const glyph = document.createElement("span");
+        glyph.className = "screen-root-glyph";
+        const baseline = document.createElement("span");
+        baseline.className = "screen-root-baseline";
+        glyph.append(baseline);
+        sign.append(glyph);
+        root.replaceWith(wrapper);
+        wrapper.append(sign, root);
+      }
+      const glyph = wrapper.firstElementChild.firstElementChild;
+      wrapper.style.setProperty("--screen-root-scale", "1");
+      wrapper.style.setProperty("--screen-root-top", "0px");
+      const style = getComputedStyle(glyph);
+      rootContext.font = `${style.fontSize} "Times New Roman"`;
+      const ink = rootContext.measureText("\u221a");
+      const inkHeight = ink.actualBoundingBoxAscent + ink.actualBoundingBoxDescent;
+      if (!(inkHeight > 0)) continue;
+      wrapper.style.setProperty("--screen-root-width", `${ink.width}px`);
+      const scale = radicand.getBoundingClientRect().height / inkHeight;
+      const inkTop = glyph.firstElementChild.getBoundingClientRect().top - glyph.getBoundingClientRect().top - ink.actualBoundingBoxAscent;
+      wrapper.style.setProperty("--screen-root-top", `${-inkTop * scale}px`);
+      wrapper.style.setProperty("--screen-root-scale", String(scale));
+      fitted++;
+    }
+    return fitted;
+  }
+  function scheduleRoots() {
+    if (!rootFrame) rootFrame = requestAnimationFrame(() => {
+      rootFrame = 0;
+      fitScreenRoots();
+    });
+  }
+  addEventListener("resize", scheduleRoots);
+  addEventListener("afterprint", scheduleRoots);
+  screenMedia.addEventListener("change", scheduleRoots);
+  document.addEventListener("toggle", scheduleRoots, true);
+  document.fonts.ready.then(scheduleRoots);
+  document.fonts.addEventListener("loadingdone", scheduleRoots);
   function enhance(route) {
     document.body.dataset.route = route;
     if (!glassTarget?.isConnected) resetGlass();
@@ -115,6 +176,7 @@
       if (surface.matches(".paper-intro, .result, .paper-part .number-grid button, .guide-list > details, .lessons > details, .dse-detail, .year-detail")) surface.dataset.glassTilt = "";
     });
     document.querySelectorAll(".solution-text:not([data-math-grouped]),.solution-equation:not([data-math-grouped])").forEach(groupSolutionMath);
+    scheduleRoots();
     document.querySelectorAll(".result-index:not([data-orbit-ready])").forEach(index => {
       index.dataset.orbitReady = "true";
       index.insertAdjacentHTML("beforeend", orbitMark());
@@ -145,5 +207,5 @@
     resetGlass();
     document.querySelector("#main-content")?.getAnimations({subtree: true}).forEach(animation => animation.finish());
   });
-  window.PilotWorkspace = {icon, topicIndex, enhance};
+  window.PilotWorkspace = {icon, topicIndex, enhance, fitScreenRoots};
 })();

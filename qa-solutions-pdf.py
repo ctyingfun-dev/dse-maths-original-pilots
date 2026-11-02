@@ -130,5 +130,5 @@ def check(year, paper):
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--year',type=int);parser.add_argument('--paper',type=int)
     args=parser.parse_args()
-    reports=[check(y,p) for y in ([args.year] if args.year else range(2015,2027)) for p in ([args.paper] if args.paper else (1,2))]
+    reports=[check(y,p) for y in ([args.year] if args.year else range(2014,2027)) for p in ([args.paper] if args.paper else (1,2))]
     if any(r['issues'] for r in reports): raise SystemExit(1)

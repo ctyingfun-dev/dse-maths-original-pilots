@@ -199,6 +199,18 @@ h1, h2, h3 { font-family: var(--font-ui); }
 .solution-steps .scheme-key, .marking-scheme caption, .marking-scheme thead th,
 .curriculum-status { font-family: var(--font-ui); }
 .solution-steps .math-expression { display: inline-block; vertical-align: baseline; white-space: nowrap; overflow-wrap: normal; }
+/* Retain native MathML geometry outside screen media, including student print. */
+@media screen {
+  .screen-root { display: inline-flex; align-items: stretch; vertical-align: middle; line-height: 1; white-space: nowrap; }
+  .screen-root > .math-root,
+  .screen-root > .math-root > msqrt,
+  .screen-root > .math-root > msqrt > mtext { display: block; }
+  .screen-root > .screen-root-sign { display: block; position: relative; flex: none; width: var(--screen-root-width); }
+  .screen-root-sign > .screen-root-glyph { position: absolute; left: 0; top: var(--screen-root-top); font-family: "Times New Roman", serif; font-style: normal; font-weight: normal; line-height: normal; transform: scaleY(var(--screen-root-scale)); transform-origin: top left; white-space: nowrap; }
+  .screen-root-glyph::before { content: "\221a"; }
+  .screen-root-baseline { display: inline-block; width: 0; height: 0; padding: 0; vertical-align: baseline; }
+  .screen-root > .math-root > msqrt > mtext > .math-radicand { border-top: 1px solid currentColor; padding: .1em .08em .02em 0; margin-left: -.04em; }
+}
 .guide-list, .lessons { gap: 0; background: #fff; padding-inline: 24px; }
 .guide-list details, .lessons details { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 0; }
 .guide-list summary, .lessons summary { font-size: 15px; font-weight: 500; padding-block: 21px; }

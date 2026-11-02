@@ -2,7 +2,7 @@
   const escape = text => text.replace(/[&<>"']/g, c => ({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
   })[c]);
-  const upright = new Set(["cm", "mm", "km", "mL", "kg", "sin", "cos", "tan", "log", "min", "max", "MODE", "SD", "SHIFT", "EXE", "FMLA", "DSE", "DEG", "P1", "P2", "P3", "P4", "I", "II", "III"]);
+  const upright = new Set(["cm", "mm", "km", "mL", "kg", "sin", "cos", "tan", "log", "min", "max", "MODE", "SD", "SHIFT", "EXE", "FMLA", "DSE", "DEG", "P1", "P2", "P3", "P4", "I", "II", "III", "IV"]);
   const matching = {"(":")", "[":"]"};
   for(const criterion of ["SAS","SSS","ASA","AAS","RHS","AA"]) upright.add(criterion);
   const superscripts = Object.fromEntries([..."⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱᵗ"].map((c,i)=>[c,"0123456789+-=()nit"[i]]));
@@ -75,7 +75,15 @@
     }
     return slash;
   }
-  function inline(text) {
+  function metreUnit(text, start, end, context) {
+    const prefix=context+text.slice(0,start),suffix=text.slice(end);
+    // A separated numerical measurement (or explicit dimensional prose) is a
+    // unit; algebraic coefficients, function calls and variable powers are not.
+    const numerical=/(?:^|[^A-Za-z0-9_.])\d+(?:\.\d+)?\s+$/.test(prefix);
+    const dimensional=/(?:長度|距離|周界|周長|半徑|直徑|高度|面積|體積|容積|長|闊|寬|高|深|厚)[^A-Za-z\d，。；\n]*\d+(?:\.\d+)?\s*$/.test(prefix);
+    return (numerical || dimensional) && /^(?:[²³]|\^(?:[23]|\([23]\)))?\s*(?:$|[，。；、：）)\]＝=≈]|[\p{Script=Han}])/u.test(suffix);
+  }
+  function inline(text, context="") {
     let result="";
     for(let i=0;i<text.length;) {
       if(text[i]==="√") {
@@ -145,7 +153,8 @@
         const word=text.slice(i,end);
         const prefix=text.slice(0,i);
         const gramUnit=word==="g" && (/\d\s+$/.test(prefix) || /(?:質量|重量|單位)[（(]\s*$/.test(prefix));
-        result+=upright.has(word) || gramUnit ? escape(word) : `<var>${escape(word)}</var>`;
+        const meterUnit=word==="m" && metreUnit(text,i,end,context);
+        result+=upright.has(word) || gramUnit || meterUnit ? escape(word) : `<var>${escape(word)}</var>`;
         i=end;
         continue;
       }
@@ -176,12 +185,12 @@
   function fraction(top,bottom) {
     return `<span class="math-frac" role="math" aria-label="${escape(top)} 除以 ${escape(bottom)}"><span aria-hidden="true">${render(ungroup(top))}</span><span aria-hidden="true">${render(ungroup(bottom))}</span></span>`;
   }
-  function render(value) {
+  function render(value, context="") {
     const text=String(value ?? "").replace(/([A-Za-zα-ωΓℓ]+)\/\/(?=[A-Za-zα-ωΓℓ])/g,"$1∥").replace(/÷/g,"/");
     const slash=topLevelSlash(text);
-    if(slash<0) return inline(text);
+    if(slash<0) return inline(text,context);
     const left=leftAt(text,slash),right=rightAt(text,slash);
-    return render(text.slice(0,left))+fraction(text.slice(left,slash).trim(),text.slice(slash+1,right).trim())+render(text.slice(right));
+    return render(text.slice(0,left),context)+fraction(text.slice(left,slash).trim(),text.slice(slash+1,right).trim())+render(text.slice(right),context+text.slice(0,right));
   }
   window.mathText=render;
   window.solutionLines=value=>{

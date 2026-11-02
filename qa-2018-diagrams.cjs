@@ -5,10 +5,10 @@ const {launchBrowser} = require("./scripts/browser-runtime.cjs");
 const base = (process.env.PREVIEW_URL || "http://127.0.0.1:4284").replace(/\/$/, "");
 const yearFlag = process.argv.indexOf('--year');
 const year = yearFlag < 0 ? 2018 : Number(process.argv[yearFlag + 1]);
-assert.ok([2015,2016,2017,2018].includes(year));
+assert.ok([2014,2015,2016,2017,2018].includes(year));
 const output = path.join(__dirname, `tmp/qa-${year}-diagrams`);
 const {waitReady} = require("./qa-2018.cjs");
-const sourceExpectation = year === 2015 ? require('./scripts/source-expectations-2015.cjs') : year === 2018 ? require('./qa-2018.cjs').sourceExpectation : require('./scripts/source-expectations-2016-2017.cjs')[year];
+const sourceExpectation = [2014,2015].includes(year) ? require(`./scripts/source-expectations-${year}.cjs`) : year === 2018 ? require('./qa-2018.cjs').sourceExpectation : require('./scripts/source-expectations-2016-2017.cjs')[year];
 const expected = Object.fromEntries([1,2].map(paper=>[paper,sourceExpectation[paper].figures]));
 const flag = process.argv.indexOf("--paper");
 const selected = process.argv.find(arg => arg.startsWith("--paper="))?.split("=")[1] ??

@@ -75,7 +75,7 @@ async function labelChecks(page) {
       await page.locator("#question-1 [data-hint]").click();
       await page.locator("#question-1 [data-bookmark]").click();
       const before=await page.evaluate(key=>localStorage.getItem(key),key(2024));
-      for(const year of [2015,2016,2017,2018,2019,2020,2021,2022,2023,2025,2026]) {
+      for(const year of [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2025,2026]) {
         await page.locator("#mock-year").selectOption(String(year));
         await page.waitForURL(new RegExp(`year=${year}`));
         assert.equal(await page.evaluate(()=>window.PILOT.year),year);
