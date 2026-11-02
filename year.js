@@ -7,6 +7,8 @@
     return /極[坐座]標|极[坐座]标|[極极][角徑径]|polar\s+coordinates?/i.test(text)
       ? '<span class="curriculum-status">已取消</span>' : "";
   };
+  window.PILOT_CATALOG = [window.PILOT, ...Array.from({length:12}, (_,i)=>window[`PILOT_${2014+i}`])]
+    .filter(Boolean).sort((a,b)=>a.year-b.year);
   const year = new URLSearchParams(location.search).get("year");
   if (year === "2014" && window.PILOT_2014) window.PILOT = window.PILOT_2014;
   if (year === "2015" && window.PILOT_2015) window.PILOT = window.PILOT_2015;

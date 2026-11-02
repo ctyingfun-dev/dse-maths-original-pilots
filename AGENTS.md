@@ -34,8 +34,10 @@ Read HANDOFF.md before editing this project. It contains setup, validation, depl
 
 ## Confirmed Interface
 
+- Topic distribution, year views and question-bank filters must share the original mock papers' canonical multi-topic classification in `assets/topic-classification.js`; follow `TOPIC_CLASSIFICATION.md`. Merge synonymous names, preserve distinct assessed concepts, and review ambiguous items against their stems/solutions. Never restore original-examination statistics as the mock papers' source.
+
 - Preserve the ice-blue glass interface, chosen typography, pi brand mark and visible resource navigation. Do not revert to previous layouts, palettes or book logo without a user request.
-- Interior pointer-following radial light was explicitly cancelled. Keep glass, localized masked border lighting, bounded tilt below four degrees and smooth reset. Respect touch and reduced-motion behavior.
+- Interior pointer-following radial light and mouse-following 3D tilt were explicitly cancelled. Keep glass and localized masked border lighting, but never rotate surfaces with the pointer. Respect touch and reduced-motion behavior.
 - Homepage is full-screen starry Mobius motion without a header or visible surface mesh. Clicking anywhere enters Paper 1 while preserving the year.
 - Preserve the gentle string pluck: one response on entry, 1.1-second cooldown, dominant slow mode and decay over 4.4 seconds. Do not restore rapid repeated vibration.
 - UI uses local Chiron Hei HK; headings use Chiron Sung HK; homepage uses Noto Sans TC 300; mathematical type remains separate. Screen styling must not alter print geometry or shrink PDF answer space.

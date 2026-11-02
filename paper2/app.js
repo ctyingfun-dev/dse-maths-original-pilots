@@ -26,14 +26,7 @@
   let active = state.active || 1;
   let topic = "全部";
   let query = "";
-  let dseYear = "all";
-  let dseSection = "all";
-  let dseSearch = "";
-  let dsePage = 1;
-  let dseDetail = "";
-  let yearYear = "2026";
-  let yearSection = "all";
-  let yearDetail = "";
+  const topicBrowser = window.PilotWorkspace.createTopicBrowser({data,prompt:q=>examPrompt(q)+diagram(q.diagram,q.mockYear),solution:solutionHtml});
   let session = [];
   let lastFocus = null;
   let pendingScroll = null;
@@ -79,9 +72,11 @@
   const question = n => data.questions.find(item => item.n === n);
   const count = data.questions.length;
   const topics = [...new Set(data.questions.map(q => q.topic))];
+  const topicsOf = q => window.MockTopics.forQuestion(q,year,data.paper);
+  const filterTopics = [...new Set(data.questions.flatMap(topicsOf))];
   const selected = q => state.answers[q.n] ?? "";
   const right = q => data.paper === 2 && selected(q) === q.answer;
-  function diagram(spec) {
+  function diagram(spec, sourceYear=year) {
     if (!spec) return "";
     const kind = typeof spec === "string" ? spec : spec.type;
     if (kind.endsWith("2014")) return window.pilotDiagram2014(kind);
@@ -96,7 +91,7 @@
     if (kind.endsWith("2023")) return window.pilotDiagram2023(kind);
     if (kind.endsWith("2024")) return window.pilotDiagram2024(kind);
     if (kind.endsWith("2025")) return window.pilotDiagram2025(kind);
-    if (year===2026 && window.pilotDiagram2026) return window.pilotDiagram2026(kind);
+    if (sourceYear===2026 && window.pilotDiagram2026) return window.pilotDiagram2026(kind);
     if (kind === "frequency") return `<table class="exam-table" aria-label="分組頻數表"><thead><tr><th>時數</th><th>0–10</th><th>10–20</th><th>20–30</th><th>30–40</th></tr></thead><tbody><tr><th>頻數</th><td>3</td><td><var>k</var></td><td>8</td><td>5</td></tr></tbody></table>`;
     if (kind === "stemleaf") return `<table class="stemleaf" aria-label="十人的時數幹葉圖"><thead><tr><th>幹（十位）</th><th>葉（個位）</th></tr></thead><tbody><tr><th>1</th><td>2　4　6　8</td></tr><tr><th>2</th><td>0　0　2　4　6　<var>w</var></td></tr></tbody></table><p class="key">例如：1｜2 表示 12 小時</p>`;
     const line = 'fill="none" stroke="#111" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"';
@@ -171,13 +166,13 @@
     return `<article class="result" data-result="${q.n}"><div class="result-index"><small>題目</small><strong>${String(q.n).padStart(2,"0")}</strong></div><div class="result-content"><div class="result-top"><strong>${esc(q.topic)}</strong><span>${esc(q.section)} · <span class="result-status">${done}</span></span></div><div class="result-prompt">${examPrompt(q)}${diagram(q.diagram)}</div></div><div class="result-actions"><button type="button" data-open="${q.n}" aria-expanded="false" aria-controls="inline-${q.n}">作答與批改</button><button type="button" class="bookmark" data-bookmark="${q.n}" title="${state.saved.includes(q.n)?"取消收藏":"收藏"}第 ${q.n} 題" aria-label="${state.saved.includes(q.n)?"取消收藏":"收藏"}第 ${q.n} 題">${state.saved.includes(q.n)?"★":"☆"}</button></div><div class="inline" id="inline-${q.n}"></div></article>`;
   }
   function findPage() {
-    const matches = data.questions.filter(q => (topic==="全部" || q.topic===topic) && (`${q.n} ${q.topic} ${q.prompt}`).includes(query));
+    const matches = data.questions.filter(q => (topic==="全部" || topicsOf(q).includes(topic)) && (`${q.n} ${q.topic} ${topicsOf(q).join(" ")} ${q.prompt}`).includes(query));
     return `<div class="page-head find-head"><h1>題目庫</h1><p class="subtle">${year} 原創卷二</p></div>
-      <div class="find-layout">${window.PilotWorkspace.topicIndex(data.questions,topic)}
+      <div class="find-layout">${window.PilotWorkspace.topicIndex(data.questions,topic,topicsOf)}
         <section class="question-stream" aria-label="題目列表">
           <section class="filters" role="search" aria-label="搜尋原創題目">
             <label class="query-field">搜尋題目<span class="search-input">${window.PilotWorkspace.icon("search")}<input type="search" id="query-filter" value="${esc(query)}" placeholder="題號、關鍵字或課題"></span></label>
-            <label class="topic-select">課題<span class="topic-control"><span class="topic-value" aria-hidden="true">${esc(topic)}</span>${window.PilotWorkspace.icon("chevron-down")}<select id="topic-filter"><option>全部</option>${topics.map(t=>`<option ${topic===t?"selected":""}>${esc(t)}</option>`).join("")}</select></span></label>
+            <label class="topic-select">課題<span class="topic-control"><span class="topic-value" aria-hidden="true">${esc(topic)}</span>${window.PilotWorkspace.icon("chevron-down")}<select id="topic-filter"><option>全部</option>${filterTopics.map(t=>`<option ${topic===t?"selected":""}>${esc(t)}</option>`).join("")}</select></span></label>
           </section>
           <div class="results-heading"><p class="count" role="status">${matches.length} 題</p></div>
           <div class="result-grid">${matches.map(searchCard).join("") || '<p class="empty-results">沒有符合的題目。</p>'}</div>
@@ -185,62 +180,10 @@
       </div>`;
   }
   function topicPage() {
-    const source=window.DSE_TOPICS;
-    const pool=source.questions.filter(q=>(dseYear==="all"||q.year===Number(dseYear))&&(dseSection==="all"||q.section===dseSection));
-    const counts=new Map();
-    for(const q of pool) for(const name of new Set(q.concepts)) {
-      if(!counts.has(name)) counts.set(name,{topic:name,A:0,B:0,count:0});
-      const row=counts.get(name);
-      row[q.section]++;
-      row.count++;
-    }
-    const rows=[...counts.values()].filter(row=>row.topic.includes(dseSearch.trim()))
-      .sort((a,b)=>b.count-a.count||a.topic.localeCompare(b.topic,"zh-Hant"));
-    const pages=Math.max(1,Math.ceil(rows.length/10));
-    dsePage=Math.min(dsePage,pages);
-    const max=Math.max(1,...rows.map(row=>row.count));
-    const detail=source.stats.find(row=>row.topic===dseDetail);
-    const matches=detail?pool.filter(q=>q.concepts.includes(detail.topic)).sort((a,b)=>a.year-b.year||a.q-b.q):[];
-    const yearOptions=[["all","全部年份"],...source.years.map(year=>[String(year),String(year)])];
-    const sectionOptions=[["all","全卷"],["A","甲部"],["B","乙部"]];
-    return `<div class="page-head"><p class="eyebrow">DSE 歷屆卷二 · 2012–2026</p><h1>課題分佈</h1><p class="subtle">原有 DSE 卷二網站的歷年分類；與這份 45 題原創模擬卷分開計算。</p></div>
-      <div class="dse-summary"><div><strong>${source.years.length}</strong><span>年正式試卷</span></div><div><strong>${source.questions.length}</strong><span>道卷二試題</span></div><div><strong>${source.stats.length}</strong><span>項課題分類</span></div></div>
-      <div class="dse-controls"><label>年份<select id="dse-topic-year">${yearOptions.map(([value,label])=>`<option value="${value}" ${dseYear===value?"selected":""}>${label}</option>`).join("")}</select></label>
-      <label>搜尋課題<input id="dse-topic-search" type="search" value="${esc(dseSearch)}" placeholder="輸入課題名稱"></label></div>
-      <div class="dse-tabs" role="group" aria-label="試卷部分">${sectionOptions.map(([id,name])=>`<button type="button" data-dse-section="${id}" aria-pressed="${dseSection===id}">${name}</button>`).join("")}</div>
-      <div class="dse-heading"><h2>課題出現次數</h2><span>${dseYear==="all"?"全部年份":dseYear} · ${dseSection==="all"?"全卷":sectionOptions.find(([id])=>id===dseSection)[1]} · ${pool.length} 題</span></div>
-      <div class="dse-legend"><span><i class="a"></i>甲部</span><span><i class="b"></i>乙部</span><span>單位：題</span></div>
-      <div class="dse-distribution">${rows.slice((dsePage-1)*10,dsePage*10).map((row,i)=>`<div class="dse-row"><span>${String((dsePage-1)*10+i+1).padStart(2,"0")}</span><button type="button" data-dse-topic="${esc(row.topic)}" aria-expanded="${dseDetail===row.topic}">${esc(row.topic)}</button><div class="dse-bar" role="img" aria-label="${esc(row.topic)} ${row.count} 題"><span class="a" style="width:${row.A/max*100}%"></span><span class="b" style="width:${row.B/max*100}%"></span></div><b>${row.count}</b></div>`).join("")||"<p>此範圍找不到課題。</p>"}</div>
-      ${pages>1?`<div class="dse-pages"><button type="button" data-dse-page="${dsePage-1}" ${dsePage===1?"disabled":""} aria-label="上一頁">‹</button><span>${dsePage} / ${pages}</span><button type="button" data-dse-page="${dsePage+1}" ${dsePage===pages?"disabled":""} aria-label="下一頁">›</button></div>`:""}
-      ${detail?`<section class="dse-detail"><div class="dse-detail-head"><div><h2>${esc(detail.topic)}</h2><p>歷年 ${detail.count} 題 · ${detail.years}/${source.years.length} 年出現</p></div><button type="button" data-dse-close aria-label="收起課題題目">×</button></div><p class="subtle">目前範圍：${matches.length} 題。</p>${matches.length?`<div class="dse-examples">${matches.map(q=>`<div class="dse-example"><strong>${q.year} · ${q.section==="A"?"甲部":"乙部"}第 ${q.q} 題</strong><span>${curriculumNotice(q)}${esc(q.summary)}</span></div>`).join("")}</div>`:"<p>此範圍未有記錄。</p>"}</section>`:""}
-      <p class="note">一題可包含多個課題；各課題次數不能相加。<a href="https://dse-maths-paper2-school.ctyingfun.workers.dev/#topics" target="_blank" rel="noopener">到原 DSE 卷二網站查看完整題目 ↗</a></p>`;
+    return topicBrowser.render("topics",location.hash.slice(1));
   }
   function yearPage() {
-    const source=window.DSE_TOPICS;
-    const years=source.years.map(String);
-    const index=years.indexOf(yearYear);
-    const all=source.questions.filter(q=>q.year===Number(yearYear));
-    const pool=all.filter(q=>yearSection==="all"||q.section===yearSection);
-    const sections=[["all","全卷"],["A","甲部"],["B","乙部"]];
-    const counts=new Map();
-    for(const q of pool) for(const name of new Set(q.concepts)) {
-      if(!counts.has(name)) counts.set(name,{topic:name,A:0,B:0,questions:[]});
-      const row=counts.get(name);
-      row[q.section]++;
-      row.questions.push(q);
-    }
-    const rows=[...counts.values()].sort((a,b)=>b.questions.length-a.questions.length||a.topic.localeCompare(b.topic,"zh-Hant"));
-    const max=Math.max(1,...rows.map(row=>row.questions.length));
-    const selected=rows.find(row=>row.topic===yearDetail);
-    return `<div class="page-head"><p class="eyebrow">DSE 歷屆卷二 · 正式試卷</p><h1>逐年課題分佈</h1><p class="subtle">按年份查看該卷每個課題的出現次數及題號。</p></div>
-      <div class="year-controls"><button type="button" data-year-step="-1" ${index===0?"disabled":""} aria-label="上一年" title="上一年">‹</button><label>年份<select id="year-select">${years.map(y=>`<option value="${y}" ${yearYear===y?"selected":""}>${y}</option>`).join("")}</select></label><button type="button" data-year-step="1" ${index===years.length-1?"disabled":""} aria-label="下一年" title="下一年">›</button><a href="#topics">查看歷年總覽 →</a></div>
-      <div class="year-summary"><div><strong>${all.length}</strong><span>${yearYear} 年試題</span></div><div><strong>${pool.length}</strong><span>目前範圍試題</span></div><div><strong>${rows.length}</strong><span>項課題</span></div></div>
-      <div class="year-tabs" role="group" aria-label="試卷部分">${sections.map(([id,name])=>`<button type="button" data-year-section="${id}" aria-pressed="${yearSection===id}">${name}</button>`).join("")}</div>
-      <div class="year-heading"><h2>${yearYear} 年 · ${sections.find(([id])=>id===yearSection)[1]}</h2><span>出現次數 · 題號</span></div>
-      <div class="year-legend"><span><i class="a"></i>甲部</span><span><i class="b"></i>乙部</span></div>
-      <div class="year-list">${rows.map(row=>`<div class="year-row"><button type="button" data-year-topic="${esc(row.topic)}" aria-expanded="${selected===row}">${esc(row.topic)}</button><div class="year-bar" role="img" aria-label="${esc(row.topic)} ${row.questions.length} 題">${[["A","a"],["B","b"]].map(([part,style])=>`<span class="${style}" style="width:${row[part]/max*100}%"></span>`).join("")}</div><b>${row.questions.length}</b><span class="year-refs">${row.questions.map(q=>`第 ${q.q} 題`).join("、")}</span></div>`).join("")}</div>
-      ${selected?`<section class="year-detail"><div class="dse-detail-head"><div><h2>${esc(selected.topic)}</h2><p>${yearYear} 年 · ${selected.questions.length} 題</p></div><button type="button" data-year-close aria-label="收起題目摘要">×</button></div><div class="dse-examples">${selected.questions.map(q=>`<div class="dse-example"><strong>${sections.find(([id])=>id===q.section)[1]} · 第 ${q.q} 題</strong><span>${curriculumNotice(q)}${esc(q.summary)}</span></div>`).join("")}</div></section>`:""}
-      <p class="note">一題可涉及多個課題，課題次數相加不等於試題總數。分類依據歷屆 DSE 題目；本頁不是原創模擬卷的統計。</p>`;
+    return topicBrowser.render("years",location.hash.slice(1));
   }
   function paperPage() {
     const answered = data.questions.filter(q=>selected(q));
@@ -339,10 +282,9 @@
   function render() {
     const fragment=location.hash.slice(1);
     route = (fragment.split("?")[0] || "papers");
-    if(route==="years") {
-      const params=new URLSearchParams(fragment.split("?")[1]||"");
-      if(/^(201[2-9]|202[0-6])$/.test(params.get("year")||"")) yearYear=params.get("year");
-      if(["all","A","B"].includes(params.get("section"))) yearSection=params.get("section");
+    if(route==="practice") {
+      const n=Number(new URLSearchParams(fragment.split("?")[1]||"").get("question"));
+      if(question(n)) {active=n;session=[n];pendingScroll=n;}
     }
     if (route==="practice" && !question(active)) route="papers";
     const pages = {find:findPage,topics:topicPage,years:yearPage,papers:paperPage,guide:guidePage,programs:programsPage,saved:savedPage,practice:practicePage};
@@ -364,14 +306,6 @@
   function navigate(name) {
     if (location.hash === `#${name}`) render();
     else location.hash = name;
-  }
-  function showYear(year, section) {
-    yearYear=year;
-    yearSection=section;
-    yearDetail="";
-    const hash=`#years?year=${year}&section=${section}`;
-    if(location.hash===hash) render();
-    else location.hash=hash;
   }
   function open(n, list) { active=n; session=list||[]; state.active=n; pendingScroll=n; persist(); navigate("practice"); }
   function start(mode) {
@@ -406,17 +340,6 @@
     document.querySelector("#query-filter")?.addEventListener("input", e=>{query=e.target.value;lastFocus="query-filter";render();});
     document.querySelectorAll("[data-topic-filter]").forEach(button=>button.onclick=()=>{topic=button.dataset.topicFilter;lastFocus=button.id;render();});
     document.querySelectorAll("[data-topic]").forEach(b=>b.onclick=()=>{topic=b.dataset.topic;query="";navigate("find");});
-    document.querySelector("#dse-topic-year")?.addEventListener("change",e=>{dseYear=e.target.value;dsePage=1;render();});
-    document.querySelector("#dse-topic-search")?.addEventListener("input",e=>{dseSearch=e.target.value;dsePage=1;lastFocus="dse-topic-search";render();});
-    document.querySelectorAll("[data-dse-section]").forEach(b=>b.onclick=()=>{dseSection=b.dataset.dseSection;dsePage=1;render();});
-    document.querySelectorAll("[data-dse-topic]").forEach(b=>b.onclick=()=>{dseDetail=dseDetail===b.dataset.dseTopic?"":b.dataset.dseTopic;render();document.querySelector(".dse-detail")?.scrollIntoView({block:"start"});});
-    document.querySelectorAll("[data-dse-page]").forEach(b=>b.onclick=()=>{dsePage=Number(b.dataset.dsePage);render();});
-    document.querySelector("[data-dse-close]")?.addEventListener("click",()=>{dseDetail="";render();});
-    document.querySelector("#year-select")?.addEventListener("change",e=>showYear(e.target.value,yearSection));
-    document.querySelectorAll("[data-year-step]").forEach(b=>b.onclick=()=>showYear(String(Number(yearYear)+Number(b.dataset.yearStep)),yearSection));
-    document.querySelectorAll("[data-year-section]").forEach(b=>b.onclick=()=>showYear(yearYear,b.dataset.yearSection));
-    document.querySelectorAll("[data-year-topic]").forEach(b=>b.onclick=()=>{yearDetail=yearDetail===b.dataset.yearTopic?"":b.dataset.yearTopic;render();document.querySelector(".year-detail")?.scrollIntoView({block:"nearest"});});
-    document.querySelector("[data-year-close]")?.addEventListener("click",()=>{yearDetail="";render();});
     document.querySelectorAll("[data-start]").forEach(b=>b.onclick=()=>{if(Object.keys(state.answers).length&&!confirm("重新開始會清除這份試卷的作答進度。已下載備份？"))return;start(b.dataset.start);});
     document.querySelector("[data-resume]")?.addEventListener("click",()=>open(active, data.questions.map(q=>q.n)));
     document.querySelector("[data-back]")?.addEventListener("click",()=>navigate("papers"));
@@ -428,6 +351,7 @@
     document.querySelector("[data-export]")?.addEventListener("click",()=>{const blob=new Blob([JSON.stringify({schema,paper:data.paper,year,progress:state},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`dse-original-${year}-paper${data.paper}-backup.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
     document.querySelector("#import-file")?.addEventListener("change", async e=>{try{const file=e.target.files[0];if(!file)return;const payload=JSON.parse(await file.text());if(payload.schema!==schema||payload.paper!==data.paper||(payload.year??2026)!==year||!payload.progress||typeof payload.progress.answers!=="object"||Array.isArray(payload.progress.answers))throw Error("格式不符");if(!confirm("匯入會取代這份原創卷的本機進度。確定嗎？"))return;state=migrateProgress(payload.progress);persist();render();alert(saveFailed?"進度已載入，但未能儲存；請保留備份。":"進度已匯入。");}catch{alert("無法匯入：請選擇相同年份、相同試卷的備份。");}});
     window.PilotWorkspace.enhance(route);
+    topicBrowser.bind(render,route);
   }
   function refreshQuestion(n) {
     const inline=document.getElementById(`inline-${n}`);

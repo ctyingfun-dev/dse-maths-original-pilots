@@ -56,11 +56,12 @@ async function installFrameControl(page) {
         const card = page.locator(".paper-intro");
         const box = await card.boundingBox();
         await page.mouse.move(box.x + box.width * .86, box.y + box.height * .23);
-        await page.waitForFunction(() => !!document.querySelector(".paper-intro[data-glass-active]")?.style.getPropertyValue("--tilt-x"));
+        await page.waitForFunction(() => !!document.querySelector(".paper-intro[data-glass-active]")?.style.getPropertyValue("--glow-x"));
         const effect = await card.evaluate(el => {
           const style = getComputedStyle(el);
           return {
-            angle: Math.hypot(parseFloat(style.getPropertyValue("--tilt-x")), parseFloat(style.getPropertyValue("--tilt-y"))),
+            transform: style.transform,
+            tilt: el.hasAttribute("data-glass-tilt"),
             blur: style.backdropFilter,
             x: parseFloat(style.getPropertyValue("--glow-x")),
             y: parseFloat(style.getPropertyValue("--glow-y")),
@@ -68,7 +69,8 @@ async function installFrameControl(page) {
             border: getComputedStyle(el, "::after").maskComposite
           };
         });
-        assert.ok(effect.angle > .5 && effect.angle <= 4, JSON.stringify(effect));
+        assert.equal(effect.transform, "none", "Pointer movement must not tilt surfaces");
+        assert.equal(effect.tilt, false);
         assert.ok(effect.blur.includes("blur(18px)"));
         assert.equal(effect.light, "none", "Card interiors must not have a pointer-following spotlight");
         assert.ok(effect.border.split(",").every(mode => mode.trim() === "exclude"));
@@ -79,7 +81,7 @@ async function installFrameControl(page) {
           const matrix = new DOMMatrix(getComputedStyle(el).transform);
           return !el.hasAttribute("data-glass-active") && Math.abs(matrix.m13) < .00001 && Math.abs(matrix.m23) < .00001;
         });
-        // Re-rendering while a card is active must not strand the transformed old node.
+        // Re-rendering while a surface is active must clear its old lighting state.
         await page.getByRole("link", {name: "題目庫", exact: true}).click();
         await page.locator(".result").first().hover();
         await page.locator("[data-topic-filter]").nth(1).click();
@@ -188,7 +190,7 @@ async function installFrameControl(page) {
       report.push({round, angleCap: 4, energy, changedSamples: changed, recoilSignChangesSeconds: crossings, rapidReentrySuppressed: true, freshTouchWorks: true, decayMatchesControl: true});
       await scene.close();
       assert.deepEqual(errors, []);
-      console.log(`Effects round ${round}: glass, bounded tilt/reset, hit testing, visible pluck and complete decay passed.`);
+      console.log(`Effects round ${round}: glass, no pointer tilt, border reset, hit testing, visible pluck and complete decay passed.`);
     }
     for (const settings of [
       {viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true},

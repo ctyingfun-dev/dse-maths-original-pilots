@@ -88,6 +88,9 @@
 !/UI_DIRECTIONS_20261020.md
 !/qa-home.cjs
 !/qa-curriculum.cjs
+!/qa-mock-topics.cjs
+!/verify-topic-classification.cjs
+!/TOPIC_CLASSIFICATION.md
 !/qa-pdfs-2025.py
 !/qa-pdf-2026.py
 !/paper1/
@@ -97,6 +100,7 @@
 !/assets/dse-maths-logo.png
 !/assets/workspace.css
 !/assets/workspace.js
+!/assets/topic-classification.js
 !/assets/workspace-icons.svg
 !/assets/fonts/
 !/assets/home.css

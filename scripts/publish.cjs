@@ -15,6 +15,7 @@ const files = [
   "assets/dse-maths-logo.png",
   "assets/workspace.css",
   "assets/workspace.js",
+  "assets/topic-classification.js",
   "assets/workspace-icons.svg",
   "assets/home.css",
   "assets/home.js",

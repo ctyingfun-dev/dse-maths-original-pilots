@@ -1,5 +1,5 @@
 <!--
-Lucide Icons: search, star, download, chevron-down.
+Lucide Icons: search, star, download, chevron-down, chevron-left, chevron-right, arrow-right, x.
 Source: https://github.com/lucide-icons/lucide/tree/main/icons
 
 ISC License
@@ -32,5 +32,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 </symbol>
 <symbol id="chevron-down" viewBox="0 0 24 24">
 <path d="m6 9 6 6 6-6" />
+</symbol>
+<symbol id="chevron-left" viewBox="0 0 24 24">
+<path d="m15 18-6-6 6-6" />
+</symbol>
+<symbol id="chevron-right" viewBox="0 0 24 24">
+<path d="m9 18 6-6-6-6" />
+</symbol>
+<symbol id="arrow-right" viewBox="0 0 24 24">
+<path d="M5 12h14m-7-7 7 7-7 7" />
+</symbol>
+<symbol id="x" viewBox="0 0 24 24">
+<path d="m18 6-12 12M6 6l12 12" />
 </symbol>
 </svg>

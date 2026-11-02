@@ -9,7 +9,8 @@ const expectedPolar = (year,paper) => {
   if([2014,2015].includes(year)) return require(`./scripts/source-expectations-${year}.cjs`)[paper].polar;
   if(year===2016 || year===2017) return require('./scripts/source-expectations-2016-2017.cjs')[year][paper].polar;
   if(year===2018) return require('./qa-2018.cjs').sourceExpectation[paper].polar;
-  return paper===1 && [2021,2024].includes(year) ? [7] : paper===2 && [2020,2022,2023,2025].includes(year) ? [24] : [];
+  if(year===2022 && paper===2) return [25];
+  return paper===1 && [2021,2024].includes(year) ? [7] : paper===2 && [2020,2023,2025].includes(year) ? [24] : [];
 };
 
 (async () => {
@@ -66,9 +67,8 @@ const expectedPolar = (year,paper) => {
         await page.locator(`#question-${expected[0]} [data-bookmark]`).click();
         await page.goto(`${base}/paper${paper}/?year=${year}#saved`);
         assert.equal(await page.locator(".compact-list .curriculum-status").count(), 1);
-        const topic=paper===1 ? "極坐標" : "坐標幾何";
         await page.goto(`${base}/paper${paper}/?year=${year}#years?year=${year}&section=all`);
-        await page.locator(`[data-year-topic="${topic}"]`).click();
+        await page.locator('[data-year-topic="極坐標"]').click();
         assert.ok(await page.locator(".year-detail .curriculum-status").count()>0);
       }
       assert.deepEqual(errors, []);

@@ -4,6 +4,8 @@
 
 ## 現況
 
+- 2026-11-02 後續介面修改尚未上架：課題分佈、逐年試題及題目庫共用模擬卷課題分類，點課題顯示完整對應題目及解答。已取消滑鼠 3D 傾斜，保留玻璃及邊框光。工作版 allowlist 增至 265 檔，正式版仍是下述 264 檔部署。
+
 - 2014–2026 已於 2026-11-02 上架，現為十三年份、833 題；公開 allowlist 為 264 檔、51 份 PDF（25 份練習、26 份參考解答）。本次包含 2014 兩卷及共用根號／單位排版修正，驗收與發佈證據見最新日期節。
 
 - 儲存庫：https://github.com/ctyingfun-dev/dse-maths-original-pilots，主要分支 `main`。
@@ -14,6 +16,18 @@
 - 正式版本為 2014–2026 十三年份、833 題，公開 allowlist 264 檔、51 份 PDF。2016 卷一有 20 題（乙部六題）；其餘卷一各 19 題，卷二各 45 題。資料及進度按年份／試卷隔離，預設仍為 2026。最新生成規則見 `SOLUTION_STYLE.md`。
 - 網站為 HTML/CSS/JavaScript 靜態檔案，無資料庫、無建置步驟；僅本機預覽需要 Node.js。字體及 Three.js 均已放在專案內。
 - 網站原始碼、修改規則和工具可以同步；登入、聊天記錄、個人 skill、瀏覽器收藏／作答進度不會隨 Git 自動同步。網站本身的備份功能可匯出／匯入進度，該 JSON 不應上傳 GitHub。
+
+## 2026-11-02 模擬卷課題及互動修訂（尚未上架）
+
+- 同步起點 `d611d0dca479239c9160f611e81331834040021c`；本次開始時乾淨並 fetch／pull --ff-only。收尾須再次 fetch、提交、push 並核對 HEAD 與 origin/main。
+- 課題分佈和逐年試題不再載入 `dse-topics.js` 的原卷統計。`year.js` 保留十三年份模擬卷目錄，共用 `createTopicBrowser` 顯示卷一 248 題、卷二 585 題，可按年份／部分篩選；點課題顯示完整題幹、圖表及可展開參考解答，連結至對應年份單題練習。
+- 833 題、616 種原始名稱統一到 46 個導覽課題。課題分佈、逐年及題目庫使用同一 `assets/topic-classification.js`，保留真正多概念歸類及原始詳細標籤。按題幹／解答修正面積比不一定相似、截距不一定直線等歧義；新增流程見 `TOPIC_CLASSIFICATION.md`。這是網站分類，不是官方課程編碼。
+- 網址保留年份、部分、搜尋、課題及頁碼；閱讀跨年份題目不改作答進度。原有題庫、解答、配分、圖形及全部 PDF bytes 不變，不重建 PDF。新增一個公開分類檔案，allowlist 現為 265 檔；舊原卷統計檔保留作歷史但不載入。
+- 移除 pointer-following 3D 傾斜的 JS 與 CSS；保留玻璃、局部邊框光、手機及減少動態行為，首頁莫比烏斯及弦撥動不變。
+- 新增 `verify-topic-classification.cjs`（亦接入交接檢查）、`qa-mock-topics.cjs`。修正舊 `qa-curriculum` fixture：2022 卷二極坐標為 Q25，按既有獨立驗算器確認；沒有改題迎合測試。
+- 驗證通過：833 題／265 檔交接、全庫分類覆蓋及同義／多課題／歧義案例、兩卷十三年份課題統計／分部／題庫一致性、完整題目／解答／跨年圖形／網址歷史／進度隔離及三寬度；工作區兩卷五寬度與 26 份列印隔離、極坐標四寬度、批改／重批／計時、三輪互動效果、螢幕公式及公開 allowlist 防覆寫亦通過。已檢視手機課題總覽、完整題目及 2025 卷一 Q17 解答截圖；長而不可拆的公式仍保留局部橫向捲動，不宣稱窄欄同時可見全式。
+- 網站指紋（文字換行正規化）：`304a78f024c5d25a9d53456a2e606a972abc23f50cf49b1a74841daa16be2735`。題庫、圖形及 PDF 在 Git 差異中均不變。測試截圖及暫存輸出不提交。
+- 預覽沿用 `http://127.0.0.1:4284/`；本次只同步 GitHub，不產生或上傳正式部署包。正式發佈證據仍以下節為準。
 
 ## 2026-11-02 正式發佈 2014（已上架）
 
@@ -322,7 +336,7 @@ Linux 若缺系統函式庫，按 Playwright 診斷安裝其需要的依賴。�
 | 介面與題目渲染 | `paper1/app.js`、`paper2/app.js`、各自的 `style.css`、`math.js` |
 | 題庫 | `paper1/data-YYYY.js`、`paper2/data-YYYY.js` |
 | 解答生成及排版規則 | `SOLUTION_STYLE.md` |
-| 圖形與課題資料 | 各卷 `diagrams-YYYY.js`、`dse-topics.js` |
+| 圖形與課題資料 | 各卷 `diagrams-YYYY.js`、共用 `assets/topic-classification.js`；`dse-topics.js` 為不載入的歷史原卷統計 |
 | 字體、3D 程式庫 | `assets/fonts/`、`assets/vendor/three/`，保留授權檔 |
 | 練習 PDF | `output/pdf/` |
 | 原卷對照與歷次設計 | `SOURCE_ALIGNMENT*.md`、`UI_DIRECTIONS_20261020.md`、`NOTATION_AUDIT_20261015.md` |
@@ -350,6 +364,9 @@ node qa-typography.cjs
 node qa-solutions.cjs
 node qa-marking-layout.cjs
 node qa-check-answers.cjs
+node qa-curriculum.cjs
+node verify-topic-classification.cjs
+node qa-mock-topics.cjs
 ```
 
 `PREVIEW_URL` 可指定其他本機埠。`qa-workspace.cjs` 涵蓋十三年份、兩卷及不同螢幕寬度；沒有歷史列印快照時，仍會檢查 screen CSS 不影響當前列印。舊的 palette/smoke 測試可能包含先前設計的外觀假設，應按當前 AGENTS.md 與真實問題判斷，不能為通過舊測試而恢復已取消設計。若本機快照早於已驗證的題幹／解答修改，先用修改前 Git 提交實際核對，保留舊快照，再建立相符基準，不可直接接受未知差異。不同作業系統的中文字體後備及 PDF 字形可能不同，重新產生 PDF 後必須目視檢查換行、題號及作答空間。
