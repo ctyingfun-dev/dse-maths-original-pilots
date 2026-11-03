@@ -83,6 +83,7 @@
 !/qa-pdfs-2024.py
 !/qa-palette.cjs
 !/qa-workspace.cjs
+!/qa-focus-practice.cjs
 !/qa-orbit.cjs
 !/qa-effects.cjs
 !/UI_DIRECTIONS_20261020.md
@@ -98,6 +99,7 @@
 !/assets/
 /assets/*
 !/assets/dse-maths-logo.png
+!/assets/favicon.svg
 !/assets/workspace.css
 !/assets/workspace.js
 !/assets/topic-classification.js

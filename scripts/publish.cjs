@@ -13,6 +13,7 @@ const files = [
   "index.html",
   "year.js",
   "assets/dse-maths-logo.png",
+  "assets/favicon.svg",
   "assets/workspace.css",
   "assets/workspace.js",
   "assets/topic-classification.js",

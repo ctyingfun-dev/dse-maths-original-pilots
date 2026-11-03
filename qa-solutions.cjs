@@ -45,6 +45,10 @@ const output=path.join(__dirname,"tmp/qa-solutions");
         assert.deepEqual(overflow,[],`${year} P${paper} ${width}`);
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
         if(year===2025&&[1056,390].includes(width)) for(const n of paper===1?[8,14,18,19]:[8,36,40,45]) {
+          if(paper===1) {
+            await page.goto(`${base}/paper1/?year=${year}#practice?question=${n}`);
+            await page.locator(`#question-${n} .worked-answer`).evaluate(node=>node.open=true);
+          }
           await page.locator(`#question-${n} .solution-steps`).screenshot({path:path.join(output,`2025-p${paper}-q${n}-${width}.png`)});
         }
       }

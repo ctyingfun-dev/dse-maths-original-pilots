@@ -132,19 +132,24 @@
         <a class="skip-link" href="#main-content">跳至主要內容</a>
         <header class="site-header">
           <div class="header-inner">
-            <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
-            <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
+            <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><div><strong>DSE 數學</strong><small>研習室</small></div></a>
+            <nav class="primary-nav" aria-label="主要導覽">${[["papers","課題操練"],["find","題目庫"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
+            <details class="tools-menu"><summary>工具 ${window.PilotWorkspace.icon("chevron-down")}</summary><nav aria-label="學習工具">${resources.map(navLink).join("")}${navLink(["home","主頁"])}</nav></details>
             <div class="header-tools">
               <label class="mock-year">年份 <select id="mock-year">${[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
+            <button class="mobile-menu-toggle" aria-label="開啟導覽" aria-controls="mobile-navigation" aria-expanded="false"><span aria-hidden="true">☰</span></button>
           </div>
-          <div class="navigation-inner">
-            ${route==="find"?"":`<span class="workspace-edition">${year}<span>原創卷二</span></span>`}
-            <nav class="resource-nav" aria-label="課題與工具">${resources.map(navLink).join("")}</nav>
-          </div>
+          <dialog id="mobile-navigation" class="mobile-navigation" aria-label="網站導覽">
+            <div class="mobile-menu-head"><strong>DSE 數學</strong><button data-menu-close aria-label="關閉導覽">${window.PilotWorkspace.icon("x")}</button></div>
+            <p>研習室</p><nav aria-label="手機主要導覽">${[["papers","課題操練"],["find","題目庫"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
+            <h2>目前試卷</h2><label class="mobile-year">年份 <select id="mobile-mock-year">${[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026].map(v=>`<option ${year===v?"selected":""}>${v}</option>`).join("")}</select></label><nav class="mobile-paper-switch" aria-label="手機選擇試卷">${[1,2].map(p=>`<a href="../paper${p}/?year=${year}">卷${p===1?"一":"二"}</a>`).join("")}</nav>
+            <h2>學習工具</h2><nav aria-label="手機學習工具">${resources.map(navLink).join("")}${navLink(["home","主頁"])}</nav><p class="menu-note">進度儲存於此裝置<br>原創模擬卷 · 非香港考評局試卷</p>
+          </dialog>
         </header>
         <main id="main-content" tabindex="-1">${content}</main>
+        <nav class="mobile-bottom-nav" aria-label="手機快捷導覽">${[["papers","課題操練"],["find","題目庫"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
         <footer><span>原創模擬卷 · 非香港考評局試卷</span><span id="save-state" role="status" data-error="${saveFailed}">${saveFailed?"未能儲存；請先到收藏頁下載進度備份。":"本機進度"}</span></footer>
       </div>`;
     const downloadHost=document.querySelector('.practice-header, .paper-intro .start');

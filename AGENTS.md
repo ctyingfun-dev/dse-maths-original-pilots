@@ -36,11 +36,11 @@ Read HANDOFF.md before editing this project. It contains setup, validation, depl
 
 - Topic distribution, year views and question-bank filters must share the original mock papers' canonical multi-topic classification in `assets/topic-classification.js`; follow `TOPIC_CLASSIFICATION.md`. Merge synonymous names, preserve distinct assessed concepts, and review ambiguous items against their stems/solutions. Never restore original-examination statistics as the mock papers' source.
 
-- Preserve the ice-blue glass interface, chosen typography, pi brand mark and visible resource navigation. Do not revert to previous layouts, palettes or book logo without a user request.
+- Preserve the approved Figma ice-blue glass interface, Traditional Chinese, text-only DSE 數學 wordmark and accessible resource navigation. The user explicitly removed the pi brand mark. Paper 1 has a filterable topic list and focused single-question practice with previous/next, manual completion, hints and expandable solutions. Timed practice retains the whole-paper flow.
 - Interior pointer-following radial light and mouse-following 3D tilt were explicitly cancelled. Keep glass and localized masked border lighting, but never rotate surfaces with the pointer. Respect touch and reduced-motion behavior.
 - Homepage is full-screen starry Mobius motion without a header or visible surface mesh. Clicking anywhere enters Paper 1 while preserving the year.
 - Preserve the gentle string pluck: one response on entry, 1.1-second cooldown, dominant slow mode and decay over 4.4 seconds. Do not restore rapid repeated vibration.
-- UI uses local Chiron Hei HK; headings use Chiron Sung HK; homepage uses Noto Sans TC 300; mathematical type remains separate. Screen styling must not alter print geometry or shrink PDF answer space.
+- UI and workspace headings use local Chiron Hei HK; homepage uses Noto Sans TC 300; mathematical type remains separate. Variables and English letters representing constants use italic Times New Roman; numerals, units and operators remain upright. Screen styling must not alter print geometry or shrink PDF answer space.
 
 ## Assets And Tools
 

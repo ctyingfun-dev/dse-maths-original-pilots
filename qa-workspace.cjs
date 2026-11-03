@@ -58,7 +58,7 @@ async function printSnapshot(page) {
       if (!before) for (const width of [1440,1056,768,390,320]) {
         await page.setViewportSize({width,height:892});
         await page.goto(`${base}/paper${paper}/?year=${year}#papers`);
-        const clipped = await page.locator(".paper-part button").evaluateAll(buttons => buttons.filter(button => {
+        const clipped = await page.locator(".paper-part button[data-solo]").evaluateAll(buttons => buttons.filter(button => {
           const box=button.getBoundingClientRect(), topic=button.querySelector(".directory-topic").getBoundingClientRect();
           return topic.top < box.top || topic.bottom > box.bottom || topic.right > box.right || button.scrollWidth > button.clientWidth;
         }).map(button => button.getAttribute("aria-label")));
@@ -102,7 +102,7 @@ async function printSnapshot(page) {
       await page.goto(`${base}/paper2/?year=2024#papers`);
       await page.locator("[data-start=timed]").click();
       await page.locator(".timer").waitFor();
-      await page.locator('a[href="#papers"]').last().click();
+      await page.locator('.primary-nav a[href="#papers"]').click();
       await page.locator("[data-resume]").click();
       await page.locator(".timer").waitFor();
       await page.goto(`${base}/paper2/?year=2024#find`);

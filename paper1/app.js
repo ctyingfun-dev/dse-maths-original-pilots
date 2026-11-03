@@ -9,12 +9,15 @@
   const letters = "ABCD";
   const questionRevision = year===2014 || year===2015 || year===2016 || year===2017 || year===2018 || year===2019 || year===2020 || year===2021 || year===2022 || year===2023 ? 1 : 2;
   const revisedQuestions = data.questions.map(q=>q.n);
-  const blank = () => ({answers:{}, checked:{}, hints:{}, saved:[], questionRevision, startedAt:null, deadline:null, mode:"untimed", finished:false});
+  const blank = () => ({answers:{}, checked:{}, hints:{}, saved:[], completed:[], questionRevision, startedAt:null, deadline:null, mode:"untimed", finished:false});
   let state = load();
   let route = "papers";
   let active = state.active || 1;
   let topic = "全部";
   let query = "";
+  let directoryQuery = "";
+  let directoryTopic = "全部";
+  let directoryProgress = "all";
   const topicBrowser = window.PilotWorkspace.createTopicBrowser({data,prompt:q=>examPrompt(q,true)+(parseExamPrompt(q).complete?"":`<p class="exam-marks">（${q.marks} 分）</p>`),solution:solutionHtml});
   let session = [];
   let lastFocus = null;
@@ -23,6 +26,7 @@
 
   function migrateProgress(saved) {
     const progress = {...blank(), ...saved};
+    progress.completed = Array.isArray(saved.completed) ? [...new Set(saved.completed.filter(n=>data.questions.some(q=>q.n===n)))] : [];
     if (saved.questionRevision !== questionRevision) {
       progress.hints = {...progress.hints};
       for (const n of revisedQuestions) delete progress.hints[n];
@@ -123,19 +127,24 @@
         <a class="skip-link" href="#main-content">跳至主要內容</a>
         <header class="site-header">
           <div class="header-inner">
-            <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><span class="brand-mark" aria-hidden="true">π</span><div><strong>DSE 數學</strong><small>原創模擬卷</small></div></a>
-            <nav class="primary-nav" aria-label="主要導覽">${[["home","主頁"],["find","題目庫"],["papers","模擬試卷"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
+            <a class="brand" href="../?year=${year}" aria-label="DSE 數學主頁"><div><strong>DSE 數學</strong><small>研習室</small></div></a>
+            <nav class="primary-nav" aria-label="主要導覽">${[["papers","課題操練"],["find","題目庫"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
+            <details class="tools-menu"><summary>工具 ${window.PilotWorkspace.icon("chevron-down")}</summary><nav aria-label="學習工具">${resources.map(navLink).join("")}${navLink(["home","主頁"])}</nav></details>
             <div class="header-tools">
               <label class="mock-year">年份 <select id="mock-year">${[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026].map(value=>`<option value="${value}" ${year===value?"selected":""}>${value}</option>`).join("")}</select></label>
               <nav class="paper-switch" aria-label="選擇試卷">${[1,2].map(paper=>`<a href="../paper${paper}/${year!==2026?`?year=${year}`:""}" ${paper===data.paper?'aria-current="true"':'class="other-paper"'}>卷${paper===1?"一":"二"}</a>`).join("")}</nav>
             </div>
+            <button class="mobile-menu-toggle" aria-label="開啟導覽" aria-controls="mobile-navigation" aria-expanded="false"><span aria-hidden="true">☰</span></button>
           </div>
-          <div class="navigation-inner">
-            ${route==="find"?"":`<span class="workspace-edition">${year}<span>原創卷一</span></span>`}
-            <nav class="resource-nav" aria-label="課題與工具">${resources.map(navLink).join("")}</nav>
-          </div>
+          <dialog id="mobile-navigation" class="mobile-navigation" aria-label="網站導覽">
+            <div class="mobile-menu-head"><strong>DSE 數學</strong><button data-menu-close aria-label="關閉導覽">${window.PilotWorkspace.icon("x")}</button></div>
+            <p>研習室</p><nav aria-label="手機主要導覽">${[["papers","課題操練"],["find","題目庫"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
+            <h2>目前試卷</h2><label class="mobile-year">年份 <select id="mobile-mock-year">${[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026].map(v=>`<option ${year===v?"selected":""}>${v}</option>`).join("")}</select></label><nav class="mobile-paper-switch" aria-label="手機選擇試卷">${[1,2].map(p=>`<a href="../paper${p}/?year=${year}">卷${p===1?"一":"二"}</a>`).join("")}</nav>
+            <h2>學習工具</h2><nav aria-label="手機學習工具">${resources.map(navLink).join("")}${navLink(["home","主頁"])}</nav><p class="menu-note">進度儲存於此裝置<br>原創模擬卷 · 非香港考評局試卷</p>
+          </dialog>
         </header>
         <main id="main-content" tabindex="-1">${content}</main>
+        <nav class="mobile-bottom-nav" aria-label="手機快捷導覽">${[["papers","課題操練"],["find","題目庫"],["saved","收藏與錯題"]].map(navLink).join("")}</nav>
         <footer><span>原創模擬卷 · 非香港考評局試卷</span><span id="save-state" role="status" data-error="${saveFailed}">${saveFailed?"未能儲存；請先到收藏頁下載進度備份。":"本機進度"}</span></footer>
       </div>`;
     const downloadHost=document.querySelector('.practice-header, .paper-intro .start');
@@ -178,24 +187,37 @@
   }
   function paperPage() {
     const sections=[...new Set(data.questions.map(q=>q.section))];
-    const names={"甲一":"甲部（1）","甲二":"甲部（2）","乙部":"乙部"};
-    return `<section class="paper-intro" aria-labelledby="paper-title">
-      <div class="paper-identity"><p class="paper-subject">數學必修部分</p><h1 id="paper-title">${year} 模擬試卷一</h1>
-        <dl class="paper-facts"><div><dt>全卷</dt><dd>${count} 道大題</dd></div><div><dt>時間</dt><dd>${data.minutes} 分鐘</dd></div><div><dt>總分</dt><dd>${data.questions.reduce((sum,q)=>sum+marks[q.n],0)} 分</dd></div></dl>
-        <p class="paper-edition">非官方原創改編</p>
-      </div>
-      <div class="start"><button type="button" data-start="untimed">不限時開始</button><button type="button" data-start="timed" class="outline">計時 ${data.minutes} 分鐘</button>${state.startedAt&&!state.finished?'<button type="button" data-resume class="quiet">繼續上次操練</button>':""}</div>
-    </section>
-    <div class="paper-session"><span>本卷收藏 <b>${state.saved.length}</b> 題</span><a href="#saved">查看收藏</a></div>
-    <section class="paper-directory" aria-labelledby="directory-title"><div class="directory-heading"><h2 id="directory-title">選題操練</h2></div>
+    const names={"甲一":"甲部（1）","甲二":"甲部（2）","乙":"乙部","乙部":"乙部"};
+    const matches = q => (directoryTopic==="全部" || topicsOf(q).includes(directoryTopic)) && (`${q.n} ${q.topic} ${topicsOf(q).join(" ")}`).includes(directoryQuery.trim()) && (directoryProgress==="all" || (directoryProgress==="done" ? state.completed.includes(q.n) : directoryProgress==="saved" ? state.saved.includes(q.n) : !state.completed.includes(q.n)));
+    const matching = data.questions.filter(matches);
+    return `<div class="directory-layout">
+      <aside class="directory-sidebar" aria-label="本卷課題導覽"><p>數學必修部分</p><h2>課題操練</h2><p>${year} 原創模擬卷一</p>
+        <a href="#directory-title" class="selected">全部課題 <span>${count}</span></a>
+        ${sections.map((section,index)=>`<a href="#part-${index}">${esc(names[section]||section)}<span>${data.questions.filter(q=>q.section===section).length} 題</span></a>`).join("")}
+        <h3>學習工具</h3><a href="#guide">技巧站</a><a href="#topics">課題分布</a><a href="#programs">計算機程式</a><a href="#saved">本卷收藏 <span>${state.saved.length}</span></a>
+        <p class="sidebar-note">進度儲存於此裝置<br>原創模擬卷 · 非官方</p>
+      </aside>
+      <div class="directory-content">
+        <section class="paper-intro" aria-labelledby="paper-title">
+          <div class="paper-identity"><p class="paper-subject">${year} 原創卷一</p><h1 id="paper-title">課題操練</h1><p class="paper-edition">${count} 道大題，按課題逐一練習。</p></div>
+          <div class="start"><button type="button" data-start="untimed">開始操練</button><button type="button" data-start="timed" class="outline">計時 ${data.minutes} 分鐘</button>${state.startedAt&&!state.finished?'<button type="button" data-resume class="quiet">繼續上次操練</button>':""}</div>
+        </section>
+        <div class="paper-session"><span>全卷 ${data.questions.reduce((sum,q)=>sum+marks[q.n],0)} 分 · ${data.minutes} 分鐘</span><span>已完成 ${state.completed.length} / ${count} 題</span><span>本卷收藏 <b>${state.saved.length}</b> 題</span><a href="#saved">查看收藏</a></div>
+        <section class="directory-filters" role="search" aria-label="篩選課題">
+          <label class="directory-search">${window.PilotWorkspace.icon("search")}<input id="directory-query" type="search" aria-label="搜尋課題或題號" placeholder="搜尋課題或題號" value="${esc(directoryQuery)}"></label>
+          <label><span class="visually-hidden">課題</span><select id="directory-topic"><option>全部</option>${filterTopics.map(t=>`<option ${directoryTopic===t?"selected":""}>${esc(t)}</option>`).join("")}</select></label>
+          <label><span class="visually-hidden">進度</span><select id="directory-progress">${[["all","全部進度"],["new","未完成"],["done","已完成"],["saved","已收藏"]].map(([value,label])=>`<option value="${value}" ${directoryProgress===value?"selected":""}>${label}</option>`).join("")}</select></label>
+          <span role="status">共 ${matching.length} 題</span>
+        </section>
+        <section class="paper-directory" aria-labelledby="directory-title"><h2 id="directory-title" class="visually-hidden">課題列表</h2>
       ${sections.map((section,index)=>{
         const questions=data.questions.filter(q=>q.section===section);
-        return `<section class="paper-part part-${index}" aria-labelledby="part-${index}"><div class="part-heading"><h3 id="part-${index}">${esc(names[section]||section)}</h3><p>第 ${questions[0].n}–${questions.at(-1).n} 題<span>${questions.reduce((sum,q)=>sum+marks[q.n],0)} 分</span></p></div><div class="number-grid">${questions.map(q=>{
+        return `<section class="paper-part part-${index}" aria-labelledby="part-${index}"><div class="part-heading"><h3 id="part-${index}">${esc(names[section]||section)}</h3><p>第 ${questions[0].n}–${questions.at(-1).n} 題<span>${questions.reduce((sum,q)=>sum+marks[q.n],0)} 分</span></p></div><div class="number-grid">${questions.filter(matches).map(q=>{
           const notice=curriculumNotice(q);
-          return `<button type="button" data-solo="${q.n}" title="${esc(q.topic)}" aria-label="第 ${q.n} 題：${esc(q.topic)}${notice?"（已取消）":""}"><span class="directory-number">${String(q.n).padStart(2,"0")}</span><span class="directory-topic">${esc(q.topic)}${notice}</span></button>`;
-        }).join("")}</div></section>`;
+          return `<div class="directory-row"><button type="button" data-solo="${q.n}" title="${esc(q.topic)}" aria-label="第 ${q.n} 題：${esc(q.topic)}${notice?"（已取消）":""}"><span class="directory-number">${String(q.n).padStart(2,"0")}</span><span class="directory-topic">${esc(q.topic)}${notice}<small>${esc(topicsOf(q).join(" · "))}</small><small class="mobile-row-meta">${marks[q.n]} 分 · ${state.completed.includes(q.n)?"已完成":"未開始"}</small></span><span class="directory-marks">${marks[q.n]} 分</span><span class="directory-status">${state.completed.includes(q.n)?"已完成":"未開始"}</span>${window.PilotWorkspace.icon("chevron-right")}</button><button class="bookmark" data-bookmark="${q.n}" aria-label="收藏第 ${q.n} 題">${state.saved.includes(q.n)?"★":"☆"}</button></div>`;
+        }).join("") || '<p class="directory-empty">此部分沒有符合條件的題目。</p>'}</div></section>`;
       }).join("")}
-    </section><p class="note">不同年份分開儲存進度；清除瀏覽器資料可能令進度消失。</p>`;
+    </section><p class="note">不同年份分開儲存進度；清除瀏覽器資料可能令進度消失。</p></div></div>`;
   }
   function savedPage() {
     const wrong = data.paper===2 ? data.questions.filter(q=>state.checked[q.n]&&!right(q)) : [];
@@ -273,20 +295,24 @@
     const timer=state.deadline && !state.finished ? `<span id="timer" class="timer">計算時間中</span>` : "";
     const checked=data.paper===2 ? data.questions.filter(q=>state.checked[q.n]) : [];
     const pdf=`dse-original-${year!==2026?`${year}-`:""}paper1-practice.pdf`;
-    return `<div class="practice-header"><button type="button" class="back" data-back>← 返回</button>${timer}<a class="export-pdf" href="../output/pdf/${pdf}" download="${pdf}" title="下載全卷 PDF（附空白作答空間）"><span aria-hidden="true">↓</span>匯出 PDF</a><span>${state.mode==="timed"?"計時":"不限時"} · ${state.finished?"已完成":"練習中"}</span></div><div class="practice-layout"><section class="practice-main"><header class="exam-title"><span>${year} 對應原創模擬卷 · 非官方</span><h1>數學　必修部分<br>試卷一</h1><p>請寫出計算步驟及答案。</p></header>${sequence.map(n=>{const q=question(n);return `${sectionTitle(q)?`<h2 class="exam-section">${sectionTitle(q)}</h2>`:""}${form(q)}`;}).join("")}${state.startedAt&&!state.finished?'<button type="button" class="finish" data-finish>完成本卷</button>':""}</section><aside class="question-nav"><h3>跳至題目</h3><div class="mini-grid">${sequence.map(n=>`<button type="button" data-jump="${n}">${n}</button>`).join("")}</div></aside></div>`;
+    const focus = state.mode!=="timed";
+    const actions=focus?`<div class="focus-actions screen-only"><button data-focus-step="-1" ${active===1?"disabled":""}>上一題</button><button data-complete="${active}" aria-pressed="${state.completed.includes(active)}">${state.completed.includes(active)?"✓ 已完成":"標記已完成"}</button><button data-focus-step="1" ${active===count?"disabled":""}>下一題 ${window.PilotWorkspace.icon("arrow-right")}</button><p>已完成 ${state.completed.length} / ${count} 題 · 進度只儲存於此裝置</p></div>`:"";
+    return `<div class="practice-header"><button type="button" class="back" data-back>← 返回課題列表</button>${timer}<a class="export-pdf" href="../output/pdf/${pdf}" download="${pdf}" title="下載全卷 PDF（附空白作答空間）"><span aria-hidden="true">↓</span>匯出 PDF</a><span>${state.mode==="timed"?"計時":"不限時"} · ${state.finished?"已完成":"練習中"}</span></div>
+    ${focus?`<div class="focus-heading screen-only"><h1>${esc(question(active).topic)}</h1><span>第 ${active} / ${count} 題 · ${marks[active]} 分</span></div>`:""}
+    <div class="practice-layout ${focus?"focus-practice":""}"><section class="practice-main"><header class="exam-title"><span>${year} 對應原創模擬卷 · 非官方</span><h1>數學　必修部分<br>試卷一</h1><p>請寫出計算步驟及答案。</p></header>${sequence.map(n=>{const q=question(n);return `${sectionTitle(q)?`<h2 class="exam-section">${sectionTitle(q)}</h2>`:""}<div class="focus-question" data-current="${n===active}">${form(q)}</div>`;}).join("")}${state.startedAt&&!state.finished?'<button type="button" class="finish" data-finish>完成本卷</button>':""}${actions}</section><aside class="question-nav"><h3>本卷題目</h3><div class="mini-grid">${data.questions.map(q=>`<button type="button" data-jump="${q.n}" aria-current="${q.n===active?"true":"false"}"><span>${String(q.n).padStart(2,"0")}</span><span>${esc(q.topic)}</span></button>`).join("")}</div><p>已完成 ${state.completed.length} / ${count} 題</p></aside></div>`;
   }
   function render() {
     const fragment=location.hash.slice(1);
     route = (fragment.split("?")[0] || "papers");
     if(route==="practice") {
       const n=Number(new URLSearchParams(fragment.split("?")[1]||"").get("question"));
-      if(question(n)) {active=n;session=[n];pendingScroll=n;}
+      if(question(n)) {active=n;state.active=n;session=[n];pendingScroll=n;persist();}
     }
     if (route==="practice" && !question(active)) route="papers";
     const pages = {find:findPage,topics:topicPage,years:yearPage,papers:paperPage,guide:guidePage,programs:programsPage,saved:savedPage,practice:practicePage};
     if (!pages[route]) route="papers";
     shell(pages[route]());
-    if ((route==="find"||route==="topics") && lastFocus) {
+    if ((route==="find"||route==="topics"||route==="papers") && lastFocus) {
       const field=document.getElementById(lastFocus);
       field?.focus();
       if(field?.setSelectionRange) field.setSelectionRange(field.value.length,field.value.length);
@@ -295,7 +321,7 @@
     if (route==="practice" && pendingScroll) {
       const n=pendingScroll;
       pendingScroll=null;
-      requestAnimationFrame(()=>document.getElementById(`question-${n}`)?.scrollIntoView({block:"start"}));
+      requestAnimationFrame(()=> (state.mode!=="timed" ? document.querySelector(".focus-heading") : document.getElementById(`question-${n}`))?.scrollIntoView({block:"nearest"}));
     }
     tick();
   }
@@ -305,7 +331,7 @@
   }
   function open(n, list) { active=n; session=list||[]; state.active=n; pendingScroll=n; persist(); navigate("practice"); }
   function start(mode) {
-    state={...blank(),saved:state.saved,mode,startedAt:Date.now(),deadline:mode==="timed"?Date.now()+data.minutes*60000:null};
+    state={...blank(),saved:state.saved,completed:state.completed,mode,startedAt:Date.now(),deadline:mode==="timed"?Date.now()+data.minutes*60000:null};
     persist(); open(1,data.questions.map(q=>q.n));
   }
   function finish() {
@@ -322,11 +348,17 @@
   }
   setInterval(tick,1000);
   function bind() {
+    document.querySelectorAll('.directory-sidebar a[href^="#part-"],.directory-sidebar a[href="#directory-title"]').forEach(link=>link.onclick=e=>{e.preventDefault();document.getElementById(link.hash.slice(1))?.scrollIntoView({behavior:"smooth",block:"start"});});
     document.querySelector(".skip-link").onclick=e=>{e.preventDefault();document.querySelector("main").focus();};
     document.querySelector("#mock-year").onchange=e=>{const url=new URL(location.href);url.searchParams.set("year",e.target.value);location.href=url.href;};
     document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{const n=Number(b.dataset.open),slot=document.getElementById(`inline-${n}`),expanded=!slot.children.length;slot.innerHTML=expanded?form(question(n),true):"";if(expanded)slot.querySelector(".worked-answer").open=true;b.setAttribute("aria-expanded",String(expanded));b.textContent=expanded?"收起解答":"提示與解答";bind();});
     document.querySelectorAll("[data-solo]").forEach(b=>b.onclick=()=>open(Number(b.dataset.solo)));
-    document.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>{active=Number(b.dataset.jump);state.active=active;persist();document.getElementById(`question-${active}`)?.scrollIntoView({behavior:"smooth",block:"start"});});
+    document.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>{if(state.mode!=="timed"){location.hash=`practice?question=${b.dataset.jump}`;return;}active=Number(b.dataset.jump);state.active=active;persist();document.getElementById(`question-${active}`)?.scrollIntoView({behavior:"smooth",block:"start"});});
+    document.querySelectorAll("[data-focus-step]").forEach(b=>b.onclick=()=>{location.hash=`practice?question=${active+Number(b.dataset.focusStep)}`;});
+    document.querySelector("[data-complete]")?.addEventListener("click",()=>{state.completed=state.completed.includes(active)?state.completed.filter(n=>n!==active):[...state.completed,active];persist();render();});
+    document.querySelector("#directory-query")?.addEventListener("input",e=>{directoryQuery=e.target.value;lastFocus="directory-query";render();});
+    document.querySelector("#directory-topic")?.addEventListener("change",e=>{directoryTopic=e.target.value;lastFocus="directory-topic";render();});
+    document.querySelector("#directory-progress")?.addEventListener("change",e=>{directoryProgress=e.target.value;lastFocus="directory-progress";render();});
     document.querySelectorAll("[data-hint]").forEach(b=>b.onclick=()=>{const n=Number(b.dataset.hint);state.hints[n]=Math.min(question(n).hints.length,(state.hints[n]||0)+1);persist();refreshQuestion(n);});
     document.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>{const n=Number(b.dataset.check);if(data.paper!==2||!state.answers[n])return;state.checked[n]=true;persist();refreshQuestion(n);});
     document.querySelectorAll("[data-bookmark]").forEach(b=>b.onclick=()=>{const n=Number(b.dataset.bookmark);state.saved=state.saved.includes(n)?state.saved.filter(x=>x!==n):[...state.saved,n];persist();pendingScroll=route==="practice"?n:null;render();});

@@ -159,6 +159,23 @@
   document.fonts.addEventListener("loadingdone", scheduleRoots);
   function enhance(route) {
     document.body.dataset.route = route;
+    const menu = document.querySelector("#mobile-navigation");
+    const menuToggle = document.querySelector(".mobile-menu-toggle");
+    if (menu && menuToggle) {
+      menuToggle.onclick = () => { menu.showModal(); menuToggle.setAttribute("aria-expanded","true"); };
+      menu.querySelector("[data-menu-close]").onclick = () => menu.close();
+      menu.onclose = () => menuToggle.setAttribute("aria-expanded","false");
+      menu.querySelectorAll("a").forEach(link => link.onclick = () => menu.close());
+      menu.querySelector("#mobile-mock-year").onchange = event => {
+        const url = new URL(location.href);
+        url.searchParams.set("year",event.target.value);
+        location.href = url.href;
+      };
+    }
+    document.querySelectorAll(".focus-practice .study-tools:not([data-hint-ready])").forEach(tools => {
+      tools.dataset.hintReady = "true";
+      tools.insertAdjacentHTML("afterbegin",'<div class="hint-intro screen-only"><h2>逐步提示</h2><p>先試一試，再看提示。<br>每次只顯示一個步驟。</p></div>');
+    });
     if (!glassTarget?.isConnected) resetGlass();
     document.querySelectorAll(".site-header, .topic-index, .paper-intro, .result, .paper-part .number-grid button, .practice-main, .question-nav, .guide-list > details, .lessons > details, .dse-distribution, .dse-detail, .year-detail, .compact-list, .year-list, .dse-summary, .year-summary").forEach(surface => {
       surface.classList.add("glass-surface");

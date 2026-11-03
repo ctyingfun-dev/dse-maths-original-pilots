@@ -12,7 +12,10 @@ const output=path.join(__dirname,"tmp/qa-typography");
     for(const paper of [1,2]) for(const year of [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026]) {
       for(const route of ["practice","find","papers","years","topics","guide","saved"]) {
         await page.goto(`${base}/paper${paper}/?year=${year}#${route}`);
-        if(route==="practice") await page.locator(".worked-answer").evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
+        if(route==="practice") {
+          await page.locator(".worked-answer").evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
+          assert.ok(await page.locator("sup").count()>0);
+        }
         for(const width of route==="practice"?[1056,390,320]:[1056]) {
           await page.setViewportSize({width,height:892});
           await page.evaluate(()=>document.fonts.ready);
@@ -26,10 +29,11 @@ const output=path.join(__dirname,"tmp/qa-typography");
           assert.deepEqual(issues,[],`${paper}/${year}/${route}/${width}: non-Times Latin/numbers`);
           assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
           if(route==="practice") {
-            assert.ok(await page.locator("sup").count()>0);
             assert.equal(await page.locator(".exam-stem,.exam-part,.scheme-answer,.options").evaluateAll(nodes=>nodes.some(n=>/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻₀-₉]/.test(n.textContent))),false);
             if(paper===1) {
               const n=await page.evaluate(()=>(window.PILOT.questions.find(q=>q.topic.includes("指數"))||window.PILOT.questions.find(q=>/[⁴⁵⁻]/.test(q.prompt))||window.PILOT.questions[0]).n);
+              await page.goto(`${base}/paper1/?year=${year}#practice?question=${n}`);
+              await page.locator(`#question-${n} .worked-answer`).evaluate(node=>node.open=true);
               await page.locator(`#question-${n}`).screenshot({path:path.join(output,`p1-${year}-exponents-${width}.png`)});
             }
           }
