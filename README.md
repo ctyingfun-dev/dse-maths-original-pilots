@@ -6,7 +6,7 @@
 
 2014 兩卷已完成並於 2026-11-02 上架：卷一 19 題、105 分，卷二 45 題，共新增 64 題及 24 組圖表。全庫現為十三年份、833 題，公開 allowlist 為 265 檔、51 份 PDF（25 份練習、26 份參考解答）。2014 卷二 Q23 保留「已取消」；卷一沒有極坐標題。兩份練習 PDF 為 16／21 頁，兩份解答為 13／15 頁。來源與改編差異見 `SOURCE_ALIGNMENT_2014.md`，最終驗收及指紋見 `HANDOFF.md`。此次亦包含共用根號／單位排版修正；下一次修改仍須新的「上架」指令。
 
-2014–2026 正式版共 833 題、265 檔、51 份 PDF。每年每卷均可下載獨立參考解答 PDF；卷一採題號／詳細步驟／既有配分三欄，卷二有答案表及逐題推導，不另加方法分。
+2014–2026 正式版共 833 題、266 檔、51 份 PDF。每年每卷均可下載獨立參考解答 PDF；卷一採題號／詳細步驟／既有配分三欄，卷二有答案表及逐題推導，不另加方法分。
 
 重建：`node build-solutions-pdf.cjs`；可加年份、卷別。檢查：`python -X utf8 qa-solutions-pdf.py`、`node qa-solutions-download.cjs`，並目視渲染結果。未來年份沿用 [SOLUTION_STYLE.md](SOLUTION_STYLE.md)。
 
@@ -14,7 +14,7 @@
 
 跨裝置接手請先閱讀 [HANDOFF.md](HANDOFF.md) 及 [AGENTS.md](AGENTS.md)。[CODEX_PROMPT.txt](CODEX_PROMPT.txt) 可直接交給另一部電腦的 Codex，回到原來電腦時也適用。使用 `node scripts/check-handoff.cjs` 檢查完整性與數學資料；日常預覽使用 `node server.cjs`。發佈工具已移至可隨 Git 同步的 `scripts/publish.cjs`，舊 `tmp/` 版本僅為本機歷史檔案。
 
-目前正式版本為 `20261102-mock-topics`，來源提交 `92b24e34a0da0173e14f12c7533d1e1d4b86b540`，Cloudflare deployment ID `5c8e3117-c491-42c1-8e83-99068800027e`。265 個公開檔案的線上 SHA-256 全部吻合。完整編寫驗證與發佈證據見 HANDOFF。下文按日期保留較早紀錄，不代表仍應使用舊版清單。
+目前正式版本為 `20261103-ice-blue-figma`，來源提交 `6b7800faa0ef8b2c9b8e2c427e4500f9cc36e1cb`，Cloudflare deployment ID `98ecfebc-a55b-4864-aca1-7b6914ac8e09`。266 個公開檔案的線上 SHA-256 全部吻合。完整編寫驗證與發佈證據見 HANDOFF。下文按日期保留較早紀錄，不代表仍應使用舊版清單。
 
 2026-10-21 後續原始碼修訂（已納入 2026-10-22 發佈）：依使用者提供的評卷參考，解答按完整步驟左對齊，不再強制對齊等號；修正斷開的計算及根號頂線，保持分式和根號內部完整。全等判定統一用正體 `SAS`、`SSS`、`ASA`、`AAS`、`RHS`；相似判定用 `AA`、`兩邊成比例且夾角相等` 或 `三邊成比例`，列出支持條件。螢幕及 PDF 已有分題配分時，不再於題末重複整題總分，沒有分題的題目保留唯一總分及原有 PDF 作答空間。所有既有及未來年份須遵守 [SOLUTION_STYLE.md](SOLUTION_STYLE.md)。
 
@@ -79,7 +79,7 @@
 
 本機預覽：安裝 Node.js 後執行 `node server.cjs`，開啟 `http://127.0.0.1:4284/`。網站不需要建置或後端服務。
 
-Cloudflare Pages：主要網站為 `https://dse-maths-original-pilots.pages.dev/`，採直接上傳。最新發佈版為 `20261102-mock-topics`，於 2026-11-02 上架，共 265 個公開檔案、51 份 PDF，包含 2014–2026。公開清單由 `scripts/publish.cjs` 管理，不包含原卷、測試、對照文件或學生資料。保留既有冰藍玻璃、π 標誌及星空莫比烏斯首頁，沒有恢復卡片內光斑或滑鼠 3D 傾斜。只有新的「上架」指令才部署；推送 GitHub 不會自動更新 Cloudflare Pages。
+Cloudflare Pages：主要網站為 `https://dse-maths-original-pilots.pages.dev/`，採直接上傳。最新發佈版為 `20261103-ice-blue-figma`，於 2026-11-03 上架，共 266 個公開檔案、51 份 PDF，包含 2014–2026。公開清單由 `scripts/publish.cjs` 管理，不包含原卷、測試、對照文件或學生資料。移除 π 標誌，保留冰藍玻璃及星空莫比烏斯首頁，沒有恢復卡片內光斑或滑鼠 3D 傾斜。只有新的「上架」指令才部署；推送 GitHub 不會自動更新 Cloudflare Pages。
 
 GitHub Pages：保留為備用網站，發佈來源為 `main` 分支的根目錄，更新並推送後會重新發佈。根目錄的 `.nojekyll` 保留純靜態檔案；所有站內連結使用相對路徑，以支援專案網址。
 

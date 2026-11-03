@@ -4,26 +4,27 @@
 
 ## 現況
 
-- 2026-11-02 後續課題及介面修改已上架：課題分佈、逐年試題及題目庫共用模擬卷分類，點課題顯示完整對應題目及解答。已取消滑鼠 3D 傾斜，保留玻璃及邊框光。正式 allowlist 為 265 檔，逐檔線上 SHA-256 核對通過。
+- 2026-11-03 Figma 冰藍桌面／手機介面已上架：移除 π 標誌，重整導覽、卷一課題列表及單題操練。保留玻璃、繁體中文與斜體 Times New Roman 變數。正式 allowlist 為 266 檔，逐檔線上 SHA-256 核對通過。
 
-- 2014–2026 已於 2026-11-02 上架，現為十三年份、833 題；公開 allowlist 為 265 檔、51 份 PDF（25 份練習、26 份參考解答）。最新版本包含同日後續課題及介面修改，驗收與發佈證據見最新日期節。
+- 2014–2026 現為十三年份、833 題；公開 allowlist 為 266 檔、51 份 PDF（25 份練習、26 份參考解答）。最新版本只調整介面，題庫及 PDF 未變，驗收與發佈證據見最新日期節。
 
 - 儲存庫：https://github.com/ctyingfun-dev/dse-maths-original-pilots，主要分支 `main`。
 - 正式網站：https://dse-maths-original-pilots.pages.dev/，Cloudflare Pages 專案 `dse-maths-original-pilots`，Direct Upload。
-- 最新正式發佈：`20261102-mock-topics`，於 2026-11-02 上架，網站來源提交 `92b24e34a0da0173e14f12c7533d1e1d4b86b540`，Cloudflare deployment ID `5c8e3117-c491-42c1-8e83-99068800027e`。265 個公開檔案已部署至既有 Production 網站，包含共用課題分類及取消傾斜效果；題庫及 PDF 未變。
-- 使用者重新要求「上架吧」後，後台確認 265/265 檔上傳成功並顯示 Success，Production 指向上述 deployment。沒有讀取或複製憑證。此次授權已完成，日後修改仍須重新等使用者說「上架」。
+- 最新正式發佈：`20261103-ice-blue-figma`，於 2026-11-03 上架，網站來源提交 `6b7800faa0ef8b2c9b8e2c427e4500f9cc36e1cb`，Cloudflare deployment ID `98ecfebc-a55b-4864-aca1-7b6914ac8e09`。266 個公開檔案已部署至既有 Production 網站。
+- 使用者重新要求「上架吧」後，後台確認 266/266 檔上傳成功並顯示 Success，重新載入確認 Production 指向上述 deployment。沒有讀取或複製憑證。此次授權已完成，日後修改仍須重新等使用者說「上架」。
 - 舊 `tmp/publish-20261021-2022-papers.zip`（來源 `0d946f7`、190 檔、SHA-256 `9a8517e6996404b105df837fadfce03210e7a168cc281fde382086978b491820`）僅保留為未曾上傳的歷史包，不再等待發佈，也不可用它覆蓋目前十三年份正式版本。所有暫存包均不提交 Git。
-- 正式版本為 2014–2026 十三年份、833 題，公開 allowlist 265 檔、51 份 PDF。2016 卷一有 20 題（乙部六題）；其餘卷一各 19 題，卷二各 45 題。資料及進度按年份／試卷隔離，預設仍為 2026。最新生成規則見 `SOLUTION_STYLE.md`。
+- 正式版本為 2014–2026 十三年份、833 題，公開 allowlist 266 檔、51 份 PDF。2016 卷一有 20 題（乙部六題）；其餘卷一各 19 題，卷二各 45 題。資料及進度按年份／試卷隔離，預設仍為 2026。最新生成規則見 `SOLUTION_STYLE.md`。
 - 網站為 HTML/CSS/JavaScript 靜態檔案，無資料庫、無建置步驟；僅本機預覽需要 Node.js。字體及 Three.js 均已放在專案內。
 - 網站原始碼、修改規則和工具可以同步；登入、聊天記錄、個人 skill、瀏覽器收藏／作答進度不會隨 Git 自動同步。網站本身的備份功能可匯出／匯入進度，該 JSON 不應上傳 GitHub。
 
-## 2026-11-03 Figma 冰藍介面重設計
+## 2026-11-03 Figma 冰藍介面重設計（已上架）
 
 - 使用者原先只要求可編輯 Figma，完成桌面／手機稿及變數斜體後，重新明確要求「上架吧」。本次實作沿用已確認設計：純文字 DSE 數學標誌、冰藍玻璃、繁體中文、Times New Roman 數學字體，移除 π 品牌標誌及舊軌道裝飾。Figma 檔案 key `2A7zYps8SWRmiQtge4E5YE`，正式設計頁為「01｜正式設計 · 變數斜體」。
 - 卷一列表加入共用 canonical 課題、題號及完成／收藏篩選；新增 `progress.completed`，載入舊 schema 2 備份時預設空陣列，不更改儲存 key。完成標記是學生手動確認，不是自動評分。單題操練提供上一題／下一題、完成、提示、收藏及展開評分參考，計時模式仍保留整卷。兩卷共用新桌面工具選單、手機原生 dialog 導覽、年份／試卷切換及列表快捷導覽。
 - 所有介面 CSS 仍經 `media="screen"` 載入；額外畫面元素在列印時隱藏。十三年份兩卷 26 組列印快照與改版前完全相同。題庫、圖表、數學 renderer、配分及 51 份 PDF 沒有修改或重建。新增 SVG favicon；公開 allowlist 增為 266 檔。
 - 已通過 `qa-workspace.cjs`（十三年份兩卷、五寬度、26 組列印）、`qa-focus-practice.cjs`（248 題逐題桌面／320px、斜體 TNR、提示、收藏、完成持久化、前後題、篩選及手機選單）、`qa-solutions.cjs`（全文／配分及七寬度）、`qa-typography.cjs`（七介面與實際 TNR 字形）、`qa-check-answers.cjs`、`qa-mock-topics.cjs`、`scripts/check-handoff.cjs` 及 `verify-publish.cjs`。新介面所需測試選擇器已改為可見的主要導覽與實際單題 URL。
-- 從乾淨的 `9773632` 建立隔離工作目錄，fetch／pull --ff-only 確認最新後實作。待正式上傳及線上 SHA-256 核對完成，再更新上方正式發佈狀態。
+- 從乾淨的 `9773632` 建立隔離工作目錄，fetch／pull --ff-only 確認最新後實作。來源 `6b7800faa0ef8b2c9b8e2c427e4500f9cc36e1cb` 已推送 origin/main；正式 ZIP `20261103-ice-blue-figma`，27,801,669 bytes，SHA-256 `825eaca1a0dd9f22af7bf9c44004c5c08b3aa6d43fe49f5532958524b1e79b56`。266 個 ZIP 項目與 allowlist、staging、manifest 及來源逐位元一致，壓縮完整性檢查通過。
+- Cloudflare Direct Upload Production 顯示 266/266 及 Success；重新載入部署清單確認 `98ecfebc-a55b-4864-aca1-7b6914ac8e09` 是目前 Production。`node scripts/publish.cjs verify 20261103-ice-blue-figma` 逐檔下載全部 266 檔並核對 SHA-256 成功，正式卷一網址已顯示新版。網站指紋 `1a485910df9f7c31d2f26eee0b4459187d23da497752b13cdb246d150c721779`。暫存包及核對 manifest 僅在忽略的 `tmp/`，不提交。
 
 ## 2026-11-02 正式發佈課題分類（已上架）
 
